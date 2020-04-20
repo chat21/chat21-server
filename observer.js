@@ -8,6 +8,7 @@ const topicreceive = 'apps.tilechat.users.*.messages.*' //apps.tilechat.*
 
 
 function start() {
+    console.log("Starting AMQP chat server...")
     amqp.connect('amqp://andrea:Freedom73@localhost:5672?heartbeat=60', function(err, conn) {
       if (err) {
         console.error("[AMQP]", err.message);
