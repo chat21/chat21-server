@@ -1,0 +1,21 @@
+{
+  "name": "mqtt-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "dependencies": {
+    "aedes": "^0.40.1",
+    "amqplib": "^0.5.5",
+    "express": "^4.17.1",
+    "mqtt": "^3.0.0",
+    "rhea": "^1.0.20",
+    "websocket-stream": "^5.5.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node web.js"
+  },
+  "author": "",
+  "license": "ISC"
+}
