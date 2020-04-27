@@ -199,6 +199,7 @@ function process_inbox(topic, message_string, callback) {
   })
 }
 
+
 function closeOnErr(err) {
   if (!err) return false;
   console.error("[AMQP] error", err);
