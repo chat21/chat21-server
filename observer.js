@@ -31,7 +31,7 @@ function startMQ() {
       console.error("[AMQP] reconnecting");
       return setTimeout(startMQ, 1000);
     });
-    console.log("[AMQP] connected");
+    console.log("[AMQP] connected.................");
     amqpConn = conn;
     whenConnected();
   });
@@ -166,7 +166,7 @@ function process_inbox(topic, message_string, callback) {
   const recipient_id = topic_parts[5]
 
   dest_topic = 'apps.tilechat.users.' + recipient_id + '.conversations.' + sender_id
-  // console.log("dest_topic:", dest_topic)
+  console.log("dest_topic:", dest_topic)
   var incoming_message = JSON.parse(message_string)
   const sender_fullname = "SENDER FULLNAME"
   const recipient_fullname = "RECIPIENT FULLNAME"
@@ -196,9 +196,11 @@ function process_inbox(topic, message_string, callback) {
     path: topic,
     status: MessageConstants.CHAT_MESSAGE_STATUS.SENT
   });
-  new ChatDB().saveMessage(newMessage, function() {
+  console.log("message:", newMessage)
+  new ChatDB().saveMessage(newMessage, function(err, msg) {
     const payload = JSON.stringify(outgoing_message)
     publish(exchange, dest_topic, Buffer.from(payload));
+    console.log("message", msg, "saved with error ", err )
     callback(true)
   })
 }

@@ -21,16 +21,15 @@ class ChatDB {
   constructor() {
   }
 
-  saveMessage(newMessage, callback) {
-    newMessage.save(function(err, savedMessage) {
+  saveMessage(message, callback) {
+    console.log("saving message...", message)
+    message.save(function(err, savedMessage) {
         if (err) {
           console.log(err);
-          return res.status(500).send({success: false, msg: 'Error saving object.', err:err});
+          callback(err, null)
         }
-    
         console.log("new message", savedMessage.toObject());
-        messageEvent.emit("message.create",savedMessage);
-        res.json(savedMessage);
+        callback(null, savedMessage.toObject())
       });
   }
 
