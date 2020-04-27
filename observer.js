@@ -4,6 +4,10 @@ const { ChatDB } = require('./chatdb/index.js');
 const uuidv4 = require('uuid/v4');
 var Message = require("./models/message");
 var MessageConstants = require("./models/messageConstants");
+const express = require('express');
+const bodyParser = require('body-parser');
+const app = express();
+app.use(bodyParser.json());
 
 var amqpConn = null;
 
@@ -11,12 +15,12 @@ var exchange = 'amq.topic';
 const topicreceive = 'apps.tilechat.users.*.messages.*'
 const topicpresence = 'presence.#'
 
-function start() {
+function startMQ() {
   console.log("Starting AMQP chat server...")
   amqp.connect('amqp://andrea:Freedom73@localhost:5672?heartbeat=60', function (err, conn) {
     if (err) {
       console.error("[AMQP]", err.message);
-      return setTimeout(start, 1000);
+      return setTimeout(startMQ, 1000);
     }
     conn.on("error", function (err) {
       if (err.message !== "Connection closing") {
@@ -25,7 +29,7 @@ function start() {
     });
     conn.on("close", function () {
       console.error("[AMQP] reconnecting");
-      return setTimeout(start, 1000);
+      return setTimeout(startMQ, 1000);
     });
     console.log("[AMQP] connected");
     amqpConn = conn;
@@ -226,6 +230,6 @@ mongodb.MongoClient.connect(mongouri, { useNewUrlParser: true, useUnifiedTopolog
   app.listen(port, () => {
     console.log('server started.')
     console.log('starting mq observer...')
-    start();
+    startMQ();
   });
 });
