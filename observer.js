@@ -1,12 +1,15 @@
 require('dotenv').config();
 var amqp = require('amqplib/callback_api');
+const { ChatDB } = require('./chatdb/index.js');
+const uuidv4 = require('uuid/v4');
+var Message = require("./models/message");
+var MessageConstants = require("./models/messageConstants");
+
 var amqpConn = null;
 
 var exchange = 'amq.topic';
 const topicreceive = 'apps.tilechat.users.*.messages.*'
 const topicpresence = 'presence.#'
-
-
 
 function start() {
   console.log("Starting AMQP chat server...")
@@ -46,7 +49,6 @@ function startPublisher() {
     ch.on("close", function () {
       console.log("[AMQP] channel closed");
     });
-
     pubChannel = ch;
     if (offlinePubQueue.length > 0) {
       while (true) {
@@ -154,23 +156,47 @@ function process_presence(topic, message_string, callback) {
 
 function process_inbox(topic, message_string, callback) {
   var topic_parts = topic.split(".")
-  // console.log("parts: ", topic_parts)
+  // /apps/tilechat/users/SENDER_ID/messages/RECIPIENT_ID
+  const app_id = topic_parts[1]
   const sender_id = topic_parts[3]
   const recipient_id = topic_parts[5]
 
   dest_topic = 'apps.tilechat.users.' + recipient_id + '.conversations.' + sender_id
   // console.log("dest_topic:", dest_topic)
   var incoming_message = JSON.parse(message_string)
+  const sender_fullname = "SENDER FULLNAME"
+  const recipient_fullname = "RECIPIENT FULLNAME"
+  const channel_type = "direct"
+  var messageId = uuidv4();
   var outgoing_message = {
+    message_id: messageId,
     text: incoming_message.text,
     sender_id: sender_id,
-    recipient_id: recipient_id
+    sender_fullname: sender_fullname,
+    recipient_id: recipient_id,
+    recipient_fullname: recipient_fullname,
+    channel_type: channel_type
   }
-  const payload = JSON.stringify(outgoing_message)
-  // console.log("payload:", payload)
-  // client.publish(dest_topic, payload) // MQTT
-  publish(exchange, dest_topic, Buffer.from(payload));
-  callback(true)
+  
+  var newMessage = new Message({
+    message_id: messageId,
+    text: incoming_message.text,
+    sender_id: sender_id,
+    sender_fullname: sender_fullname,
+    recipient_id: recipient_id,
+    recipient_fullname: recipient_fullname,
+    channel_type: channel_type,
+    app_id: app_id,
+    createdBy: sender_id,
+    timelineOf: sender_id,
+    path: topic,
+    status: MessageConstants.CHAT_MESSAGE_STATUS.SENT
+  });
+  new ChatDB().saveMessage(newMessage, function() {
+    const payload = JSON.stringify(outgoing_message)
+    publish(exchange, dest_topic, Buffer.from(payload));
+    callback(true)
+  })
 }
 
 function closeOnErr(err) {
@@ -180,9 +206,9 @@ function closeOnErr(err) {
   return true;
 }
 
-var mongouri = process.env.MONGODB_URI || "mongodb://localhost:27017/tiledesk-queue";
+var mongouri = process.env.MONGODB_URI || "mongodb://localhost:27017/chatdb";
 var mongodb = require("mongodb");
-var ObjectID = mongodb.ObjectID;
+// var ObjectID = mongodb.ObjectID;
 // Create a database variable outside of the
 // database connection callback to reuse the connection pool in the app.
 var db;
