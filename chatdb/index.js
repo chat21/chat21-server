@@ -15,24 +15,67 @@ class ChatDB {
    *
    * @example
    * const { ChatDB } = require('chatdb');
-   * const chatdb = new ChatDB();
+   * const chatdb = new ChatDB({database: db});
    *
    */
-  constructor() {
+  constructor(options) {
+    if (!options.database) {
+      throw new Error('mongodb option can NOT be empty.');
+    }
+    this.db = options.database
+    this.messages_collection = 'messages'
   }
 
   saveMessage(message, callback) {
     console.log("saving message...", message)
-    message.save(function(err, savedMessage) {
-        if (err) {
-          console.log(err);
+    this.db.collection(this.messages_collection).insertOne(message, function(err, doc) {
+      if (err) {
+        console.log(err);
+        if (callback) {
           callback(err, null)
         }
-        console.log("new message", savedMessage.toObject());
-        callback(null, savedMessage.toObject())
-      });
+      }
+      console.log("new message", doc);
+      if (callback) {
+        callback(null, doc)
+      }
+    });
+
+    // message.save(function(err, savedMessage) {
+    //     if (err) {
+    //       console.log(err);
+    //       callback(err, null)
+    //     }
+    //     console.log("new message", savedMessage.toObject());
+    //     callback(null, savedMessage.toObject())
+    //   });
   }
 
+  updateMessage(message_fields, callback) {
+    console.log("saving message...", message)
+    this.db.collection(this.messages_collection).updateOne({message_id: message.message_id},
+      {$set: message_fields}, function(err, doc) {
+      if (err) {
+        console.log(err);
+        if (callback) {
+          callback(err, null)
+        }
+      }
+      console.log("updated message", doc);
+      if (callback) {
+        callback(null, doc)
+      }
+    });
+
+    // message.save(function(err, savedMessage) {
+    //     if (err) {
+    //       console.log(err);
+    //       callback(err, null)
+    //     }
+    //     console.log("new message", savedMessage.toObject());
+    //     callback(null, savedMessage.toObject())
+    //   });
+  }
   
 
 }

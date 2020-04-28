@@ -15,6 +15,8 @@ var exchange = 'amq.topic';
 const topicreceive = 'apps.tilechat.users.*.messages.*'
 const topicpresence = 'presence.#'
 
+var chatdb;
+
 function startMQ() {
   console.log("Starting AMQP chat server...")
   amqp.connect('amqp://andrea:Freedom73@localhost:5672?heartbeat=60', function (err, conn) {
@@ -182,7 +184,7 @@ function process_inbox(topic, message_string, callback) {
     channel_type: channel_type
   }
   
-  var newMessage = new Message({
+  var newMessage = {
     message_id: messageId,
     text: incoming_message.text,
     sender_id: sender_id,
@@ -195,9 +197,9 @@ function process_inbox(topic, message_string, callback) {
     timelineOf: sender_id,
     path: topic,
     status: MessageConstants.CHAT_MESSAGE_STATUS.SENT
-  });
+  }
   console.log("message:", newMessage)
-  new ChatDB().saveMessage(newMessage, function(err, msg) {
+  chatdb.saveMessage(newMessage, function(err, msg) {
     const payload = JSON.stringify(outgoing_message)
     publish(exchange, dest_topic, Buffer.from(payload));
     console.log("message", msg, "saved with error ", err )
@@ -232,6 +234,7 @@ mongodb.MongoClient.connect(mongouri, { useNewUrlParser: true, useUnifiedTopolog
   app.listen(port, () => {
     console.log('server started.')
     console.log('starting mq observer...')
+    chatdb = new ChatDB({database: db})
     startMQ();
   });
 });
