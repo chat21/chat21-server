@@ -24,58 +24,78 @@ class ChatDB {
     }
     this.db = options.database
     this.messages_collection = 'messages'
+    this.conversations_collection = 'conversations'
+    this.db.collection(this.messages_collection).createIndex(
+      { 'timelineOf':1, 'message_id': 1 }
+    );
+    this.db.collection(this.conversations_collection).createIndex(
+      { 'timelineOf':1, 'conversWith': 1 }
+    );
   }
 
-  saveMessage(message, callback) {
+  saveOrUpdateMessage(message, callback) {
     console.log("saving message...", message)
-    this.db.collection(this.messages_collection).insertOne(message, function(err, doc) {
+    this.db.collection(this.messages_collection).updateOne({timelineOf: message.timelineOf, message_id: message.message_id}, { $set: message }, { upsert: true }, function(err, doc) {
+      console.log("error...", err)
       if (err) {
-        console.log(err);
         if (callback) {
           callback(err, null)
         }
       }
-      console.log("new message", doc);
-      if (callback) {
-        callback(null, doc)
-      }
-    });
-
-    // message.save(function(err, savedMessage) {
-    //     if (err) {
-    //       console.log(err);
-    //       callback(err, null)
-    //     }
-    //     console.log("new message", savedMessage.toObject());
-    //     callback(null, savedMessage.toObject())
-    //   });
-  }
-
-  updateMessage(message_fields, callback) {
-    console.log("saving message...", message)
-    this.db.collection(this.messages_collection).updateOne({message_id: message.message_id},
-      {$set: message_fields}, function(err, doc) {
-      if (err) {
-        console.log(err);
+      else {
         if (callback) {
-          callback(err, null)
+          callback(null, doc)
         }
       }
-      console.log("updated message", doc);
+    });
+  }
+
+  // saveMessage(message, callback) {
+  //   console.log("saving message...", message)
+  //   this.db.collection(this.messages_collection).insertOne(message, function(err, doc) {
+  //     if (err) {
+  //       if (callback) {
+  //         callback(err, null)
+  //       }
+  //     }
+  //     else {
+  //       if (callback) {
+  //         callback(null, doc)
+  //       }
+  //     }
+  //   });
+  // }
+
+  saveOrUpdateConversation(conversation, callback) {
+    console.log("saving conversation...", conversation)
+    this.db.collection(this.conversations_collection).updateOne({timelineOf: conversation.timelineOf, conversWith: conversation.conversWith}, { $set: conversation}, { upsert: true }, function(err, doc) {
       if (callback) {
-        callback(null, doc)
+        callback(err, null)
+      }
+      else {
+        if (callback) {
+          callback(null, doc)
+        }
       }
     });
-
-    // message.save(function(err, savedMessage) {
-    //     if (err) {
-    //       console.log(err);
-    //       callback(err, null)
-    //     }
-    //     console.log("new message", savedMessage.toObject());
-    //     callback(null, savedMessage.toObject())
-    //   });
   }
+
+  // updateMessage(message_fields, callback) {
+  //   console.log("saving message...", message)
+  //   this.db.collection(this.messages_collection).updateOne({message_id: message.message_id},
+  //     {$set: message_fields}, function(err, doc) {
+  //     if (err) {
+  //       console.log(err);
+  //       if (callback) {
+  //         callback(err, null)
+  //       }
+  //     }
+  //     console.log("updated message", doc);
+  //     if (callback) {
+  //       callback(null, doc)
+  //     }
+  //   });
+  // }
   
 
 }
