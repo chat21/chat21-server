@@ -107,16 +107,16 @@ function startWorker() {
     ch.assertQueue("jobs", { durable: true }, function (err, _ok) {
       if (closeOnErr(err)) return;
       ch.bindQueue(_ok.queue, exchange, topic_outgoing, {}, function (err3, oka) {
-        console.log("queue: " + _ok.queue + " err: " + err3 + " key: " + topic_outgoing);
-        console.log(oka)
+        console.log("bind: " + _ok.queue + " err: " + err3 + " topic: " + topic_outgoing);
+        // console.log(oka)
       });
       ch.bindQueue(_ok.queue, exchange, topic_incoming, {}, function (err3, oka) {
-        console.log("queue: " + _ok.queue + " err: " + err3 + " key: " + topic_incoming);
-        console.log(oka)
+        console.log("bind: " + _ok.queue + " err: " + err3 + " topic: " + topic_incoming);
+        // console.log(oka)
       });
       ch.bindQueue(_ok.queue, exchange, topic_presence, {}, function (err3, oka) {
-        console.log("queue lost: " + _ok.queue + " err: " + err3 + " key: " + topic_presence);
-        console.log(oka)
+        console.log("bind: " + _ok.queue + " err: " + err3 + " topic: " + topic_presence);
+        // console.log(oka)
       });
       ch.consume("jobs", processMsg, { noAck: false });
       console.log("Worker is started");
