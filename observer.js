@@ -208,6 +208,7 @@ function process_outgoing(topic, message_string, callback) {
   
   var savedMessage = outgoing_message
   savedMessage.timelineOf = me
+  savedMessage.conversWith = convers_with
   savedMessage.status = MessageConstants.CHAT_MESSAGE_STATUS.SENT
   console.log("saving and forwarding message/conversation update:", savedMessage)
   chatdb.saveOrUpdateMessage(savedMessage, function(err, msg) {
@@ -246,6 +247,7 @@ function process_incoming(topic, message_string, callback) {
   var incoming_message = JSON.parse(message_string)
   var savedMessage = incoming_message
   savedMessage.timelineOf = me
+  savedMessage.conversWith = convers_with
   savedMessage.status = MessageConstants.CHAT_MESSAGE_STATUS.SENT
     
   console.log("saving incoming message/conversation update:", savedMessage)
