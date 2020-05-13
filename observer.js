@@ -14,6 +14,7 @@ var amqpConn = null;
 var exchange = 'amq.topic';
 const topic_outgoing = 'apps.tilechat.users.*.messages.*.outgoing'
 const topic_incoming = 'apps.tilechat.users.*.messages.*.incoming'
+const topic_update = 'apps.tilechat.users.*.messages.*.*.update' // 'apps/tilechat/users/USER_ID/messages/CONVERS_WITH/MESSAGE_ID/update'
 const topic_presence = 'apps.tilechat.users.*.presence.*'
 
 var chatdb;
@@ -113,26 +114,23 @@ function startWorker() {
     });
     ch.assertQueue("jobs", { durable: true }, function (err, _ok) {
       if (closeOnErr(err)) return;
-      // const topic_outgoing_ = 'apps.tilechat.users.ulisse.#'
-      // ch.bindQueue(_ok.queue, exchange, topic_outgoing_, {}, function (err3, oka) {
-      //   console.log("bind: " + _ok.queue + " err: " + err3 + " topic: " + topic_outgoing_);
-      // });
-      // ch.bindQueue(_ok.queue, exchange, 'giaguarox.*', {}, function (err3, oka) {
-      //   console.log("bind: " + _ok.queue + " err: " + err3 + " topic: " + "giaguaro.*");
-      // });
+      subscribeTo(topic_outgoing, ch, _ok.queue)
+      subscribeTo(topic_incoming, ch, _ok.queue)
+      // subscribeTo(topic_update, ch, _ok.queue)
+      subscribeTo(topic_presence, ch, _ok.queue)
 
-      ch.bindQueue(_ok.queue, exchange, topic_outgoing, {}, function (err3, oka) {
-        console.log("bind: " + _ok.queue + " err: " + err3 + " topic: " + topic_outgoing);
-      });
-      ch.bindQueue(_ok.queue, exchange, topic_incoming, {}, function (err3, oka) {
-        console.log("bind: " + _ok.queue + " err: " + err3 + " topic: " + topic_incoming);
-      });
-      ch.bindQueue(_ok.queue, exchange, topic_presence, {}, function (err3, oka) {
-        console.log("bind: " + _ok.queue + " err: " + err3 + " topic: " + topic_presence);
-      });
+      // ch.bindQueue(_ok.queue, exchange, topic_outgoing, {}, function (err3, oka) {
+      //   console.log("bind: " + _ok.queue + " err: " + err3 + " topic: " + topic_outgoing);
+      // });
       ch.consume("jobs", processMsg, { noAck: false });
       console.log("Worker is started");
     });
+  });
+}
+
+function subscribeTo(topic, channel, queue) {
+  channel.bindQueue(queue, exchange, topic, {}, function (err, oka) {
+    console.log("bind: " + queue + " err: " + err + " topic: " + topic);
   });
 }
 
@@ -159,7 +157,10 @@ function work(msg, callback) {
   else if (topic.endsWith('.incoming')) {
     process_incoming(topic, message_string, callback);
   }
-  else if (topic.startsWith('presence.')) {
+  if (topic.endsWith('.update')) {
+    process_update(topic, message_string, callback);
+  }
+  else if (topic.includes('.presence.')) {
     process_presence(topic, message_string, callback);
   }
   else {
@@ -183,8 +184,10 @@ function process_outgoing(topic, message_string, callback) {
   const convers_with = recipient_id
   const me = sender_id
 
-  dest_topic = 'apps.tilechat.users.' + recipient_id + '.messages.' + sender_id + '.incoming'
-  console.log("dest_topic:", dest_topic)
+  recipient_inbox = 'apps.tilechat.users.' + recipient_id + '.messages.' + sender_id + '.incoming'
+  sender_inbox = 'apps.tilechat.users.' + sender_id + '.messages.' + recipient_id + '.incoming'
+  console.log("recipient_inbox:", recipient_inbox)
+  console.log("sender_inbox:", sender_inbox)
   var message = JSON.parse(message_string)
   var messageId = uuidv4();
   const now = Date.now()
@@ -194,6 +197,8 @@ function process_outgoing(topic, message_string, callback) {
   outgoing_message.recipient = recipient_id
   outgoing_message.app_id = app_id
   outgoing_message.timestamp = now
+  outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED
+
   // {
   //   message_id: messageId,
   //   text: message.text,
@@ -206,50 +211,67 @@ function process_outgoing(topic, message_string, callback) {
   //   timestamp: now
   // }
   
-  var savedMessage = outgoing_message
-  savedMessage.timelineOf = me
-  savedMessage.conversWith = convers_with
-  savedMessage.status = MessageConstants.CHAT_MESSAGE_STATUS.SENT
-  console.log("saving and forwarding message/conversation update:", savedMessage)
-  chatdb.saveOrUpdateMessage(savedMessage, function(err, msg) {
-    console.log("error", err)
-    const my_conversation_topic = 'apps.tilechat.users.' + me + '.conversations.' + convers_with
-    let conversation = outgoing_message
-    conversation.conversWith = convers_with
-    conversation.is_new = false
-    const conversation_payload = JSON.stringify(conversation)
-    publish(exchange, my_conversation_topic, Buffer.from(conversation_payload), function(err) {
-      if (err) {
-        callback(false) // TODO message was already saved! What todo? Remove?
-      }
-      else {
-        console.log("tessssss")
-        chatdb.saveOrUpdateConversation(conversation, null)
-        const message_payload = JSON.stringify(outgoing_message)
-        publish(exchange, dest_topic, Buffer.from(message_payload), function(err, msg) {
-          console.log("message", msg, "saved with error ", err )
-          callback(true)
-        });
-      }
-    });
-  })
+  // var savedMessage = outgoing_message
+  // savedMessage.timelineOf = me
+  // savedMessage.conversWith = convers_with
+  // savedMessage.status = MessageConstants.CHAT_MESSAGE_STATUS.SENT
+  // console.log("saving and forwarding message/conversation update:", savedMessage)
+  // chatdb.saveOrUpdateMessage(savedMessage, function(err, msg) {
+  //   console.log("error", err)
+  //   const my_conversation_topic = 'apps.tilechat.users.' + me + '.conversations.' + convers_with
+  //   let conversation = outgoing_message
+  //   conversation.conversWith = convers_with
+  //   conversation.is_new = false
+  //   const conversation_payload = JSON.stringify(conversation)
+  //   publish(exchange, my_conversation_topic, Buffer.from(conversation_payload), function(err) {
+  //     if (err) {
+  //       callback(false) // TODO message was already saved! What todo? Remove?
+  //     }
+  //     else {
+  //       console.log("tessssss")
+  //       chatdb.saveOrUpdateConversation(conversation, null)
+  const message_payload = JSON.stringify(outgoing_message)
+  publish(exchange, recipient_inbox, Buffer.from(message_payload), function(err, msg) {
+    console.log("message", msg, "sent to recipient_inbox:", recipient_inbox, ", err:", err )
+    if (recipient_id !== sender_id) {
+      // outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS.SENT
+      const message_payload = JSON.stringify(outgoing_message)
+      publish(exchange, sender_inbox, Buffer.from(message_payload), function(err, msg) {
+        console.log("message", msg, "sent to sender_inbox:", sender_inbox, ", err:", err )
+        callback(true)
+      });
+    }
+    else {
+      console.log("Recipient === Sender. Stopping to sender inbox")
+      callback(true)
+    }
+  });
+  
+    //   }
+    // });
+  // })
 }
 
+// IMPORTANT: This handler only saves messages and creates conversations.
+// Original messages were already delivered as-it-were (as they arrived here)
+// to ALL the connected Clients, also subscribed to this same topic
 function process_incoming(topic, message_string, callback) {
   var topic_parts = topic.split(".")
-  // /apps/tilechat/users/ME(RECIPIENT_ID)/messages/SENDER_ID/incoming
+  // /apps/tilechat/users/ME/messages/CONVERS_WITH/incoming
   const app_id = topic_parts[1]
-  const recipient_id = topic_parts[3]
-  const sender_id = topic_parts[5]
-  const convers_with = sender_id
-  const me = recipient_id
+  const me = topic_parts[3]
+  const convers_with = topic_parts[5]
+  // const convers_with = sender_id
+  // const me = recipient_id
 
   var incoming_message = JSON.parse(message_string)
   var savedMessage = incoming_message
+  // const messageId = uuidv4();
+  // savedMessage.message_id = messageId
   savedMessage.timelineOf = me
   savedMessage.conversWith = convers_with
-  savedMessage.status = MessageConstants.CHAT_MESSAGE_STATUS.SENT
-    
+  // savedMessage.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED
+  
   console.log("saving incoming message/conversation update:", savedMessage)
   chatdb.saveOrUpdateMessage(savedMessage, function(err, msg) {
     const my_conversation_topic = 'apps.tilechat.users.' + me + '.conversations.' + convers_with
@@ -259,6 +281,7 @@ function process_incoming(topic, message_string, callback) {
     conversation.is_new = true
     conversation.last_message_text = conversation.text // retro comp
     const conversation_payload = JSON.stringify(conversation)
+    console.log("PUB CONV", conversation_payload)
     publish(exchange, my_conversation_topic, Buffer.from(conversation_payload), function(err) {
       if (err) {
         callback(false) // TODO message was already saved! What todo? Remove?
@@ -269,6 +292,18 @@ function process_incoming(topic, message_string, callback) {
       }
     });
   })
+}
+
+function process_update(topic, message_string, callback) {
+  var topic_parts = topic.split(".")
+  // 'apps.tilechat.users.*.messages.*.*.update'
+  // 'apps/tilechat/users/USER_ID/messages/CONVERS_WITH/MESSAGE_ID/update'
+  const app_id = topic_parts[1]
+  const me = topic_parts[3]
+  const convers_with = topic_parts[5]
+  const message_id = topic_parts[6]
+  // console.log("updating message:", message_id , "on conversation", convers_with, "for user", me)
+  console.log("updating message")
 }
 
 
