@@ -96,6 +96,19 @@ function publish(exchange, routingKey, content, callback) {
   }
 }
 
+// function publish(routingKey, content, callback) {
+//   try {
+//     _publish(exchange, routingKey, content, { persistent: true },
+//       function (err, ok) {
+//         callback(err, ok)
+//       });
+//   } catch (e) {
+//     console.error("[AMQP] publish", e.message);
+//     offlinePubQueue.push([exchange, routingKey, content]);
+//     callback(e)
+//   }
+// }
+
 var channel;
 function startWorker() {
   amqpConn.createChannel(function (err, ch) {
@@ -116,7 +129,7 @@ function startWorker() {
       if (closeOnErr(err)) return;
       subscribeTo(topic_outgoing, ch, _ok.queue)
       subscribeTo(topic_incoming, ch, _ok.queue)
-      // subscribeTo(topic_update, ch, _ok.queue)
+      subscribeTo(topic_update, ch, _ok.queue)
       subscribeTo(topic_presence, ch, _ok.queue)
 
       // ch.bindQueue(_ok.queue, exchange, topic_outgoing, {}, function (err3, oka) {
@@ -157,7 +170,7 @@ function work(msg, callback) {
   else if (topic.endsWith('.incoming')) {
     process_incoming(topic, message_string, callback);
   }
-  if (topic.endsWith('.update')) {
+  else if (topic.endsWith('.update')) {
     process_update(topic, message_string, callback);
   }
   else if (topic.includes('.presence.')) {
@@ -234,7 +247,7 @@ function process_outgoing(topic, message_string, callback) {
   publish(exchange, recipient_inbox, Buffer.from(message_payload), function(err, msg) {
     console.log("message", msg, "sent to recipient_inbox:", recipient_inbox, ", err:", err )
     if (recipient_id !== sender_id) {
-      // outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS.SENT
+      outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT // it's better DELIVERED, but the client actually wants 100 to show the sent-checkbox
       const message_payload = JSON.stringify(outgoing_message)
       publish(exchange, sender_inbox, Buffer.from(message_payload), function(err, msg) {
         console.log("message", msg, "sent to sender_inbox:", sender_inbox, ", err:", err )
@@ -272,7 +285,7 @@ function process_incoming(topic, message_string, callback) {
   savedMessage.conversWith = convers_with
   // savedMessage.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED
   
-  console.log("saving incoming message/conversation update:", savedMessage)
+  console.log("saving incoming message:", savedMessage)
   chatdb.saveOrUpdateMessage(savedMessage, function(err, msg) {
     const my_conversation_topic = 'apps.tilechat.users.' + me + '.conversations.' + convers_with
     let conversation = incoming_message
@@ -281,7 +294,7 @@ function process_incoming(topic, message_string, callback) {
     conversation.is_new = true
     conversation.last_message_text = conversation.text // retro comp
     const conversation_payload = JSON.stringify(conversation)
-    console.log("PUB CONV", conversation_payload)
+    console.log("PUB CONV:", conversation_payload)
     publish(exchange, my_conversation_topic, Buffer.from(conversation_payload), function(err) {
       if (err) {
         callback(false) // TODO message was already saved! What todo? Remove?
@@ -298,12 +311,71 @@ function process_update(topic, message_string, callback) {
   var topic_parts = topic.split(".")
   // 'apps.tilechat.users.*.messages.*.*.update'
   // 'apps/tilechat/users/USER_ID/messages/CONVERS_WITH/MESSAGE_ID/update'
-  const app_id = topic_parts[1]
-  const me = topic_parts[3]
-  const convers_with = topic_parts[5]
-  const message_id = topic_parts[6]
-  // console.log("updating message:", message_id , "on conversation", convers_with, "for user", me)
-  console.log("updating message")
+  console.log("UPDATE TOPIC PARTS:", topic_parts, "payload:", message_string)
+  if (topic_parts[4] === "messages") {
+    // message update, only status update actually supported
+    const app_id = topic_parts[1]
+    const user_id = topic_parts[3]
+    const convers_with = topic_parts[5]
+    const message_id = topic_parts[6]
+    console.log("updating message:", message_id, "on convers_with", convers_with, "for user", user_id, "patch", message_string)
+    
+    const patch = JSON.parse(message_string)
+    if (!patch.status || patch.status != 200) {
+      callback(true)
+      return
+    }
+    // If patched with "status = 200" then:
+    // 1. Save message in my timeline with status = 200
+    // 2. propagate "status = 250" to the symmetric message in recipient inbox
+
+    // 1. SAVE MESSAGE ON MY TIMELINE
+    // timelineOf: message.timelineOf, message_id: message.message_id
+    const me = user_id
+    const my_message_patch = {
+      "timelineOf": me,
+      "message_id": message_id,
+      "status": patch.status // for the moment this is always = 200 (SENT)
+    }
+    const my_message_patch_payload = JSON.stringify(my_message_patch)
+    console.log(">>> PERSISTING ON DB... WITH A STATUS ON MY MESSAGE-UPDATE TOPIC", topic, "WITH PATCH", my_message_patch)
+    chatdb.saveOrUpdateMessage(my_message_patch, function(err, msg) {
+      console.log(">>> MESSAGE ON TOPIC", topic, "UPDATED!")
+      if (err) {
+        callback(false)
+        return
+      }
+      // const my_message_update_topic = 'apps.tilechat.users.' + me + '.messages.' + convers_with + '.' + message_id + '.update'
+      // console.log(">>> NOW PUBLISHING... MY MESSAGE TOPIC UPDATE", my_message_update_topic, "WITH PATCH", my_message_patch)
+      // publish(exchange, my_message_update_topic, Buffer.from(my_message_patch_payload), function(err) {
+      //   console.log(">>> PUBLISHED!!!! MY MESSAGE TOPIC UPDATE", my_message_update_topic, "WITH PATCH", my_message_patch)
+      //   if (err) {
+      //     callback(false)
+      //     return
+      //   }
+        const dest_message_patch = {
+          "timelineOf": convers_with,
+          "message_id": message_id,
+          "status": MessageConstants.CHAT_MESSAGE_STATUS_CODE.RETURN_RECEIPT
+        }
+        const dest_message_patch_payload = JSON.stringify(dest_message_patch)
+        console.log(">>> PERSISTING ON DB... RECIPIENT MESSAGE ON DB WITH", dest_message_patch)
+        chatdb.saveOrUpdateMessage(dest_message_patch, function(err, msg) {
+          const recipient_message_update_topic = 'apps.tilechat.users.' + convers_with + '.messages.' + me + '.' + message_id + '.clientupdate'
+          console.log(">>> NOW PUBLISHING... RECIPIENT MESSAGE TOPIC UPDATE", recipient_message_update_topic, "WITH PATCH", dest_message_patch)
+          publish(exchange, recipient_message_update_topic, Buffer.from(dest_message_patch_payload), function(err) {
+            console.log(">>> PUBLISHED!!!! RECIPIENT MESSAGE TOPIC UPDATE", recipient_message_update_topic, "WITH PATCH", dest_message_patch)
+            if (err) {
+              callback(false)
+            }
+            else {
+              callback(true)
+            }
+          });
+        });
+      // });
+    });
+  }
 }
 
 
