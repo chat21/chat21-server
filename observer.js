@@ -338,14 +338,15 @@ function process_update(topic, message_string, callback) {
       "status": patch.status // for the moment this is always = 200 (SENT)
     }
     const my_message_patch_payload = JSON.stringify(my_message_patch)
-    console.log(">>> PERSISTING ON DB... WITH A STATUS ON MY MESSAGE-UPDATE TOPIC", topic, "WITH PATCH", my_message_patch)
+    console.log(">>> ON DISK... WITH A STATUS ON MY MESSAGE-UPDATE TOPIC", topic, "WITH PATCH", my_message_patch)
     chatdb.saveOrUpdateMessage(my_message_patch, function(err, msg) {
       console.log(">>> MESSAGE ON TOPIC", topic, "UPDATED!")
       if (err) {
         callback(false)
         return
       }
-      // const my_message_update_topic = 'apps.tilechat.users.' + me + '.messages.' + convers_with + '.' + message_id + '.update'
+      // DISABLE BECAUSE NOT REALLY NECESSARY (FOR PERF) TO NOTIFY STATUS MODIFICATION TO THE ONE WHO COMMITED THE SAME MOD
+      // const my_message_update_topic = 'apps.tilechat.users.' + me + '.messages.' + convers_with + '.' + message_id + '.clientupdate'
       // console.log(">>> NOW PUBLISHING... MY MESSAGE TOPIC UPDATE", my_message_update_topic, "WITH PATCH", my_message_patch)
       // publish(exchange, my_message_update_topic, Buffer.from(my_message_patch_payload), function(err) {
       //   console.log(">>> PUBLISHED!!!! MY MESSAGE TOPIC UPDATE", my_message_update_topic, "WITH PATCH", my_message_patch)
@@ -359,7 +360,7 @@ function process_update(topic, message_string, callback) {
           "status": MessageConstants.CHAT_MESSAGE_STATUS_CODE.RETURN_RECEIPT
         }
         const dest_message_patch_payload = JSON.stringify(dest_message_patch)
-        console.log(">>> PERSISTING ON DB... RECIPIENT MESSAGE ON DB WITH", dest_message_patch)
+        console.log(">>> ON DISK... RECIPIENT MESSAGE ON DB WITH", dest_message_patch)
         chatdb.saveOrUpdateMessage(dest_message_patch, function(err, msg) {
           const recipient_message_update_topic = 'apps.tilechat.users.' + convers_with + '.messages.' + me + '.' + message_id + '.clientupdate'
           console.log(">>> NOW PUBLISHING... RECIPIENT MESSAGE TOPIC UPDATE", recipient_message_update_topic, "WITH PATCH", dest_message_patch)
