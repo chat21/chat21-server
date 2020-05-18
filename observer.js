@@ -12,10 +12,12 @@ app.use(bodyParser.json());
 var amqpConn = null;
 
 var exchange = 'amq.topic';
-const topic_outgoing = 'apps.tilechat.users.*.messages.*.outgoing'
-const topic_incoming = 'apps.tilechat.users.*.messages.*.incoming'
-const topic_update = 'apps.tilechat.users.*.messages.*.*.update' // 'apps/tilechat/users/USER_ID/messages/CONVERS_WITH/MESSAGE_ID/update'
-const topic_presence = 'apps.tilechat.users.*.presence.*'
+const topic_outgoing = `apps.${process.env.APP_ID}.users.*.messages.*.outgoing`
+const topic_incoming = `apps.${process.env.APP_ID}.users.*.messages.*.incoming`
+// const topic_update = `apps.${process.env.APP_ID}.users.*.messages.*.*.update` // 'apps/tilechat/users/USER_ID/messages/CONVERS_WITH/MESSAGE_ID/update'
+const topic_update = `apps.${process.env.APP_ID}.users.#.update`
+const topic_archive = `apps.${process.env.APP_ID}.users.#.archive`
+const topic_presence = `apps.${process.env.APP_ID}.users.*.presence.*`
 
 var chatdb;
 
@@ -130,6 +132,7 @@ function startWorker() {
       subscribeTo(topic_outgoing, ch, _ok.queue)
       subscribeTo(topic_incoming, ch, _ok.queue)
       subscribeTo(topic_update, ch, _ok.queue)
+      subscribeTo(topic_archive, ch, _ok.queue)
       subscribeTo(topic_presence, ch, _ok.queue)
 
       // ch.bindQueue(_ok.queue, exchange, topic_outgoing, {}, function (err3, oka) {
@@ -172,6 +175,9 @@ function work(msg, callback) {
   }
   else if (topic.endsWith('.update')) {
     process_update(topic, message_string, callback);
+  }
+  else if (topic.endsWith('.archive')) {
+    process_archive(topic, message_string, callback);
   }
   else if (topic.includes('.presence.')) {
     process_presence(topic, message_string, callback);
@@ -309,10 +315,16 @@ function process_incoming(topic, message_string, callback) {
 
 function process_update(topic, message_string, callback) {
   var topic_parts = topic.split(".")
-  // 'apps.tilechat.users.*.messages.*.*.update'
-  // 'apps/tilechat/users/USER_ID/messages/CONVERS_WITH/MESSAGE_ID/update'
-  console.log("UPDATE TOPIC PARTS:", topic_parts, "payload:", message_string)
+  console.log("UPDATE. TOPIC PARTS:", topic_parts, "payload:", message_string)
+  if (topic_parts.length < 5) {
+    console.log("process_update topic error.")
+    callback(false)
+    return
+  }
   if (topic_parts[4] === "messages") {
+    console.log(" MESSAGE UPDATE.")
+    // 'apps.tilechat.users.*.messages.*.*.update'
+    // 'apps/tilechat/users/USER_ID/messages/CONVERS_WITH/MESSAGE_ID/update'
     // message update, only status update actually supported
     const app_id = topic_parts[1]
     const user_id = topic_parts[3]
@@ -375,6 +387,90 @@ function process_update(topic, message_string, callback) {
           });
         });
       // });
+    });
+  }
+  else if (topic_parts[4] === "conversations") {
+    // conversation update, only is_new update actually supported
+    // 'apps/tilechat/users/USER_ID/conversations/CONVERS_WITH/update'
+    console.log(" CONVERSATION UPDATE.")
+    const app_id = topic_parts[1]
+    const user_id = topic_parts[3]
+    const convers_with = topic_parts[5]
+    console.log("updating conversation:", convers_with, "for user", user_id, "patch", message_string)
+    
+    const patch = JSON.parse(message_string)
+    // 1. Patch my conversation: convers_with
+    // 2. Publish the patch to my conversation: convers_with
+    // 1. SAVE PATCH
+    const me = user_id
+    patch.timelineOf = me
+    patch.conversWith = convers_with
+    console.log(">>> ON DISK... CONVERSATION TOPIC", topic, "WITH PATCH", patch)
+    chatdb.saveOrUpdateConversation(patch, function(err, doc) {
+      console.log(">>> CONVERSATION ON TOPIC", topic, "UPDATED!")
+      if (err) {
+        callback(false)
+        return
+      }
+      const patch_payload = JSON.stringify(patch)
+      const my_conversation_update_topic = 'apps.tilechat.users.' + me + '.conversations.' + convers_with + '.clientupdate'
+      console.log(">>> NOW PUBLISHING... MY CONVERSATION UPDATE", my_conversation_update_topic, "WITH PATCH", patch_payload)
+      publish(exchange, my_conversation_update_topic, Buffer.from(patch_payload), function(err) {
+        console.log(">>> PUBLISHED!!!! MY CONVERSATION UPDATE TOPIC", my_conversation_update_topic, "WITH PATCH", patch_payload, "err", err)
+        if (err) {
+          callback(false)
+          return
+        }
+        else {
+          callback(true)
+        }
+      });
+    });
+  }
+}
+
+function process_archive(topic, payload, callback) {
+  // Ex. apps/tilechat/users/USER_ID/conversations/CONVERS_WITH/archive
+  var topic_parts = topic.split(".")
+  console.log("ARCHIVE. TOPIC PARTS:", topic_parts, "payload (ignored):", payload)
+  if (topic_parts.length < 7) {
+    console.log("process_archive topic error. topic_parts.length < 7:", topic)
+    callback(true)
+    return
+  }
+  if (topic_parts[4] === "conversations") {
+    console.log("CONVERSATION ARCHIVE.")
+    // 'apps.tilechat.users.*.messages.*.*.update'
+    // 'apps/tilechat/users/USER_ID/messages/CONVERS_WITH/MESSAGE_ID/update'
+    // message update, only status update actually supported
+    const app_id = topic_parts[1]
+    const user_id = topic_parts[3]
+    const convers_with = topic_parts[5]
+    console.log("archiving conversation:", convers_with, "for user", user_id, "payload", payload)
+    const me = user_id
+    conversation_archive_patch = {
+      "timelineOf": me,
+      "conversWith": convers_with,
+      "archived": true
+    }
+    console.log(">>> ON DISK... ARCHIVE CONVERSATION ON TOPIC", topic)
+    chatdb.saveOrUpdateConversation(conversation_archive_patch, function(err, msg) {
+      console.log(">>> CONVERSATION ON TOPIC", topic, "ARCHIVED!")
+      if (err) {
+        callback(false)
+        return
+      }
+      const conversation_archived_topic = 'apps.tilechat.users.' + user_id + '.conversations.' + convers_with + '.clientarchived'
+      console.log(">>> NOW PUBLISHING... CONVERSATION ARCHIVED TOPIC", conversation_archived_topic)
+      publish(exchange, conversation_archived_topic, Buffer.from(conversation_archive_patch), function(err) {
+        console.log(">>> PUBLISHED!!!! CONVERSATION ON TOPIC", conversation_archived_topic, "ARCHIVED")
+        if (err) {
+          callback(false)
+        }
+        else {
+          callback(true)
+        }
+      });
     });
   }
 }
