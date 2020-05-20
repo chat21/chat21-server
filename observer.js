@@ -10,11 +10,9 @@ const app = express();
 app.use(bodyParser.json());
 
 var amqpConn = null;
-
 var exchange = 'amq.topic';
 const topic_outgoing = `apps.${process.env.APP_ID}.users.*.messages.*.outgoing`
-const topic_incoming = `apps.${process.env.APP_ID}.users.*.messages.*.incoming`
-// const topic_update = `apps.${process.env.APP_ID}.users.*.messages.*.*.update` // 'apps/tilechat/users/USER_ID/messages/CONVERS_WITH/MESSAGE_ID/update'
+const topic_incoming = `apps.observer.${process.env.APP_ID}.users.*.messages.*.incoming`
 const topic_update = `apps.${process.env.APP_ID}.users.#.update`
 const topic_archive = `apps.${process.env.APP_ID}.users.#.archive`
 const topic_presence = `apps.${process.env.APP_ID}.users.*.presence.*`
@@ -22,14 +20,7 @@ const topic_presence = `apps.${process.env.APP_ID}.users.*.presence.*`
 var chatdb;
 
 function startMQ() {
-  console.log("Starting AMQP chat server...")
-  // amqp.connect('amqp://andrea:Freedom73@localhost:5672?heartbeat=60', function (err, conn) {
-  const userid = "ignored"
-  //const password = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlYzA4MmU5Yy1hOWIxLTQ1ZGYtYWRkMy0zMGY3YzY3NWEwZmUiLCJzdWIiOiJ1bGlzc2UiLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi91bGlzc2UuKiIsInJhYmJpdG1xLnJlYWQ6Ki8qL2dpYWd1YXJveC4qIiwicmFiYml0bXEud3JpdGU6Ki8qL3VsaXNzZS4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6InVsaXNzZSIsImNpZCI6InVsaXNzZSIsImF6cCI6InVsaXNzZSIsImdyYW50X3R5cGUiOiJwYXNzd29yZCIsInVzZXJfaWQiOiJ1bGlzc2UiLCJvcmlnaW4iOiJ1YWEiLCJ1c2VyX25hbWUiOiJ1bGlzc2UiLCJlbWFpbCI6InJhYmJpdF9hbm9ueW1AZXhhbXBsZS5jb20iLCJhdXRoX3RpbWUiOjE1ODg1NDEwNzksImlhdCI6MTU4ODU0MTA3OSwiZXhwIjoxNTkxMTMzMDc5LCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwODAvdWFhL29hdXRoL3Rva2VuIiwiemlkIjoidWFhIiwiYXVkIjpbInJhYmJpdG1xIiwidWxpc3NlIl0sImprdSI6Imh0dHBzOi8vbG9jYWxob3N0OjgwODAvdWFhL3Rva2VuX2tleXMiLCJraWQiOiJsZWdhY3ktdG9rZW4ta2V5In0.hm60kLv8EEW-Ih8gIIltNKTxtSt6l6zJBoaIsP1Rd64"
-  // const password = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhN2RkZjdkNC02ZTdjLTQ5NzEtYmY0My1jOTZkMTYzMjAwNTkiLCJzdWIiOiJ1bGlzc2UiLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLnVsaXNzZS4jIiwicmFiYml0bXEud3JpdGU6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMudWxpc3NlLiMiLCJyYWJiaXRtcS5jb25maWd1cmU6Ki8qLyoiXSwiY2xpZW50X2lkIjoidWxpc3NlIiwiY2lkIjoidWxpc3NlIiwiYXpwIjoidWxpc3NlIiwiZ3JhbnRfdHlwZSI6InBhc3N3b3JkIiwidXNlcl9pZCI6InVsaXNzZSIsIm9yaWdpbiI6InVhYSIsInVzZXJfbmFtZSI6InVsaXNzZSIsImF1dGhfdGltZSI6MTU4ODU4MDQ3NywiaWF0IjoxNTg4NTgwNDc3LCJleHAiOjE1OTExNzI0NzcsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODA4MC91YWEvb2F1dGgvdG9rZW4iLCJ6aWQiOiJ1YWEiLCJhdWQiOlsicmFiYml0bXEiLCJ1bGlzc2UiXSwiamt1IjoiaHR0cHM6Ly9sb2NhbGhvc3Q6ODA4MC91YWEvdG9rZW5fa2V5cyIsImtpZCI6ImxlZ2FjeS10b2tlbi1rZXkifQ.rcrHL_FoOAJNxhF64gJqIN3nwqtqpvsG4Pg2CpCEoIg"
-  // const password = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjYzQzZDZiZC1kNTY5LTRjZWMtOGJiZi00ZjA2ODY4Y2JlMWMiLCJzdWIiOiIwMS1PQlNFUlZFUiIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qLyoiLCJyYWJiaXRtcS53cml0ZToqLyovKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiIwMS1PQlNFUlZFUiIsImNpZCI6IjAxLU9CU0VSVkVSIiwiYXpwIjoiMDEtT0JTRVJWRVIiLCJncmFudF90eXBlIjoicGFzc3dvcmQiLCJ1c2VyX2lkIjoiMDEtT0JTRVJWRVIiLCJvcmlnaW4iOiJ1YWEiLCJ1c2VyX25hbWUiOiIwMS1PQlNFUlZFUiIsImF1dGhfdGltZSI6MTU4ODU4NzQzMywiaWF0IjoxNTg4NTg3NDMzLCJleHAiOjE1OTExNzk0MzMsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODA4MC91YWEvb2F1dGgvdG9rZW4iLCJ6aWQiOiJ1YWEiLCJhdWQiOlsicmFiYml0bXEiLCIwMS1PQlNFUlZFUiJdLCJqa3UiOiJodHRwczovL2xvY2FsaG9zdDo4MDgwL3VhYS90b2tlbl9rZXlzIiwia2lkIjoibGVnYWN5LXRva2VuLWtleSJ9.3SDis6B1SeLYCRcYRRHxeGp-bL0P56f0grORwfQiNes"
-  // amqp.connect('amqp://' + userid + ':' + password + '@localhost:5672?heartbeat=60', function (err, conn) {
-  console.log("Connecting to RabbitMQ:", process.env.RABBITMQ_URI)
+  console.log("Connecting to RabbitMQ...")
   amqp.connect(process.env.RABBITMQ_URI, function (err, conn) {
     if (err) {
       console.error("[AMQP]", err.message);
@@ -44,7 +35,7 @@ function startMQ() {
       console.error("[AMQP] reconnecting");
       return setTimeout(startMQ, 1000);
     });
-    console.log("[AMQP] connected.................");
+    console.log("[AMQP] connected.");
     amqpConn = conn;
     whenConnected();
   });
@@ -203,10 +194,17 @@ function process_outgoing(topic, message_string, callback) {
   const convers_with = recipient_id
   const me = sender_id
 
-  recipient_inbox = 'apps.tilechat.users.' + recipient_id + '.messages.' + sender_id + '.incoming'
-  sender_inbox = 'apps.tilechat.users.' + sender_id + '.messages.' + recipient_id + '.incoming'
-  console.log("recipient_inbox:", recipient_inbox)
-  console.log("sender_inbox:", sender_inbox)
+  recipient_incoming_topic = 'apps.observer.tilechat.users.' + recipient_id + '.messages.' + sender_id + '.incoming'
+  sender_incoming_topic = 'apps.observer.tilechat.users.' + sender_id + '.messages.' + recipient_id + '.incoming'
+
+  recipient_added_topic = 'apps.tilechat.users.' + recipient_id + '.messages.' + sender_id + '.clientadded'
+  sender_added_topic = 'apps.tilechat.users.' + sender_id + '.messages.' + recipient_id + '.clientadded'
+
+  console.log("recipient_incoming_topic:", recipient_incoming_topic)
+  console.log("sender_incoming_topic:", sender_incoming_topic)
+  console.log("recipient_added_topic:", recipient_added_topic)
+  console.log("sender_added_topic:", sender_added_topic)
+
   var message = JSON.parse(message_string)
   var messageId = uuidv4();
   const now = Date.now()
@@ -217,87 +215,51 @@ function process_outgoing(topic, message_string, callback) {
   outgoing_message.app_id = app_id
   outgoing_message.timestamp = now
   outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED
-
-  // {
-  //   message_id: messageId,
-  //   text: message.text,
-  //   sender: sender_id,
-  //   sender_fullname: message.sender_fullname,
-  //   recipient: recipient_id,
-  //   recipient_fullname: message.recipient_fullname,
-  //   channel_type: message.channel_type,
-  //   app_id: app_id,
-  //   timestamp: now
-  // }
-  
-  // var savedMessage = outgoing_message
-  // savedMessage.timelineOf = me
-  // savedMessage.conversWith = convers_with
-  // savedMessage.status = MessageConstants.CHAT_MESSAGE_STATUS.SENT
-  // console.log("saving and forwarding message/conversation update:", savedMessage)
-  // chatdb.saveOrUpdateMessage(savedMessage, function(err, msg) {
-  //   console.log("error", err)
-  //   const my_conversation_topic = 'apps.tilechat.users.' + me + '.conversations.' + convers_with
-  //   let conversation = outgoing_message
-  //   conversation.conversWith = convers_with
-  //   conversation.is_new = false
-  //   const conversation_payload = JSON.stringify(conversation)
-  //   publish(exchange, my_conversation_topic, Buffer.from(conversation_payload), function(err) {
-  //     if (err) {
-  //       callback(false) // TODO message was already saved! What todo? Remove?
-  //     }
-  //     else {
-  //       console.log("tessssss")
-  //       chatdb.saveOrUpdateConversation(conversation, null)
   const message_payload = JSON.stringify(outgoing_message)
-  publish(exchange, recipient_inbox, Buffer.from(message_payload), function(err, msg) {
-    console.log("message", msg, "sent to recipient_inbox:", recipient_inbox, ", err:", err )
-    if (recipient_id !== sender_id) {
-      outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT // it's better DELIVERED, but the client actually wants 100 to show the sent-checkbox
-      const message_payload = JSON.stringify(outgoing_message)
-      publish(exchange, sender_inbox, Buffer.from(message_payload), function(err, msg) {
-        console.log("message", msg, "sent to sender_inbox:", sender_inbox, ", err:", err )
+  // sends to recipient client
+  publish(exchange, recipient_added_topic, Buffer.from(message_payload), function(err, msg) { // .clientadded
+    // saves on db and creates conversation
+    publish(exchange, recipient_incoming_topic, Buffer.from(message_payload), function(err, msg) {
+      if (recipient_id !== sender_id) {
+        outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT // DELIVERED it's better, but the client actually wants 100 to show the sent-checkbox
+        const message_payload = JSON.stringify(outgoing_message)
+        publish(exchange, sender_added_topic, Buffer.from(message_payload), function(err, msg) { // .clientadded
+          publish(exchange, sender_incoming_topic, Buffer.from(message_payload), function(err, msg) {
+            callback(true)
+          });
+        });
+      }
+      else {
+        console.log("Recipient === Sender. Stopping here")
         callback(true)
-      });
-    }
-    else {
-      console.log("Recipient === Sender. Stopping to sender inbox")
-      callback(true)
-    }
+      }
+    })
   });
-  
-    //   }
-    // });
-  // })
 }
 
-// IMPORTANT: This handler only saves messages and creates conversations.
-// Original messages were already delivered as-it-were (as they arrived here)
-// to ALL the connected Clients, also subscribed to this same topic
+// This handler only saves messages and creates conversations.
+// Original messages were already delivered with *.messages.*.clientadded
 function process_incoming(topic, message_string, callback) {
   var topic_parts = topic.split(".")
-  // /apps/tilechat/users/ME/messages/CONVERS_WITH/incoming
-  const app_id = topic_parts[1]
-  const me = topic_parts[3]
-  const convers_with = topic_parts[5]
-  // const convers_with = sender_id
-  // const me = recipient_id
+  // /apps/observer/tilechat/users/ME/messages/CONVERS_WITH/incoming -> WITH "SERVER" THIS MESSAGES WILL NOT BE DELIVERED TO CLIENTS
+  const app_id = topic_parts[2]
+  const me = topic_parts[4]
+  const convers_with = topic_parts[6]
 
   var incoming_message = JSON.parse(message_string)
   var savedMessage = incoming_message
-  // const messageId = uuidv4();
-  // savedMessage.message_id = messageId
   savedMessage.timelineOf = me
   savedMessage.conversWith = convers_with
   // savedMessage.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED
   
   console.log("saving incoming message:", savedMessage)
   chatdb.saveOrUpdateMessage(savedMessage, function(err, msg) {
-    const my_conversation_topic = 'apps.tilechat.users.' + me + '.conversations.' + convers_with
+    const my_conversation_topic = 'apps.tilechat.users.' + me + '.conversations.' + convers_with + ".clientadded"
     let conversation = incoming_message
     conversation.conversWith = convers_with // new!
     conversation.key = convers_with // retro comp
     conversation.is_new = true
+    conversation.archived = false
     conversation.last_message_text = conversation.text // retro comp
     const conversation_payload = JSON.stringify(conversation)
     console.log("PUB CONV:", conversation_payload)
@@ -374,7 +336,7 @@ function process_update(topic, message_string, callback) {
         const dest_message_patch_payload = JSON.stringify(dest_message_patch)
         console.log(">>> ON DISK... RECIPIENT MESSAGE ON DB WITH", dest_message_patch)
         chatdb.saveOrUpdateMessage(dest_message_patch, function(err, msg) {
-          const recipient_message_update_topic = 'apps.tilechat.users.' + convers_with + '.messages.' + me + '.' + message_id + '.clientupdate'
+          const recipient_message_update_topic = 'apps.tilechat.users.' + convers_with + '.messages.' + me + '.' + message_id + '.clientupdated'
           console.log(">>> NOW PUBLISHING... RECIPIENT MESSAGE TOPIC UPDATE", recipient_message_update_topic, "WITH PATCH", dest_message_patch)
           publish(exchange, recipient_message_update_topic, Buffer.from(dest_message_patch_payload), function(err) {
             console.log(">>> PUBLISHED!!!! RECIPIENT MESSAGE TOPIC UPDATE", recipient_message_update_topic, "WITH PATCH", dest_message_patch)
@@ -413,7 +375,7 @@ function process_update(topic, message_string, callback) {
         return
       }
       const patch_payload = JSON.stringify(patch)
-      const my_conversation_update_topic = 'apps.tilechat.users.' + me + '.conversations.' + convers_with + '.clientupdate'
+      const my_conversation_update_topic = 'apps.tilechat.users.' + me + '.conversations.' + convers_with + '.clientupdated'
       console.log(">>> NOW PUBLISHING... MY CONVERSATION UPDATE", my_conversation_update_topic, "WITH PATCH", patch_payload)
       publish(exchange, my_conversation_update_topic, Buffer.from(patch_payload), function(err) {
         console.log(">>> PUBLISHED!!!! MY CONVERSATION UPDATE TOPIC", my_conversation_update_topic, "WITH PATCH", patch_payload, "err", err)
@@ -460,15 +422,28 @@ function process_archive(topic, payload, callback) {
         callback(false)
         return
       }
-      const conversation_archived_topic = 'apps.tilechat.users.' + user_id + '.conversations.' + convers_with + '.clientarchived'
-      console.log(">>> NOW PUBLISHING... CONVERSATION ARCHIVED TOPIC", conversation_archived_topic)
-      publish(exchange, conversation_archived_topic, Buffer.from(conversation_archive_patch), function(err) {
-        console.log(">>> PUBLISHED!!!! CONVERSATION ON TOPIC", conversation_archived_topic, "ARCHIVED")
+      const conversation_deleted_topic = 'apps.tilechat.users.' + user_id + '.conversations.' + convers_with + '.clientdeleted'
+      console.log(">>> NOW PUBLISHING... CONVERSATION ARCHIVED (DELETED) TOPIC", conversation_deleted_topic)
+      const success_payload = JSON.stringify({"success": true})
+      publish(exchange, conversation_deleted_topic, Buffer.from(success_payload), function(err) {
+        console.log(">>> PUBLISHED!!!! CONVERSATION ON TOPIC", conversation_deleted_topic, "ARCHIVED (DELETED)")
         if (err) {
           callback(false)
         }
         else {
-          callback(true)
+          // now publish new archived conversation added
+          const archived_conversation_added_topic = 'apps.tilechat.users.' + user_id + '.archived_conversations.' + convers_with + '.clientadded'
+          console.log(">>> NOW PUBLISHING... CONVERSATION ARCHIVED (ADDED) TOPIC", archived_conversation_added_topic)
+          const success_payload = JSON.stringify({"success": true})
+          publish(exchange, archived_conversation_added_topic, Buffer.from(success_payload), function(err) {
+            console.log(">>> PUBLISHED!!!! ARCHIVED (DELETED) CONVERSATION ON TOPIC", conversation_deleted_topic)
+            if (err) {
+              callback(false)
+            }
+            else {
+              callback(true)
+            }
+          });
         }
       });
     });
