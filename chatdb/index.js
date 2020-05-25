@@ -24,6 +24,7 @@ class ChatDB {
     }
     this.db = options.database
     this.messages_collection = 'messages'
+    this.groups_collection = 'groups'
     this.conversations_collection = 'conversations'
     this.db.collection(this.messages_collection).createIndex(
       { 'timelineOf':1, 'message_id': 1 }
@@ -71,6 +72,35 @@ class ChatDB {
     this.db.collection(this.conversations_collection).updateOne({timelineOf: conversation.timelineOf, conversWith: conversation.conversWith}, { $set: conversation}, { upsert: true }, function(err, doc) {
       if (callback) {
         callback(err, null)
+      }
+      else {
+        if (callback) {
+          callback(null, doc)
+        }
+      }
+    });
+  }
+
+  saveOrUpdateGroup(group, callback) {
+    console.log("saving group...", group)
+    this.db.collection(this.groups_collection).updateOne( { uid: group.uid }, { $set: group }, { upsert: true }, function(err, doc) {
+      if (callback) {
+        callback(err, null)
+      }
+      else {
+        if (callback) {
+          callback(null, doc)
+        }
+      }
+    });
+  }
+
+  getGroup(group_id, callback) {
+    this.db.collection(this.groups_collection).findOne( { uid: group_id }, function(err, doc) {
+      if (err) {
+        if (callback) {
+          callback(err, null)
+        }
       }
       else {
         if (callback) {

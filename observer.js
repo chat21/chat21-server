@@ -16,6 +16,7 @@ const topic_incoming = `apps.observer.${process.env.APP_ID}.users.*.messages.*.i
 const topic_update = `apps.${process.env.APP_ID}.users.#.update`
 const topic_archive = `apps.${process.env.APP_ID}.users.#.archive`
 const topic_presence = `apps.${process.env.APP_ID}.users.*.presence.*`
+const topic_create_group = `apps.observer.${process.env.APP_ID}.groups.create`
 
 var chatdb;
 
@@ -78,7 +79,7 @@ function publish(exchange, routingKey, content, callback) {
           callback(err)
         }
         else {
-          console.log("published to", routingKey, "result", ok)
+          // console.log("published to", routingKey, "result", ok)
           callback(null)
         }
       });
@@ -113,7 +114,6 @@ function startWorker() {
     ch.on("close", function () {
       console.log("[AMQP] channel closed");
     });
-
     ch.prefetch(10);
     ch.assertExchange(exchange, 'topic', {
       durable: true
@@ -125,10 +125,7 @@ function startWorker() {
       subscribeTo(topic_update, ch, _ok.queue)
       subscribeTo(topic_archive, ch, _ok.queue)
       subscribeTo(topic_presence, ch, _ok.queue)
-
-      // ch.bindQueue(_ok.queue, exchange, topic_outgoing, {}, function (err3, oka) {
-      //   console.log("bind: " + _ok.queue + " err: " + err3 + " topic: " + topic_outgoing);
-      // });
+      subscribeTo(topic_create_group, ch, _ok.queue)
       ch.consume("jobs", processMsg, { noAck: false });
       console.log("Worker is started");
     });
@@ -155,7 +152,7 @@ function processMsg(msg) {
 }
 
 function work(msg, callback) {
-  console.log("Topic:", msg.fields.routingKey, " message:", msg.content.toString());
+  console.log("NEW TOPIC:", msg.fields.routingKey) //, " message:", msg.content.toString());
   const topic = msg.fields.routingKey //.replace(/[.]/g, '/');
   const message_string = msg.content.toString();
   if (topic.endsWith('.outgoing')) {
@@ -173,8 +170,12 @@ function work(msg, callback) {
   else if (topic.includes('.presence.')) {
     process_presence(topic, message_string, callback);
   }
+  else if (topic.endsWith('.groups.create')) {
+    process_create_group(topic, message_string, callback);
+  }
   else {
-    console.log("unkownn topic", topic)
+    console.log("unhandled topic:", topic)
+    callback(true)
   }
 }
 
@@ -186,6 +187,7 @@ function process_presence(topic, message_string, callback) {
 }
 
 function process_outgoing(topic, message_string, callback) {
+  console.log("TOPIC OUTGOING:", topic)
   var topic_parts = topic.split(".")
   // /apps/tilechat/users/(ME)SENDER_ID/messages/RECIPIENT_ID/outgoing
   const app_id = topic_parts[1]
@@ -194,60 +196,142 @@ function process_outgoing(topic, message_string, callback) {
   const convers_with = recipient_id
   const me = sender_id
 
-  recipient_incoming_topic = 'apps.observer.tilechat.users.' + recipient_id + '.messages.' + sender_id + '.incoming'
-  sender_incoming_topic = 'apps.observer.tilechat.users.' + sender_id + '.messages.' + recipient_id + '.incoming'
+  // recipient_OBSERVER_incoming_topic = 'apps.observer.tilechat.users.' + recipient_id + '.messages.' + sender_id + '.incoming'
+  // sender_OBSERVER_incoming_topic = 'apps.observer.tilechat.users.' + sender_id + '.messages.' + recipient_id + '.incoming'
 
-  recipient_added_topic = 'apps.tilechat.users.' + recipient_id + '.messages.' + sender_id + '.clientadded'
-  sender_added_topic = 'apps.tilechat.users.' + sender_id + '.messages.' + recipient_id + '.clientadded'
+  // recipient_added_topic = 'apps.tilechat.users.' + recipient_id + '.messages.' + sender_id + '.clientadded'
+  // sender_added_topic = 'apps.tilechat.users.' + sender_id + '.messages.' + recipient_id + '.clientadded'
 
-  console.log("recipient_incoming_topic:", recipient_incoming_topic)
-  console.log("sender_incoming_topic:", sender_incoming_topic)
-  console.log("recipient_added_topic:", recipient_added_topic)
-  console.log("sender_added_topic:", sender_added_topic)
+  // console.log("recipient_OBSERVER_incoming_topic:", recipient_OBSERVER_incoming_topic)
+  // console.log("sender_OBSERVER_incoming_topic:", sender_OBSERVER_incoming_topic)
+  // console.log("recipient_added_topic:", recipient_added_topic)
+  // console.log("sender_added_topic:", sender_added_topic)
 
   var message = JSON.parse(message_string)
   var messageId = uuidv4();
   const now = Date.now()
   var outgoing_message = message;
   outgoing_message.message_id = messageId
-  outgoing_message.sender = sender_id
+  outgoing_message.sender = me
   outgoing_message.recipient = recipient_id
   outgoing_message.app_id = app_id
   outgoing_message.timestamp = now
-  outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED
-  const message_payload = JSON.stringify(outgoing_message)
-  // sends to recipient client
-  publish(exchange, recipient_added_topic, Buffer.from(message_payload), function(err, msg) { // .clientadded
-    // saves on db and creates conversation
-    publish(exchange, recipient_incoming_topic, Buffer.from(message_payload), function(err, msg) {
-      if (recipient_id !== sender_id) {
-        outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT // DELIVERED it's better, but the client actually wants 100 to show the sent-checkbox
-        const message_payload = JSON.stringify(outgoing_message)
-        publish(exchange, sender_added_topic, Buffer.from(message_payload), function(err, msg) { // .clientadded
-          publish(exchange, sender_incoming_topic, Buffer.from(message_payload), function(err, msg) {
-            callback(true)
-          });
-        });
-      }
-      else {
-        console.log("Recipient === Sender. Stopping here")
-        callback(true)
+  outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED // =150
+
+  if (!isGroup(recipient_id)) {
+    console.log("!isGroup")
+    let inbox_of = recipient_id
+    let convers_with = sender_id
+    deliverMessage(outgoing_message, app_id, inbox_of, convers_with, function(ok) {
+      if (ok) {
+        if (recipient_id !== sender_id) {
+          inbox_of = sender_id
+          convers_with = recipient_id
+          outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT // =100. DELIVERED it's better, but the client actually wants 100 to show the sent-checkbox
+          deliverMessage(outgoing_message, app_id, inbox_of, convers_with, function(ok) {
+            if (ok) {
+              callback(true)
+            }
+            else {
+              callback(false)
+            }
+          })
+        }
       }
     })
-  });
+  }
+  else {
+    const group_id = recipient_id
+    chatdb.getGroup(group_id, function(err, group) {
+      console.log("group found!", group)
+      for (let [key, value] of Object.entries(group.members)) {
+        const member_id = key
+        const inbox_of = member_id
+        const convers_with = recipient_id
+        console.log("inbox_of:", inbox_of)
+        console.log("convers_with:", convers_with)
+        deliverMessage(outgoing_message, app_id, inbox_of, convers_with, function(ok) {
+          console.log("MESSAGE DELIVERED?", ok)
+          if (!ok) {
+            console.log("Error sending group creation message.", group_created_message)
+            callback(false)
+            return
+          }
+        })
+      }
+      callback(true)
+    })
+  }
+  
+  // const message_payload = JSON.stringify(outgoing_message)
+  // // RECIPIENT .clientadded
+  // publish(exchange, recipient_added_topic, Buffer.from(message_payload), function(err, msg) { // .clientadded
+  //   // saves on db and creates conversation
+  //   publish(exchange, recipient_OBSERVER_incoming_topic, Buffer.from(message_payload), function(err, msg) {
+  //     // SENDER .clientadded
+  //     if (recipient_id !== sender_id) {
+  //       outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT // DELIVERED it's better, but the client actually wants 100 to show the sent-checkbox
+  //       const message_payload = JSON.stringify(outgoing_message)
+  //       publish(exchange, sender_added_topic, Buffer.from(message_payload), function(err, msg) { // .clientadded
+  //         publish(exchange, sender_OBSERVER_incoming_topic, Buffer.from(message_payload), function(err, msg) {
+  //           callback(true)
+  //         });
+  //       });
+  //     }
+  //     else {
+  //       console.log("Recipient === Sender. Stopping here")
+  //       callback(true)
+  //     }
+  //   })
+  // });
 }
 
-// This handler only saves messages and creates conversations.
+function isGroup(group_id) {
+  if (group_id.indexOf('group-') >= 0) {
+    return true
+  }
+  return false
+}
+
+function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
+  console.log("DELIVERING:", message)
+  const incoming_topic = `apps.observer.${app_id}.users.${inbox_of}.messages.${convers_with_id}.incoming`
+  const added_topic = `apps.${app_id}.users.${inbox_of}.messages.${convers_with_id}.clientadded`
+  console.log("incoming_topic:", incoming_topic)
+  console.log("added_topic:", added_topic)
+  const message_payload = JSON.stringify(message)
+  publish(exchange, added_topic, Buffer.from(message_payload), function(err, msg) { // .clientadded
+    if (err) {
+      callback(false)
+      return
+    }
+    // saves on db and creates conversation
+    console.log(" .........ADDED. NOW TO INCOMING:", incoming_topic)
+    publish(exchange, incoming_topic, Buffer.from(message_payload), function(err, msg) { // .incoming
+      if (err) {
+        console.log("... ALL BAD ON:", incoming_topic)
+        callback(false)
+        return
+      }
+      console.log("... ALL GOOD ON:", incoming_topic)
+      callback(true)
+    })
+  })
+}
+
+// This handler only saves messages and updated the reletive conversations.
 // Original messages were already delivered with *.messages.*.clientadded
 function process_incoming(topic, message_string, callback) {
+  console.log(">>>>> INCOMING:", topic, "MESSAGE PAYLOAD:",message_string)
   var topic_parts = topic.split(".")
   // /apps/observer/tilechat/users/ME/messages/CONVERS_WITH/incoming -> WITH "SERVER" THIS MESSAGES WILL NOT BE DELIVERED TO CLIENTS
   const app_id = topic_parts[2]
   const me = topic_parts[4]
   const convers_with = topic_parts[6]
 
-  var incoming_message = JSON.parse(message_string)
-  var savedMessage = incoming_message
+  let incoming_message = JSON.parse(message_string)
+  let savedMessage = incoming_message
+  savedMessage.app_id = app_id
   savedMessage.timelineOf = me
   savedMessage.conversWith = convers_with
   // savedMessage.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED
@@ -450,6 +534,76 @@ function process_archive(topic, payload, callback) {
   }
 }
 
+function process_create_group(topic, payload, callback) {
+  var topic_parts = topic.split(".")
+  console.log("process_create_group. TOPIC PARTS:", topic_parts, "payload:", payload)
+  // `apps.observer.${process.env.APP_ID}.groups.create`
+  const app_id = topic_parts[2]
+  console.log("app_id:", app_id)
+  console.log("payload:", payload)
+  const group = JSON.parse(payload)
+  if (!group.uid || !group.name || !group.members || !group.owner) {
+    console.log("group error.")
+    callback(true)
+    return
+  }
+  // 3. PERSISTING GROUP
+  chatdb.saveOrUpdateGroup(group, function(err, doc) {
+    if (err) {
+      console.log("Error saving group:", err)
+      callback(false)
+      return
+    }
+    sendGroupWelcomeMessageToInitialMembers(app_id, group, function(ok) {
+      callback(ok)
+    })
+  })
+  
+  // 5.
+  // GROUP UPDATES:
+  // - MEMBER ENTERED
+  // - GROUP NAME CHANGED
+  // - MEMBER REMOVED
+  // NOTE every client subscribes to his own group path to receive real time group updates:
+  // 'apps.APP_ID.users.USER_ID.groups.GROUP_ID.[clientadded|clientupdated]'
+  // 5.1 send 'apps.APP_ID.users.USER_ID.groups.GROUP_ID.clientadded'
+}
+
+function sendGroupWelcomeMessageToInitialMembers(app_id, group, callback) {
+  for (let [key, value] of Object.entries(group.members)) {
+    const member_id = key
+    const now = Date.now()
+    var group_created_message = {
+      message_id: uuidv4(),
+      type: "text",
+      timestamp: now,
+      sender_fullname: "System",
+      sender: group.owner,
+      recipient_fullname: group.name,
+      recipient: group.uid,
+      status: MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT
+    }
+    if (member_id !== group.owner) {
+      group_created_message.text = "You was added to this group"
+    }
+    else {
+      group_created_message.text = "You created this group"
+    }
+    const user_id = member_id
+    const convers_with = group.uid
+    console.log("user_id:", user_id)
+    console.log("convers_with:", convers_with)
+    deliverMessage(group_created_message, app_id, user_id, convers_with, function(ok) {
+      console.log("MESSAGE DELIVERED?", ok)
+      if (!ok) {
+        console.log("Error sending group creation message.", group_created_message)
+        callback(false)
+        return
+      }
+    })
+  }
+  callback(true)
+}
 
 function closeOnErr(err) {
   if (!err) return false;
