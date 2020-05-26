@@ -250,6 +250,7 @@ function process_outgoing(topic, message_string, callback) {
         const convers_with = recipient_id
         console.log("inbox_of:", inbox_of)
         console.log("convers_with:", convers_with)
+        outgoing_message.channel_type = "group"
         deliverMessage(outgoing_message, app_id, inbox_of, convers_with, function(ok) {
           console.log("MESSAGE DELIVERED?", ok)
           if (!ok) {
@@ -577,6 +578,7 @@ function sendGroupWelcomeMessageToInitialMembers(app_id, group, callback) {
       message_id: uuidv4(),
       type: "text",
       timestamp: now,
+      channel_type: "group",
       sender_fullname: "System",
       sender: group.owner,
       recipient_fullname: group.name,
