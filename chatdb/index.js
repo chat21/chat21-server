@@ -1,5 +1,5 @@
 /* 
-    ver 0.1
+    ver 0.1.2
     Andrea Sponziello - (c) Tiledesk.com
 */
 
@@ -32,6 +32,9 @@ class ChatDB {
     this.db.collection(this.conversations_collection).createIndex(
       { 'timelineOf':1, 'conversWith': 1 }
     );
+    this.db.collection(this.groups_collection).createIndex(
+      { 'uid':1 }
+    );
   }
 
   saveOrUpdateMessage(message, callback) {
@@ -50,22 +53,6 @@ class ChatDB {
       }
     });
   }
-
-  // saveMessage(message, callback) {
-  //   console.log("saving message...", message)
-  //   this.db.collection(this.messages_collection).insertOne(message, function(err, doc) {
-  //     if (err) {
-  //       if (callback) {
-  //         callback(err, null)
-  //       }
-  //     }
-  //     else {
-  //       if (callback) {
-  //         callback(null, doc)
-  //       }
-  //     }
-  //   });
-  // }
 
   saveOrUpdateConversation(conversation, callback) {
     console.log("saving conversation...", conversation)
@@ -110,23 +97,37 @@ class ChatDB {
     });
   }
 
-  // updateMessage(message_fields, callback) {
-  //   console.log("saving message...", message)
-  //   this.db.collection(this.messages_collection).updateOne({message_id: message.message_id},
-  //     {$set: message_fields}, function(err, doc) {
-  //     if (err) {
-  //       console.log(err);
-  //       if (callback) {
-  //         callback(err, null)
-  //       }
-  //     }
-  //     console.log("updated message", doc);
-  //     if (callback) {
-  //       callback(null, doc)
-  //     }
-  //   });
-  // }
-  
+  lastConversations(appid, userid, archived, callback) {
+    console.log("DB. app:", appid, "user:", userid, "archived:", archived)
+    this.db.collection(this.conversations_collection).find( { timelineOf: userid, app_id: appid, archived: archived } ).limit(200).sort( { timestamp: -1 } ).toArray(function(err, docs) {
+      if (err) {
+        if (callback) {
+          callback(err, null)
+        }
+      }
+      else {
+        if (callback) {
+          callback(null, docs)
+        }
+      }
+    });
+  }
+
+  lastMessages(appid, userid, convid, callback) {
+    console.log("DB. app:", appid, "user:", userid, "convid", convid)
+    this.db.collection(this.messages_collection).find( { timelineOf: userid, app_id: appid, conversWith: convid } ).limit(200).sort( { timestamp: -1 } ).toArray(function(err, docs) {
+      if (err) {
+        if (callback) {
+          callback(err, null)
+        }
+      }
+      else {
+        if (callback) {
+          callback(null, docs)
+        }
+      }
+    });
+  }
 
 }
 

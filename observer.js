@@ -11,12 +11,16 @@ app.use(bodyParser.json());
 
 var amqpConn = null;
 var exchange = 'amq.topic';
+// FROM CLIENTS TOPICS
 const topic_outgoing = `apps.${process.env.APP_ID}.users.*.messages.*.outgoing`
-const topic_incoming = `apps.observer.${process.env.APP_ID}.users.*.messages.*.incoming`
 const topic_update = `apps.${process.env.APP_ID}.users.#.update`
 const topic_archive = `apps.${process.env.APP_ID}.users.#.archive`
 const topic_presence = `apps.${process.env.APP_ID}.users.*.presence.*`
+// FOR OBSERVER TOPICS
+const topic_incoming = `apps.observer.${process.env.APP_ID}.users.*.messages.*.incoming`
+const topic_delivered = `apps.observer.${process.env.APP_ID}.users.*.messages.*.delivered`
 const topic_create_group = `apps.observer.${process.env.APP_ID}.groups.create`
+const topic_update_group = `apps.observer.${process.env.APP_ID}.groups.update`
 
 var chatdb;
 
@@ -24,8 +28,8 @@ function startMQ() {
   console.log("Connecting to RabbitMQ...")
   amqp.connect(process.env.RABBITMQ_URI, function (err, conn) {
     if (err) {
-      console.error("[AMQP]", err.message);
-      return setTimeout(startMQ, 1000);
+      console.error("[AMQP]...", err.message);
+      return setTimeout(startMQ, 5000);
     }
     conn.on("error", function (err) {
       if (err.message !== "Connection closing") {
@@ -126,6 +130,8 @@ function startWorker() {
       subscribeTo(topic_archive, ch, _ok.queue)
       subscribeTo(topic_presence, ch, _ok.queue)
       subscribeTo(topic_create_group, ch, _ok.queue)
+      subscribeTo(topic_update_group, ch, _ok.queue)
+      subscribeTo(topic_delivered, ch, _ok.queue)
       ch.consume("jobs", processMsg, { noAck: false });
       console.log("Worker is started");
     });
@@ -161,8 +167,8 @@ function work(msg, callback) {
   else if (topic.endsWith('.incoming')) {
     process_incoming(topic, message_string, callback);
   }
-  else if (topic.endsWith('.update')) {
-    process_update(topic, message_string, callback);
+  else if (topic.endsWith('.delivered')) {
+    process_delivered(topic, message_string, callback);
   }
   else if (topic.endsWith('.archive')) {
     process_archive(topic, message_string, callback);
@@ -172,6 +178,12 @@ function work(msg, callback) {
   }
   else if (topic.endsWith('.groups.create')) {
     process_create_group(topic, message_string, callback);
+  }
+  else if (topic.endsWith('.groups.update')) {
+    process_update_group(topic, message_string, callback);
+  }
+  else if (topic.endsWith('.update')) {
+    process_update(topic, message_string, callback);
   }
   else {
     console.log("unhandled topic:", topic)
@@ -196,21 +208,10 @@ function process_outgoing(topic, message_string, callback) {
   const convers_with = recipient_id
   const me = sender_id
 
-  // recipient_OBSERVER_incoming_topic = 'apps.observer.tilechat.users.' + recipient_id + '.messages.' + sender_id + '.incoming'
-  // sender_OBSERVER_incoming_topic = 'apps.observer.tilechat.users.' + sender_id + '.messages.' + recipient_id + '.incoming'
-
-  // recipient_added_topic = 'apps.tilechat.users.' + recipient_id + '.messages.' + sender_id + '.clientadded'
-  // sender_added_topic = 'apps.tilechat.users.' + sender_id + '.messages.' + recipient_id + '.clientadded'
-
-  // console.log("recipient_OBSERVER_incoming_topic:", recipient_OBSERVER_incoming_topic)
-  // console.log("sender_OBSERVER_incoming_topic:", sender_OBSERVER_incoming_topic)
-  // console.log("recipient_added_topic:", recipient_added_topic)
-  // console.log("sender_added_topic:", sender_added_topic)
-
   var message = JSON.parse(message_string)
-  var messageId = uuidv4();
+  var messageId = uuidv4()
   const now = Date.now()
-  var outgoing_message = message;
+  var outgoing_message = message
   outgoing_message.message_id = messageId
   outgoing_message.sender = me
   outgoing_message.recipient = recipient_id
@@ -227,7 +228,7 @@ function process_outgoing(topic, message_string, callback) {
         if (recipient_id !== sender_id) {
           inbox_of = sender_id
           convers_with = recipient_id
-          outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT // =100. DELIVERED it's better, but the client actually wants 100 to show the sent-checkbox
+          outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT // =100. DELIVERED it's better, but the JS client actually wants 100 to show the sent-checkbox
           deliverMessage(outgoing_message, app_id, inbox_of, convers_with, function(ok) {
             if (ok) {
               callback(true)
@@ -242,10 +243,12 @@ function process_outgoing(topic, message_string, callback) {
   }
   else {
     const group_id = recipient_id
-    chatdb.getGroup(group_id, function(err, group) {
+    chatdb.getGroup(group_id, function(err, group) { // REDIS?
       console.log("group found!", group)
-      for (let [key, value] of Object.entries(group.members)) {
-        const member_id = key
+      // adding the group in the members so we got a copy of
+      // all the group messages in timelineOf: group.uid
+      group.members[group.uid] = 1
+      for (let [member_id, value] of Object.entries(group.members)) {
         const inbox_of = member_id
         const convers_with = recipient_id
         console.log("inbox_of:", inbox_of)
@@ -263,28 +266,6 @@ function process_outgoing(topic, message_string, callback) {
       callback(true)
     })
   }
-  
-  // const message_payload = JSON.stringify(outgoing_message)
-  // // RECIPIENT .clientadded
-  // publish(exchange, recipient_added_topic, Buffer.from(message_payload), function(err, msg) { // .clientadded
-  //   // saves on db and creates conversation
-  //   publish(exchange, recipient_OBSERVER_incoming_topic, Buffer.from(message_payload), function(err, msg) {
-  //     // SENDER .clientadded
-  //     if (recipient_id !== sender_id) {
-  //       outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT // DELIVERED it's better, but the client actually wants 100 to show the sent-checkbox
-  //       const message_payload = JSON.stringify(outgoing_message)
-  //       publish(exchange, sender_added_topic, Buffer.from(message_payload), function(err, msg) { // .clientadded
-  //         publish(exchange, sender_OBSERVER_incoming_topic, Buffer.from(message_payload), function(err, msg) {
-  //           callback(true)
-  //         });
-  //       });
-  //     }
-  //     else {
-  //       console.log("Recipient === Sender. Stopping here")
-  //       callback(true)
-  //     }
-  //   })
-  // });
 }
 
 function isGroup(group_id) {
@@ -295,19 +276,20 @@ function isGroup(group_id) {
 }
 
 function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
-  console.log("DELIVERING:", message)
+  console.log("DELIVERING:", message, "inbox_of:", inbox_of, "convers_with:", convers_with_id)
   const incoming_topic = `apps.observer.${app_id}.users.${inbox_of}.messages.${convers_with_id}.incoming`
   const added_topic = `apps.${app_id}.users.${inbox_of}.messages.${convers_with_id}.clientadded`
   console.log("incoming_topic:", incoming_topic)
   console.log("added_topic:", added_topic)
   const message_payload = JSON.stringify(message)
+  // notifies to the client
   publish(exchange, added_topic, Buffer.from(message_payload), function(err, msg) { // .clientadded
     if (err) {
       callback(false)
       return
     }
     // saves on db and creates conversation
-    console.log(" .........ADDED. NOW TO INCOMING:", incoming_topic)
+    console.log("ADDED. NOW TO INCOMING:", incoming_topic)
     publish(exchange, incoming_topic, Buffer.from(message_payload), function(err, msg) { // .incoming
       if (err) {
         console.log("... ALL BAD ON:", incoming_topic)
@@ -320,7 +302,28 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
   })
 }
 
-// This handler only saves messages and updated the reletive conversations.
+// delivers messages to inboxes with rabbitmq quues
+function process_delivered(topic, message_string, callback) {
+  console.log(">>>>> DELIVERED:", topic, "MESSAGE PAYLOAD:",message_string)
+  var topic_parts = topic.split(".")
+  // delivers the message payload in the INBOX_OF -> CONVERS_WITH timeline
+  // /apps/observer/tilechat/users/INBOX_OF/messages/CONVERS_WITH/delivered
+  const app_id = topic_parts[2]
+  const inbox_of = topic_parts[4]
+  const convers_with = topic_parts[6]
+  deliverMessage(message_string, app_id, inbox_of, convers_with, function(ok) {
+    console.log("MESSAGE DELIVERED?", ok)
+    if (!ok) {
+      console.log("Error delivering message.", message_string)
+      callback(false)
+    }
+    else {
+      callback(true)
+    }
+  })
+}
+
+// This handler only saves messages and updates relative conversations.
 // Original messages were already delivered with *.messages.*.clientadded
 function process_incoming(topic, message_string, callback) {
   console.log(">>>>> INCOMING:", topic, "MESSAGE PAYLOAD:",message_string)
@@ -548,26 +551,103 @@ function process_create_group(topic, payload, callback) {
     callback(true)
     return
   }
-  // 3. PERSISTING GROUP
+  group.appId = app_id
+  saveOrUpdateGroup(group, function(ok) {
+    if (ok) {
+      deliverGroupAdded(group, function(ok) {
+        if (!ok) {
+          callback(false)
+        }
+        else {
+          sendGroupWelcomeMessageToInitialMembers(app_id, group, function(ok) {
+            if (!ok) {
+              callback(false)
+            }
+            else {
+              callback(true)
+            }
+          })
+        }
+      })
+    }
+    else {
+      callback(false)
+    }
+  })
+}
+
+function process_update_group(topic, payload, callback) {
+  var topic_parts = topic.split(".")
+  console.log("process_update_group. TOPIC PARTS:", topic_parts, "payload:", payload)
+  // `apps.observer.${process.env.APP_ID}.groups.update`
+  const app_id = topic_parts[2]
+  console.log("app_id:", app_id)
+  console.log("payload:", payload)
+  const group = JSON.parse(payload)
+  if (!group.uid || !group.name || !group.members || !group.owner) {
+    console.log("group error.")
+    callback(true)
+    return
+  }
+  // group.appId = app_id
+  // saveOrUpdateGroup(group, function(ok) { // ????
+    // if (ok) {
+  deliverGroupUpdated(group, function(ok) {
+  callback(ok)
+  //     })
+  //   }
+  //   else {
+  //     callback(false)
+  //   }
+  })
+}
+
+// enqueues group saving on db
+function saveOrUpdateGroup(group, callback) {
   chatdb.saveOrUpdateGroup(group, function(err, doc) {
     if (err) {
       console.log("Error saving group:", err)
       callback(false)
       return
     }
-    sendGroupWelcomeMessageToInitialMembers(app_id, group, function(ok) {
-      callback(ok)
-    })
+    else {
+      callback(true)
+    }
   })
-  
-  // 5.
-  // GROUP UPDATES:
-  // - MEMBER ENTERED
-  // - GROUP NAME CHANGED
-  // - MEMBER REMOVED
-  // NOTE every client subscribes to his own group path to receive real time group updates:
-  // 'apps.APP_ID.users.USER_ID.groups.GROUP_ID.[clientadded|clientupdated]'
-  // 5.1 send 'apps.APP_ID.users.USER_ID.groups.GROUP_ID.clientadded'
+}
+
+function deliverGroupAdded(group, callback) {
+  const app_id = group.appId
+  for (let [key, value] of Object.entries(group.members)) {
+    const member_id = key
+    const added_group_topic = `apps.${app_id}.users.${member_id}.groups.${group.uid}.clientadded`
+    console.log("added_group_topic:", added_group_topic)
+    const payload = JSON.stringify(group)
+    publish(exchange, added_group_topic, Buffer.from(payload), function(err, msg) {
+      if (err) {
+        callback(false)
+        return
+      }
+    })
+  }
+  callback(true)
+}
+
+function deliverGroupUpdated(group, callback) {
+  const app_id = group.appId
+  for (let [key, value] of Object.entries(group.members)) {
+    const member_id = key
+    const updated_group_topic = `apps.${app_id}.users.${member_id}.groups.${group.uid}.clientupdated`
+    console.log("updated_group_topic:", updated_group_topic)
+    const payload = JSON.stringify(group)
+    publish(exchange, updated_group_topic, Buffer.from(payload), function(err, msg) {
+      if (err) {
+        callback(false)
+        return
+      }
+    })
+  }
+  callback(true)
 }
 
 function sendGroupWelcomeMessageToInitialMembers(app_id, group, callback) {
