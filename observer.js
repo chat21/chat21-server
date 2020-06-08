@@ -311,10 +311,11 @@ function process_delivered(topic, message_string, callback) {
   const app_id = topic_parts[2]
   const inbox_of = topic_parts[4]
   const convers_with = topic_parts[6]
-  deliverMessage(message_string, app_id, inbox_of, convers_with, function(ok) {
+  const message = JSON.parse(message_string)
+  deliverMessage(message, app_id, inbox_of, convers_with, function(ok) {
     console.log("MESSAGE DELIVERED?", ok)
     if (!ok) {
-      console.log("Error delivering message.", message_string)
+      console.log("Error delivering message.", message)
       callback(false)
     }
     else {
@@ -657,20 +658,32 @@ function sendGroupWelcomeMessageToInitialMembers(app_id, group, callback) {
     var group_created_message = {
       message_id: uuidv4(),
       type: "text",
+      text: "Group created",
       timestamp: now,
       channel_type: "group",
       sender_fullname: "System",
       sender: group.owner,
       recipient_fullname: group.name,
       recipient: group.uid,
-      status: MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT
+      status: MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT,
+      attributes: {
+        subtype: "info",
+        updateconversation: true, // TO BE USED LATER
+        messagelabel: {
+          key: "GROUP_CREATED",
+          parameters:
+          {
+            creator: group.owner
+          }
+        }
+      }
     }
-    if (member_id !== group.owner) {
-      group_created_message.text = "You was added to this group"
-    }
-    else {
-      group_created_message.text = "You created this group"
-    }
+    // if (member_id !== group.owner) {
+    //   group_created_message.text = "You was added to this group"
+    // }
+    // else {
+    //   group_created_message.text = "You created this group"
+    // }
     const user_id = member_id
     const convers_with = group.uid
     console.log("user_id:", user_id)
