@@ -662,7 +662,7 @@ function sendGroupWelcomeMessageToInitialMembers(app_id, group, callback) {
       timestamp: now,
       channel_type: "group",
       sender_fullname: "System",
-      sender: group.owner,
+      sender: "system",
       recipient_fullname: group.name,
       recipient: group.uid,
       status: MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT,
