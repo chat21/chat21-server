@@ -584,22 +584,19 @@ function process_update_group(topic, payload, callback) {
   const app_id = topic_parts[2]
   console.log("app_id:", app_id)
   console.log("payload:", payload)
-  const group = JSON.parse(payload)
-  if (!group.uid || !group.name || !group.members || !group.owner) {
+  const data = JSON.parse(payload)
+  console.log("process_update_group DATA ", data)
+  const group = data.group
+  console.log("process_update_group DATA.group ", data.group)
+  const notify_to = data.notify_to
+  console.log("process_update_group DATA.notify_to ", data.notify_to)
+  if (!group || !group.uid) {
     console.log("group error.")
     callback(true)
     return
   }
-  // group.appId = app_id
-  // saveOrUpdateGroup(group, function(ok) { // ????
-    // if (ok) {
-  deliverGroupUpdated(group, function(ok) {
-  callback(ok)
-  //     })
-  //   }
-  //   else {
-  //     callback(false)
-  //   }
+  deliverGroupUpdated(group, notify_to, function(ok) {
+    callback(ok)
   })
 }
 
@@ -634,9 +631,9 @@ function deliverGroupAdded(group, callback) {
   callback(true)
 }
 
-function deliverGroupUpdated(group, callback) {
+function deliverGroupUpdated(group, notify_to, callback) {
   const app_id = group.appId
-  for (let [key, value] of Object.entries(group.members)) {
+  for (let [key, value] of Object.entries(notify_to)) {
     const member_id = key
     const updated_group_topic = `apps.${app_id}.users.${member_id}.groups.${group.uid}.clientupdated`
     console.log("updated_group_topic:", updated_group_topic)
