@@ -1,11 +1,13 @@
 require('dotenv').config();
 var amqp = require('amqplib/callback_api');
 const { ChatDB } = require('./chatdb/index.js');
+// const { Webhooks } = require('./webhooks/index.js');
 const uuidv4 = require('uuid/v4');
 var Message = require("./models/message");
 var MessageConstants = require("./models/messageConstants");
 const express = require('express');
 const bodyParser = require('body-parser');
+var url = require('url');
 const app = express();
 app.use(bodyParser.json());
 
@@ -21,8 +23,10 @@ const topic_incoming = `apps.observer.${process.env.APP_ID}.users.*.messages.*.i
 const topic_delivered = `apps.observer.${process.env.APP_ID}.users.*.messages.*.delivered`
 const topic_create_group = `apps.observer.${process.env.APP_ID}.groups.create`
 const topic_update_group = `apps.observer.${process.env.APP_ID}.groups.update`
+const topic_webhook_message_received = `observer.webhook.apps.${process.env.APP_ID}.message_received`
 
 var chatdb;
+var webhooks;
 
 function startMQ() {
   console.log("Connecting to RabbitMQ...")
@@ -42,29 +46,40 @@ function startMQ() {
     });
     console.log("[AMQP] connected.");
     amqpConn = conn;
-    whenConnected();
+    whenConnected((pubChannel, offlinePubQueue) => {
+      console.log("whenConnected()...")
+      // webhooks = new Webhooks({amqp: amqp, exchange: exchange, pubChannel: pubChannel, offlinePubQueue: offlinePubQueue})
+    });
   });
 }
 
-function whenConnected() {
-  startPublisher();
-  startWorker();
+function whenConnected(callback) {
+  startPublisher((pubChannel, offlinePubQueue) => {
+    startWorker();
+    if (callback) {
+      callback(pubChannel, offlinePubQueue)
+    }
+  });
 }
 
 var pubChannel = null;
 var offlinePubQueue = [];
-function startPublisher() {
+function startPublisher(callback) {
   amqpConn.createConfirmChannel(function (err, ch) {
     if (closeOnErr(err)) return;
     ch.on("error", function (err) {
-      console.error("[AMQP] channel error", err.message);
+      console.error("[AMQP] channel error", err);
     });
     ch.on("close", function () {
       console.log("[AMQP] channel closed");
     });
     pubChannel = ch;
+    if (callback) {
+      callback(pubChannel, offlinePubQueue) // offlinePubQueue ??? only initialized to []!
+    }
     if (offlinePubQueue.length > 0) {
       while (true) {
+        console.log("here it is.")
         var [exchange, routingKey, content] = offlinePubQueue.shift();
         publish(exchange, routingKey, content);
       }
@@ -132,6 +147,7 @@ function startWorker() {
       subscribeTo(topic_create_group, ch, _ok.queue)
       subscribeTo(topic_update_group, ch, _ok.queue)
       subscribeTo(topic_delivered, ch, _ok.queue)
+      subscribeTo(topic_webhook_message_received, ch, _ok.queue)
       ch.consume("jobs", processMsg, { noAck: false });
       console.log("Worker is started");
     });
@@ -184,6 +200,11 @@ function work(msg, callback) {
   }
   else if (topic.endsWith('.update')) {
     process_update(topic, message_string, callback);
+  }
+  else if (topic.startsWith('observer.webhook.') && topic.endsWith('.message_received')) {
+    console.log("......................")
+    // webhooks.process_webhook_message_received(topic, message_string, callback);
+    WHprocess_webhook_message_received(topic, message_string, callback);
   }
   else {
     console.log("unhandled topic:", topic)
@@ -244,10 +265,27 @@ function process_outgoing(topic, message_string, callback) {
   else {
     const group_id = recipient_id
     chatdb.getGroup(group_id, function(err, group) { // REDIS?
-      console.log("group found!", group)
-      // adding the group in the members so we got a copy of
+      // console.log("group found!", group)
+      if (!group) { // created only to temporary store group-messages in group-timeline
+        // TODO: 1. create group (on-the-fly), 2. remove this code, 3. continue as ifthe group exists.
+        console.log("group doesn't exist! Sending anyway to group timeline...")
+        group = {
+          uid: group_id,
+          transient: true,
+          members: {
+          }
+        }
+        group.members[me] = 1
+      }
+      if (!group.members[me]) {
+        console.log(me + " can't write to this group")
+        callback(true)
+        return
+      }
+      // adding the group in the members so we easily get a copy of
       // all the group messages in timelineOf: group.uid
       group.members[group.uid] = 1
+      // console.log("Writing to group:", group)
       for (let [member_id, value] of Object.entries(group.members)) {
         const inbox_of = member_id
         const convers_with = recipient_id
@@ -258,8 +296,8 @@ function process_outgoing(topic, message_string, callback) {
           console.log("MESSAGE DELIVERED?", ok)
           if (!ok) {
             console.log("Error sending group creation message.", group_created_message)
-            callback(false)
-            return
+            // callback(false)
+            // return
           }
         })
       }
@@ -282,7 +320,7 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
   console.log("incoming_topic:", incoming_topic)
   console.log("added_topic:", added_topic)
   const message_payload = JSON.stringify(message)
-  // notifies to the client
+  // notifies to the client (on MQTT client topic)
   publish(exchange, added_topic, Buffer.from(message_payload), function(err, msg) { // .clientadded
     if (err) {
       callback(false)
@@ -302,11 +340,11 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
   })
 }
 
-// delivers messages to inboxes with rabbitmq quues
+// delivers messages to inboxes with rabbitmq queues
 function process_delivered(topic, message_string, callback) {
   console.log(">>>>> DELIVERED:", topic, "MESSAGE PAYLOAD:",message_string)
   var topic_parts = topic.split(".")
-  // delivers the message payload in the INBOX_OF -> CONVERS_WITH timeline
+  // delivers the message payload in INBOX_OF -> CONVERS_WITH timeline
   // /apps/observer/tilechat/users/INBOX_OF/messages/CONVERS_WITH/delivered
   const app_id = topic_parts[2]
   const inbox_of = topic_parts[4]
@@ -341,7 +379,12 @@ function process_incoming(topic, message_string, callback) {
   savedMessage.conversWith = convers_with
   // savedMessage.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED
   
-  console.log("saving incoming message:", savedMessage)
+  console.log("NOTIFY VIA WEBHOOK ON INCOMING TOPIC", topic)
+  WHnotifyMessageReceived(savedMessage, (err) => {
+    console.log("Webhook notified with err:", err)
+  })
+
+  // console.log("saving incoming message:", savedMessage)
   chatdb.saveOrUpdateMessage(savedMessage, function(err, msg) {
     const my_conversation_topic = 'apps.tilechat.users.' + me + '.conversations.' + convers_with + ".clientadded"
     let conversation = incoming_message
@@ -357,8 +400,14 @@ function process_incoming(topic, message_string, callback) {
         callback(false) // TODO message was already saved! What todo? Remove?
       }
       else {
-        chatdb.saveOrUpdateConversation(conversation, null)
-        callback(true)
+        chatdb.saveOrUpdateConversation(conversation, (err, doc) => {
+          if (err) {
+            callback(false)
+          }
+          else {
+            callback(true)
+          }
+        })
       }
     });
   })
@@ -721,9 +770,102 @@ mongodb.MongoClient.connect(mongouri, { useNewUrlParser: true, useUnifiedTopolog
   db = client.db();
   // var port = process.env.PORT || 3000;
   // app.listen(port, () => {
-  
   chatdb = new ChatDB({database: db})
   console.log('Starting observer.')
   startMQ();
-  // });
 });
+
+
+// ************ WEBHOOKS *********** //
+
+function WHnotifyMessageReceived(message, callback) {
+  console.log("NOTIFY MESSAGE:", message)
+  // callback(null)
+  const notify_topic = `observer.webhook.apps.${process.env.APP_ID}.message_received`
+  console.log("notifying webhook notifyMessageReceived topic:", notify_topic)
+  const message_payload = JSON.stringify(message)
+  console.log("MESSAGE_PAYLOAD:", message_payload)
+  publish(exchange, notify_topic, Buffer.from(message_payload), (err) => {
+    console.log("publishedddd")
+    if (err) {
+      console.log("Err", err)
+      callback(err)
+    }
+    else {
+      callback(null)
+    }
+  })
+}
+
+function WHprocess_webhook_message_received(topic, message_string, callback) {
+  console.log("process webhook_message_received:", message_string, "on topic", topic)
+  var message = JSON.parse(message_string)
+  console.log("timelineOf...:", message.timelineOf)
+  
+  if (callback) {
+    callback(true)
+  }
+
+  if (!WHisMessageOnGroupTimeline(message)) {
+    console.log("Discarding notification. Not to group.")
+    return
+  }
+  console.log("Sending notification to webhook:", process.env.WEBHOOK_ENDPOINT)
+  const message_id = message.message_id;
+  const recipient_id = message.recipient_id;
+  const app_id = message.app_id;
+
+  // JUST A TEST, REMOVE AS SOON AS POSSIBLE (ASAP)
+  message.attributes.projectId = "5ef319da45080400342efe73"
+  
+  var json = {
+    event_type: "new-message",
+    createdAt: new Date().getTime(),
+    recipient_id: recipient_id,
+    app_id: app_id,
+    message_id: message_id,
+    data: message
+  };
+
+  console.log("Sending JSON", json)
+  var q = url.parse(process.env.WEBHOOK_ENDPOINT, true);
+  console.log("ENV WEBHOOK URL PARSED:", q)
+  var protocol = (q.protocol == "http:") ? require('http') : require('https');
+  // console.log("protocol:", protocol)
+  let options = {
+    path:  q.pathname,
+    host: q.hostname,
+    port: q.port,
+    method: 'POST',
+    headers: {
+      "Content-Type": "application/json"
+    }
+  };
+  // console.log("options:", options)
+  
+  try {
+    const req = protocol.request(options, (response) => {
+      var respdata = ''
+      response.on('data', function (chunk) {
+        respdata += chunk;
+      });
+      response.on('end', function () {
+        console.log("WEBHOOK RESPONSE:", respdata);
+      });
+    });
+    req.write(JSON.stringify(json));
+    req.end();
+  }
+  catch(err) {
+    console.log("an error occurred:", err)
+  }
+}
+
+function WHisMessageOnGroupTimeline(message) {
+  if (message && message.timelineOf) {
+    if (message.timelineOf.toLowerCase().indexOf("group") !== -1) {
+      return true
+    }
+  }
+  return false
+}

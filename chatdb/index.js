@@ -20,7 +20,7 @@ class ChatDB {
    */
   constructor(options) {
     if (!options.database) {
-      throw new Error('mongodb option can NOT be empty.');
+      throw new Error('database option can NOT be empty.');
     }
     this.db = options.database
     this.messages_collection = 'messages'
@@ -38,7 +38,7 @@ class ChatDB {
   }
 
   saveOrUpdateMessage(message, callback) {
-    console.log("saving message...", message)
+    // console.log("saving message...", message)
     this.db.collection(this.messages_collection).updateOne({timelineOf: message.timelineOf, message_id: message.message_id}, { $set: message }, { upsert: true }, function(err, doc) {
       console.log("error...", err)
       if (err) {
@@ -55,7 +55,7 @@ class ChatDB {
   }
 
   saveOrUpdateConversation(conversation, callback) {
-    console.log("saving conversation...", conversation)
+    // console.log("saving conversation...", conversation)
     this.db.collection(this.conversations_collection).updateOne({timelineOf: conversation.timelineOf, conversWith: conversation.conversWith}, { $set: conversation}, { upsert: true }, function(err, doc) {
       if (callback) {
         callback(err, null)
