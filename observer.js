@@ -812,11 +812,11 @@ function WHprocess_webhook_message_received(topic, message_string, callback) {
   }
   console.log("Sending notification to webhook:", process.env.WEBHOOK_ENDPOINT)
   const message_id = message.message_id;
-  const recipient_id = message.recipient_id;
+  const recipient_id = message.recipient;
   const app_id = message.app_id;
 
   // JUST A TEST, REMOVE AS SOON AS POSSIBLE (ASAP)
-  message.attributes.projectId = "5ef319da45080400342efe73"
+  // message.attributes.projectId = "5ef319da45080400342efe73"
   
   var json = {
     event_type: "new-message",
