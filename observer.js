@@ -2,7 +2,8 @@ require('dotenv').config();
 var amqp = require('amqplib/callback_api');
 const { ChatDB } = require('./chatdb/index.js');
 // const { Webhooks } = require('./webhooks/index.js');
-const uuidv4 = require('uuid/v4');
+// const uuidv4 = require('uuid/v4');
+const { uuid } = require('uuidv4');
 var Message = require("./models/message");
 var MessageConstants = require("./models/messageConstants");
 const express = require('express');
@@ -230,7 +231,7 @@ function process_outgoing(topic, message_string, callback) {
   const me = sender_id
 
   var message = JSON.parse(message_string)
-  var messageId = uuidv4()
+  var messageId = uuid()
   const now = Date.now()
   var outgoing_message = message
   outgoing_message.message_id = messageId
@@ -614,12 +615,12 @@ function process_create_group(topic, payload, callback) {
               callback(false)
             }
             else {
-              callback(true)
               for (let [member_id, value] of Object.entries(group.members)) {
                 console.log(">>>>> JOINING MEMBER", member_id)
                 joinGroup(member_id, group, function(reply) {
                     console.log("member", member_id, "invited on group", group_id, "result", reply)
                 })
+                callback(true)
               }
             }
           })
@@ -795,7 +796,7 @@ function sendGroupWelcomeMessageToInitialMembers(app_id, group, callback) {
     const member_id = key
     const now = Date.now()
     var group_created_message = {
-      message_id: uuidv4(),
+      message_id: uuid(),
       type: "text",
       text: "Group created",
       timestamp: now,
