@@ -322,7 +322,6 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
   console.log("incoming_topic:", incoming_topic)
   console.log("added_topic:", added_topic)
   const message_payload = JSON.stringify(message)
-  delete message_payload['_id'] // if present (coming from a mongodb query?) is illegal. It produces: MongoError: E11000 duplicate key error collection: tiledesk-dialogflow-proxy.messages index: _id_ dup key: { : "5ef72c2494e08ffec88a033a" }
   // notifies to the client (on MQTT client topic)
   publish(exchange, added_topic, Buffer.from(message_payload), function(err, msg) { // .clientadded
     if (err) {
