@@ -621,8 +621,8 @@ function process_create_group(topic, payload, callback) {
                 joinGroup(member_id, group, function(reply) {
                     console.log("member", member_id, "invited on group", group, "result", reply)
                 })
-                callback(true)
               }
+              callback(true)
             }
           })
         }
