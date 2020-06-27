@@ -619,7 +619,7 @@ function process_create_group(topic, payload, callback) {
               for (let [member_id, value] of Object.entries(group.members)) {
                 console.log(">>>>> JOINING MEMBER", member_id)
                 joinGroup(member_id, group, function(reply) {
-                    console.log("member", member_id, "invited on group", group_id, "result", reply)
+                    console.log("member", member_id, "invited on group", group, "result", reply)
                 })
                 callback(true)
               }
