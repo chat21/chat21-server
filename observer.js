@@ -615,6 +615,12 @@ function process_create_group(topic, payload, callback) {
             }
             else {
               callback(true)
+              for (let [member_id, value] of Object.entries(group.members)) {
+                console.log(">>>>> JOINING MEMBER", member_id)
+                joinGroup(member_id, group, function(reply) {
+                    console.log("member", member_id, "invited on group", group_id, "result", reply)
+                })
+              }
             }
           })
         }
@@ -623,6 +629,93 @@ function process_create_group(topic, payload, callback) {
     else {
       callback(false)
     }
+  })
+}
+
+/**
+ * Adds a member to a group.
+ * 1. Sends "{user} added to this group" message to every member of the group, including the joined one
+ * 2. Pubblishes old group messages to the newly joined member timeline
+ * NOTE: this method doesn't modify the group members neither sends a group.updated message to
+ * the clients. Use addMemberToGroupAndNotifyUpdate() to reach these couple of goals.
+ * 
+ * @param {*} joined_member_id 
+ * @param {*} group 
+ * @param {*} callback 
+ */
+function joinGroup(joined_member_id, group, callback) {
+  console.log("SENDING 'ADDED TO GROUP' TO EACH MEMBER INCLUDING THE JOINED ONE...", group)
+  const appid = group.appId
+  for (let [member_id, value] of Object.entries(group.members)) {
+      console.log("to member:", member_id)
+      const now = Date.now()
+      const message = {
+          message_id: uuid(),
+          type: "text",
+          text: joined_member_id + " added to group",
+          timestamp: now,
+          channel_type: "group",
+          sender_fullname: "System",
+          sender: "system",
+          recipient_fullname: group.name,
+          recipient: group.uid,
+          status: 100, // MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT,
+          attributes: {
+              subtype:"info",
+              updateconversation : true,
+              messagelabel: {
+                  key: "MEMBER_JOINED_GROUP",
+                  parameters: {
+                      member_id: joined_member_id
+                      // fullname: fullname // OPTIONAL
+                  }
+              }
+          }
+      }
+      console.log("Member joined group message:", message)
+      let inbox_of = member_id
+      let convers_with = group.uid
+      this.deliverMessage(appid, message, inbox_of, convers_with, (err) => {
+        if (err) {
+          console.log("error delivering message to joined member", inbox_of)
+          callback(err)
+          return
+        }
+        else {
+          console.log("DELIVERED MESSAGE TO", inbox_of, "CONVERS_WITH", convers_with)
+        }
+      })
+  }
+  // 2. pubblish old group messages to the joined member (in the member/group-conversWith timeline)
+  const userid = group.uid
+  const convid = group.uid
+  this.chatdb.lastMessages(appid, userid, convid, 1, 200, (err, messages) => {
+      if (err) {
+          console.log("Error", err)
+          callback(err)
+      }
+      else if (!messages) {
+          console.log("No messages in group", group.uid)
+          callback(null)
+      }
+      else {
+          console.log("delivering old group messages to:", joined_member_id)
+          const inbox_of = joined_member_id
+          const convers_with = group.uid
+          messages.forEach(message => {
+              // TODO: CHECK IN MESSAGE WAS ALREADY DELIVERED. (CLIENT? SERVER?)
+              console.log("Message:", message.text)
+              this.deliverMessage(appid, message, inbox_of, convers_with, (err) => {
+                  if (err) {
+                      console.log("error delivering message to joined member", inbox_of)
+                  }
+                  else {
+                      console.log("DELIVERED MESSAGE TO", inbox_of, "CONVERS_WITH", convers_with)
+                  }
+              })
+          });
+          callback(null)
+      }
   })
 }
 
