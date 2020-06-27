@@ -322,6 +322,7 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
   console.log("incoming_topic:", incoming_topic)
   console.log("added_topic:", added_topic)
   const message_payload = JSON.stringify(message)
+  delete message_payload['_id'] // if present (coming from a mongodb query?) is illegal. It produces: MongoError: E11000 duplicate key error collection: tiledesk-dialogflow-proxy.messages index: _id_ dup key: { : "5ef72c2494e08ffec88a033a" }
   // notifies to the client (on MQTT client topic)
   publish(exchange, added_topic, Buffer.from(message_payload), function(err, msg) { // .clientadded
     if (err) {
@@ -701,7 +702,7 @@ function joinGroup(joined_member_id, group, callback) {
           callback(null)
       }
       else {
-          console.log("delivering old group messages to:", joined_member_id)
+          console.log("delivering past group messages to:", joined_member_id)
           const inbox_of = joined_member_id
           const convers_with = group.uid
           messages.forEach(message => {
@@ -709,10 +710,10 @@ function joinGroup(joined_member_id, group, callback) {
               console.log("Message:", message.text)
               deliverMessage(message, appid, inbox_of, convers_with, (err) => {
                   if (err) {
-                      console.log("error delivering message to joined member", inbox_of)
+                      console.log("error delivering past message to joined member", inbox_of)
                   }
                   else {
-                      console.log("DELIVERED MESSAGE TO", inbox_of, "CONVERS_WITH", convers_with)
+                      console.log("DELIVERED PAST MESSAGE TO", inbox_of, "CONVERS_WITH", convers_with)
                   }
               })
           });
