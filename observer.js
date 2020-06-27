@@ -314,6 +314,7 @@ function isGroup(group_id) {
   return false
 }
 
+//deliverMessage(appid, message, inbox_of, convers_with, (err) => {
 function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
   console.log("DELIVERING:", message, "inbox_of:", inbox_of, "convers_with:", convers_with_id)
   const incoming_topic = `apps.observer.${app_id}.users.${inbox_of}.messages.${convers_with_id}.incoming`
@@ -676,7 +677,7 @@ function joinGroup(joined_member_id, group, callback) {
       console.log("Member joined group message:", message)
       let inbox_of = member_id
       let convers_with = group.uid
-      this.deliverMessage(appid, message, inbox_of, convers_with, (err) => {
+      deliverMessage(message, appid, inbox_of, convers_with, (err) => {
         if (err) {
           console.log("error delivering message to joined member", inbox_of)
           callback(err)
@@ -706,7 +707,7 @@ function joinGroup(joined_member_id, group, callback) {
           messages.forEach(message => {
               // TODO: CHECK IN MESSAGE WAS ALREADY DELIVERED. (CLIENT? SERVER?)
               console.log("Message:", message.text)
-              this.deliverMessage(appid, message, inbox_of, convers_with, (err) => {
+              deliverMessage(message, appid, inbox_of, convers_with, (err) => {
                   if (err) {
                       console.log("error delivering message to joined member", inbox_of)
                   }
