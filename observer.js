@@ -691,7 +691,7 @@ function joinGroup(joined_member_id, group, callback) {
   // 2. pubblish old group messages to the joined member (in the member/group-conversWith timeline)
   const userid = group.uid
   const convid = group.uid
-  this.chatdb.lastMessages(appid, userid, convid, 1, 200, (err, messages) => {
+  chatdb.lastMessages(appid, userid, convid, 1, 200, (err, messages) => {
       if (err) {
           console.log("Error", err)
           callback(err)
