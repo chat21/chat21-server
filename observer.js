@@ -677,8 +677,8 @@ function joinGroup(joined_member_id, group, callback) {
       console.log("Member joined group message:", message)
       let inbox_of = member_id
       let convers_with = group.uid
-      deliverMessage(message, appid, inbox_of, convers_with, (err) => {
-        if (err) {
+      deliverMessage(message, appid, inbox_of, convers_with, (ok) => {
+        if (!ok) {
           console.log("error delivering message to joined member", inbox_of)
           callback(err)
           return
@@ -701,7 +701,7 @@ function joinGroup(joined_member_id, group, callback) {
           callback(null)
       }
       else {
-          console.log("delivering past group messages to:", joined_member_id)
+          console.log("delivering past group messages to:", joined_member_id, "messages", messages)
           const inbox_of = joined_member_id
           const convers_with = group.uid
           messages.forEach(message => {
@@ -709,7 +709,7 @@ function joinGroup(joined_member_id, group, callback) {
               console.log("Message:", message.text)
               deliverMessage(message, appid, inbox_of, convers_with, (err) => {
                   if (err) {
-                      console.log("error delivering past message to joined member", inbox_of)
+                      console.log("error delivering past message to joined member", inbox_of, "error", err)
                   }
                   else {
                       console.log("DELIVERED PAST MESSAGE TO", inbox_of, "CONVERS_WITH", convers_with)
