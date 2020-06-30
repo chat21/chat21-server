@@ -405,6 +405,8 @@ function process_incoming(topic, message_string, callback) {
 
   // console.log("saving incoming message:", savedMessage)
   chatdb.saveOrUpdateMessage(savedMessage, function(err, msg) {
+    console.log("Message saved.")
+    console.log("Updating conversation? updateconversation is:", update_conversation)
     if (update_conversation) {
       const my_conversation_topic = 'apps.tilechat.users.' + me + '.conversations.' + convers_with + ".clientadded"
       let conversation = incoming_message
