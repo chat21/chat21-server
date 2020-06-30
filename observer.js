@@ -395,7 +395,7 @@ function process_incoming(topic, message_string, callback) {
   if (savedMessage.attributes && savedMessage.attributes.updateconversation) {
     update_conversation = savedMessage.attributes.updateconversation
   }
-  console.log("updateconversation = true")
+  console.log("updateconversation = ", update_conversation)
   // savedMessage.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED
   
   console.log("NOTIFY VIA WEBHOOK ON INCOMING TOPIC", topic)
@@ -405,20 +405,20 @@ function process_incoming(topic, message_string, callback) {
 
   // console.log("saving incoming message:", savedMessage)
   chatdb.saveOrUpdateMessage(savedMessage, function(err, msg) {
-    const my_conversation_topic = 'apps.tilechat.users.' + me + '.conversations.' + convers_with + ".clientadded"
-    let conversation = incoming_message
-    conversation.conversWith = convers_with // new!
-    conversation.key = convers_with // retro comp
-    conversation.is_new = true
-    conversation.archived = false
-    conversation.last_message_text = conversation.text // retro comp
-    const conversation_payload = JSON.stringify(conversation)
-    console.log("PUB CONV:", conversation_payload)
-    publish(exchange, my_conversation_topic, Buffer.from(conversation_payload), function(err) {
-      if (err) {
-        callback(false) // TODO message was already saved! What todo? Remove?
-      }
-      else if (update_conversation) {
+    if (update_conversation) {
+      const my_conversation_topic = 'apps.tilechat.users.' + me + '.conversations.' + convers_with + ".clientadded"
+      let conversation = incoming_message
+      conversation.conversWith = convers_with // new!
+      conversation.key = convers_with // retro comp
+      conversation.is_new = true
+      conversation.archived = false
+      conversation.last_message_text = conversation.text // retro comp
+      const conversation_payload = JSON.stringify(conversation)
+      console.log("PUB CONV:", conversation_payload)
+      publish(exchange, my_conversation_topic, Buffer.from(conversation_payload), function(err) {
+        if (err) {
+          callback(false) // TODO message was already saved! What todo? Remove?
+        }
         console.log("Updating conversation.")
         chatdb.saveOrUpdateConversation(conversation, (err, doc) => {
           if (err) {
@@ -428,12 +428,12 @@ function process_incoming(topic, message_string, callback) {
             callback(true)
           }
         })
-      }
-      else {
-        console.log("Skip updating conversation. (update_conversation = false)")
-        callback(true)
-      }
-    });
+      });
+    }
+    else {
+      console.log("Skip updating conversation. (update_conversation = false)")
+      callback(true)
+    }
   })
 }
 
