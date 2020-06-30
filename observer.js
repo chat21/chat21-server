@@ -246,12 +246,14 @@ function process_outgoing(topic, message_string, callback) {
     let inbox_of = recipient_id
     let convers_with = sender_id
     deliverMessage(outgoing_message, app_id, inbox_of, convers_with, function(ok) {
+      console.log("outgoing_message1 OK?", ok)
       if (ok) {
         if (recipient_id !== sender_id) {
           inbox_of = sender_id
           convers_with = recipient_id
           outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT // =100. DELIVERED it's better, but the JS client actually wants 100 to show the sent-checkbox
           deliverMessage(outgoing_message, app_id, inbox_of, convers_with, function(ok) {
+            console.log("outgoing_message2 OK?", ok)
             if (ok) {
               callback(true)
             }
@@ -260,6 +262,10 @@ function process_outgoing(topic, message_string, callback) {
             }
           })
         }
+      }
+      else {
+        console.log("!ok")
+        callback(false)
       }
     })
   }
@@ -325,6 +331,7 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
   // notifies to the client (on MQTT client topic)
   publish(exchange, added_topic, Buffer.from(message_payload), function(err, msg) { // .clientadded
     if (err) {
+      console.log("an error occurred while delivering to topic:", added_topic, "err:", err)
       callback(false)
       return
     }
@@ -332,7 +339,7 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
     console.log("ADDED. NOW TO INCOMING:", incoming_topic)
     publish(exchange, incoming_topic, Buffer.from(message_payload), function(err, msg) { // .incoming
       if (err) {
-        console.log("... ALL BAD ON:", incoming_topic)
+        console.log("Error:", incoming_topic)
         callback(false)
         return
       }
