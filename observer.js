@@ -379,6 +379,12 @@ function process_incoming(topic, message_string, callback) {
   savedMessage.app_id = app_id
   savedMessage.timelineOf = me
   savedMessage.conversWith = convers_with
+
+  let update_conversation = true
+  if (savedMessage.attributes && savedMessage.attributes.updateconversation) {
+    update_conversation = savedMessage.attributes.updateconversation
+  }
+  console.log("updateconversation = true")
   // savedMessage.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED
   
   console.log("NOTIFY VIA WEBHOOK ON INCOMING TOPIC", topic)
@@ -401,7 +407,8 @@ function process_incoming(topic, message_string, callback) {
       if (err) {
         callback(false) // TODO message was already saved! What todo? Remove?
       }
-      else {
+      else if (update_conversation) {
+        console.log("Updating conversation.")
         chatdb.saveOrUpdateConversation(conversation, (err, doc) => {
           if (err) {
             callback(false)
@@ -410,6 +417,10 @@ function process_incoming(topic, message_string, callback) {
             callback(true)
           }
         })
+      }
+      else {
+        console.log("Skip updating conversation. (update_conversation = false)")
+        callback(true)
       }
     });
   })
