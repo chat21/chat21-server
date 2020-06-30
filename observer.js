@@ -392,8 +392,8 @@ function process_incoming(topic, message_string, callback) {
   savedMessage.conversWith = convers_with
 
   let update_conversation = true
-  if (savedMessage.attributes && savedMessage.attributes.updateconversation) {
-    update_conversation = savedMessage.attributes.updateconversation
+  if (savedMessage.attributes && savedMessage.attributes.updateconversation == false) {
+    update_conversation = false
   }
   console.log("updateconversation = ", update_conversation)
   // savedMessage.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED
