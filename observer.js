@@ -564,9 +564,9 @@ function process_archive(topic, payload, callback) {
       }
       const conversation_deleted_topic = 'apps.tilechat.users.' + user_id + '.conversations.' + convers_with + '.clientdeleted'
       console.log(">>> NOW PUBLISHING... CONVERSATION ARCHIVED (DELETED) TOPIC", conversation_deleted_topic)
-      const success_payload = JSON.stringify({"success": true})
-      publish(exchange, conversation_deleted_topic, Buffer.from(success_payload), function(err) {
-        console.log(">>> PUBLISHED!!!! CONVERSATION ON TOPIC", conversation_deleted_topic, "ARCHIVED (DELETED)")
+      const payload = JSON.stringify(conversation_archive_patch)
+      publish(exchange, conversation_deleted_topic, Buffer.from(payload), function(err) {
+        console.log(">>> PUBLISHED!!!! CONVERSATION ON TOPIC", conversation_deleted_topic, "ARCHIVED (DELETED)", "payload:", payload, "buffered:", Buffer.from(payload))
         if (err) {
           callback(false)
         }
@@ -574,8 +574,8 @@ function process_archive(topic, payload, callback) {
           // now publish new archived conversation added
           const archived_conversation_added_topic = 'apps.tilechat.users.' + user_id + '.archived_conversations.' + convers_with + '.clientadded'
           console.log(">>> NOW PUBLISHING... CONVERSATION ARCHIVED (ADDED) TOPIC", archived_conversation_added_topic)
-          const success_payload = JSON.stringify({"success": true})
-          publish(exchange, archived_conversation_added_topic, Buffer.from(success_payload), function(err) {
+          // const success_payload = JSON.stringify({"success": true})
+          publish(exchange, archived_conversation_added_topic, Buffer.from(payload), function(err) {
             console.log(">>> PUBLISHED!!!! ARCHIVED (DELETED) CONVERSATION ON TOPIC", conversation_deleted_topic)
             if (err) {
               callback(false)
