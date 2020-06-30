@@ -262,6 +262,10 @@ function process_outgoing(topic, message_string, callback) {
             }
           })
         }
+        else {
+          console.log("message sent to myself. not delivering")
+          callback(true)
+        }
       }
       else {
         console.log("!ok")
