@@ -1086,7 +1086,7 @@ function WHsendData(json, callback) {
       });
       response.on('end', function () {
         console.log("WEBHOOK RESPONSE:", respdata);
-        callback(null, data)
+        callback(null, respdata)
       });
     });
     req.write(JSON.stringify(json));
