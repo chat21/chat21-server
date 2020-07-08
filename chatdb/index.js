@@ -114,6 +114,21 @@ class ChatDB {
     });
   }
 
+  getConversation(timelineOf, conversWith, callback) {
+    this.db.collection(this.conversations_collection).findOne( { timelineOf: timelineOf, conversWith: conversWith }, function(err, doc) {
+      if (err) {
+        if (callback) {
+          callback(err, null)
+        }
+      }
+      else {
+        if (callback) {
+          callback(null, doc)
+        }
+      }
+    });
+  }
+
   lastMessages(appid, userid, convid, sort, limit, callback) {
     console.log("DB. app:", appid, "user:", userid, "convid", convid)
     this.db.collection(this.messages_collection).find( { timelineOf: userid, app_id: appid, conversWith: convid } ).limit(limit).sort( { timestamp: sort } ).toArray(function(err, docs) {

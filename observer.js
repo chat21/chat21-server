@@ -25,6 +25,7 @@ const topic_delivered = `apps.observer.${process.env.APP_ID}.users.*.messages.*.
 const topic_create_group = `apps.observer.${process.env.APP_ID}.groups.create`
 const topic_update_group = `apps.observer.${process.env.APP_ID}.groups.update`
 const topic_webhook_message_received = `observer.webhook.apps.${process.env.APP_ID}.message_received`
+const topic_webhook_conversation_archived = `observer.webhook.apps.${process.env.APP_ID}.conversation_archived`
 
 var chatdb;
 var webhooks;
@@ -149,6 +150,7 @@ function startWorker() {
       subscribeTo(topic_update_group, ch, _ok.queue)
       subscribeTo(topic_delivered, ch, _ok.queue)
       subscribeTo(topic_webhook_message_received, ch, _ok.queue)
+      subscribeTo(topic_webhook_conversation_archived, ch, _ok.queue)
       ch.consume("jobs", processMsg, { noAck: false });
       console.log("Worker is started");
     });
@@ -203,9 +205,10 @@ function work(msg, callback) {
     process_update(topic, message_string, callback);
   }
   else if (topic.startsWith('observer.webhook.') && topic.endsWith('.message_received')) {
-    console.log("......................")
-    // webhooks.process_webhook_message_received(topic, message_string, callback);
     WHprocess_webhook_message_received(topic, message_string, callback);
+  }
+  else if (topic.startsWith('observer.webhook.') && topic.endsWith('.conversation_archived')) {
+    WHprocess_webhook_conversation_archived(topic, message_string, callback);
   }
   else {
     console.log("unhandled topic:", topic)
@@ -579,6 +582,10 @@ function process_archive(topic, payload, callback) {
       "conversWith": convers_with,
       "archived": true
     }
+    console.log("NOTIFY VIA WEBHOOK ON INCOMING TOPIC", topic)
+    WHnotifyConversationArchived(conversation_archive_patch, (err) => {
+      console.log("Webhook notified with err:", err)
+    })
     console.log(">>> ON DISK... ARCHIVE CONVERSATION ON TOPIC", topic)
     chatdb.saveOrUpdateConversation(conversation_archive_patch, function(err, msg) {
       console.log(">>> CONVERSATION ON TOPIC", topic, "ARCHIVED!")
@@ -905,7 +912,23 @@ function WHnotifyMessageReceived(message, callback) {
   const message_payload = JSON.stringify(message)
   console.log("MESSAGE_PAYLOAD:", message_payload)
   publish(exchange, notify_topic, Buffer.from(message_payload), (err) => {
-    console.log("publishedddd")
+    if (err) {
+      console.log("Err", err)
+      callback(err)
+    }
+    else {
+      callback(null)
+    }
+  })
+}
+
+function WHnotifyConversationArchived(conversation, callback) {
+  console.log("NOTIFY CONVERSATION ARCHIVED:", conversation)
+  const notify_topic = `observer.webhook.apps.${process.env.APP_ID}.conversation_archived`
+  console.log("notifying webhook notifyConversationArchived topic:", notify_topic)
+  const payload = JSON.stringify(conversation)
+  console.log("PAYLOAD:", payload)
+  publish(exchange, notify_topic, Buffer.from(payload), (err) => {
     if (err) {
       console.log("Err", err)
       callback(err)
@@ -920,11 +943,9 @@ function WHprocess_webhook_message_received(topic, message_string, callback) {
   console.log("process webhook_message_received:", message_string, "on topic", topic)
   var message = JSON.parse(message_string)
   console.log("timelineOf...:", message.timelineOf)
-  
   if (callback) {
     callback(true)
   }
-
   if (!WHisMessageOnGroupTimeline(message)) {
     console.log("Discarding notification. Not to group.")
     return
@@ -933,10 +954,6 @@ function WHprocess_webhook_message_received(topic, message_string, callback) {
   const message_id = message.message_id;
   const recipient_id = message.recipient;
   const app_id = message.app_id;
-
-  // JUST A TEST, REMOVE AS SOON AS POSSIBLE (ASAP)
-  // message.attributes.projectId = "5ef319da45080400342efe73"
-  
   var json = {
     event_type: "new-message",
     createdAt: new Date().getTime(),
@@ -945,39 +962,98 @@ function WHprocess_webhook_message_received(topic, message_string, callback) {
     message_id: message_id,
     data: message
   };
+  console.log("Sending JSON webhook:", json)
+  WHsendData(json, function(err, data) {
+    console.log("sendata end with data:", data, "err:", err)
+  })
+  // var q = url.parse(process.env.WEBHOOK_ENDPOINT, true);
+  // console.log("ENV WEBHOOK URL PARSED:", q)
+  // var protocol = (q.protocol == "http:") ? require('http') : require('https');
+  // // console.log("protocol:", protocol)
+  // let options = {
+  //   path:  q.pathname,
+  //   host: q.hostname,
+  //   port: q.port,
+  //   method: 'POST',
+  //   headers: {
+  //     "Content-Type": "application/json"
+  //   }
+  // };
+  // try {
+  //   const req = protocol.request(options, (response) => {
+  //     var respdata = ''
+  //     response.on('data', function (chunk) {
+  //       respdata += chunk;
+  //     });
+  //     response.on('end', function () {
+  //       console.log("WEBHOOK RESPONSE:", respdata);
+  //     });
+  //   });
+  //   req.write(JSON.stringify(json));
+  //   req.end();
+  // }
+  // catch(err) {
+  //   console.log("an error occurred:", err)
+  // }
+}
 
-  console.log("Sending JSON", json)
-  var q = url.parse(process.env.WEBHOOK_ENDPOINT, true);
-  console.log("ENV WEBHOOK URL PARSED:", q)
-  var protocol = (q.protocol == "http:") ? require('http') : require('https');
-  // console.log("protocol:", protocol)
-  let options = {
-    path:  q.pathname,
-    host: q.hostname,
-    port: q.port,
-    method: 'POST',
-    headers: {
-      "Content-Type": "application/json"
-    }
-  };
-  // console.log("options:", options)
-  
-  try {
-    const req = protocol.request(options, (response) => {
-      var respdata = ''
-      response.on('data', function (chunk) {
-        respdata += chunk;
-      });
-      response.on('end', function () {
-        console.log("WEBHOOK RESPONSE:", respdata);
-      });
-    });
-    req.write(JSON.stringify(json));
-    req.end();
+function WHprocess_webhook_conversation_archived(topic, message_string, callback) {
+  console.log("process webhook_conversation_archived:", message_string, "on topic", topic)
+  var conversation = JSON.parse(message_string)
+  if (callback) {
+    callback(true)
   }
-  catch(err) {
-    console.log("an error occurred:", err)
-  }
+  // if (!WHisMessageOnGroupTimeline(message)) {
+  //   console.log("Discarding notification. Not to group.")
+  //   return
+  // }
+
+  console.log("Sending notification to webhook:", process.env.WEBHOOK_ENDPOINT)
+  const conversWith = conversation.conversWith;
+  const timelineOf = conversation.timelineOf;
+
+  chatdb.getConversation(timelineOf, conversWith, function(err, conversation) {
+    var json = {
+      event_type: "deleted-conversation",
+      createdAt: new Date().getTime(),
+      app_id: conversation.app_id,
+      user_id: "system", // temporary patch for Tiledesk
+      recipient_id: conversWith,
+      data: conversation
+    };
+    console.log("Sending JSON webhook:", json)
+    WHsendData(json, function(err, data) {
+      console.log("sendata end with data:", data, "err:", err)
+    })
+    // var q = url.parse(process.env.WEBHOOK_ENDPOINT, true);
+    // console.log("ENV WEBHOOK URL PARSED:", q)
+    // var protocol = (q.protocol == "http:") ? require('http') : require('https');
+    // let options = {
+    //   path:  q.pathname,
+    //   host: q.hostname,
+    //   port: q.port,
+    //   method: 'POST',
+    //   headers: {
+    //     "Content-Type": "application/json"
+    //   }
+    // };
+    // try {
+    //   const req = protocol.request(options, (response) => {
+    //     var respdata = ''
+    //     response.on('data', function (chunk) {
+    //       respdata += chunk;
+    //     });
+    //     response.on('end', function () {
+    //       console.log("WEBHOOK RESPONSE:", respdata);
+    //     });
+    //   });
+    //   req.write(JSON.stringify(json));
+    //   req.end();
+    // }
+    // catch(err) {
+    //   console.log("an error occurred:", err)
+    // }
+  })
 }
 
 function WHisMessageOnGroupTimeline(message) {
@@ -987,4 +1063,37 @@ function WHisMessageOnGroupTimeline(message) {
     }
   }
   return false
+}
+
+function WHsendData(json, callback) {
+  var q = url.parse(process.env.WEBHOOK_ENDPOINT, true);
+  console.log("ENV WEBHOOK URL PARSED:", q)
+  var protocol = (q.protocol == "http:") ? require('http') : require('https');
+  let options = {
+    path:  q.pathname,
+    host: q.hostname,
+    port: q.port,
+    method: 'POST',
+    headers: {
+      "Content-Type": "application/json"
+    }
+  };
+  try {
+    const req = protocol.request(options, (response) => {
+      var respdata = ''
+      response.on('data', function (chunk) {
+        respdata += chunk;
+      });
+      response.on('end', function () {
+        console.log("WEBHOOK RESPONSE:", respdata);
+        callback(null, data)
+      });
+    });
+    req.write(JSON.stringify(json));
+    req.end();
+  }
+  catch(err) {
+    console.log("an error occurred:", err)
+    callback(err, null)
+  }
 }
