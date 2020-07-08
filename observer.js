@@ -1010,7 +1010,7 @@ function WHprocess_webhook_conversation_archived(topic, message_string, callback
 
   console.log("Sending notification to webhook:", process.env.WEBHOOK_ENDPOINT)
   const conversWith = conversation.conversWith;
-  const timelineOf = conversation.timelineOf;
+  const timelineOf = "system"; // conversation.timelineOf; temporary patch for Tiledesk
 
   chatdb.getConversation(timelineOf, conversWith, function(err, conversation) {
     var json = {
