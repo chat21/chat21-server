@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config(); //
 var amqp = require('amqplib/callback_api');
 const { ChatDB } = require('./chatdb/index.js');
 // const { Webhooks } = require('./webhooks/index.js');
