@@ -152,7 +152,7 @@ function startWorker() {
       subscribeTo(topic_webhook_message_received, ch, _ok.queue)
       subscribeTo(topic_webhook_conversation_archived, ch, _ok.queue)
       ch.consume("jobs", processMsg, { noAck: false });
-      console.log("Worker is started");
+      console.log("Worker is started:",process.env.RABBITMQ_URI);
     });
   });
 }
