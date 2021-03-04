@@ -58,11 +58,14 @@ class ChatDB {
   saveOrUpdateConversation(conversation, callback) {
     // console.log("saving conversation...", conversation)
     this.db.collection(this.conversations_collection).updateOne({timelineOf: conversation.timelineOf, conversWith: conversation.conversWith}, { $set: conversation}, { upsert: true }, function(err, doc) {
-      if (callback) {
-        callback(err, null)
+      if (err) {
+        if (callback) {
+          callback(err, null)
+        }
       }
       else {
         if (callback) {
+          console.log("Conversation saved.")
           callback(null, doc)
         }
       }

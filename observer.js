@@ -152,14 +152,19 @@ function startWorker() {
       subscribeTo(topic_webhook_message_received, ch, _ok.queue)
       subscribeTo(topic_webhook_conversation_archived, ch, _ok.queue)
       ch.consume("jobs", processMsg, { noAck: false });
-      console.log("Worker is started:",process.env.RABBITMQ_URI);
+      // console.log("Worker is started:",process.env.RABBITMQ_URI);
     });
   });
 }
 
 function subscribeTo(topic, channel, queue) {
   channel.bindQueue(queue, exchange, topic, {}, function (err, oka) {
-    console.log("bind: " + queue + " err: " + err + " topic: " + topic);
+    if (err) {
+      console.log("Error:", err, " binding on queue:", queue, "topic:", topic)
+    }
+    else {
+      console.log("bind: '" + queue + "' on topic: " + topic);
+    }
   });
 }
 
@@ -171,6 +176,7 @@ function processMsg(msg) {
       else
         channel.reject(msg, true);
     } catch (e) {
+      console.log("gin:", e)
       closeOnErr(e);
     }
   });
@@ -424,9 +430,10 @@ function process_incoming(topic, message_string, callback) {
         if (err) {
           callback(false) // TODO message was already saved! What todo? Remove?
         }
-        console.log("Updating conversation.")
+        console.log("Updating conversation 1.")
         chatdb.saveOrUpdateConversation(conversation, (err, doc) => {
           if (err) {
+            console.log("(saveOrUpdateMessage, chatdb.saveOrUpdateConversation callback) ERROR: ", err)
             callback(false)
           }
           else {
@@ -515,7 +522,6 @@ function process_update(topic, message_string, callback) {
             }
           });
         });
-      // });
     });
   }
   else if (topic_parts[4] === "conversations") {
@@ -535,6 +541,7 @@ function process_update(topic, message_string, callback) {
     patch.timelineOf = me
     patch.conversWith = convers_with
     console.log(">>> ON DISK... CONVERSATION TOPIC", topic, "WITH PATCH", patch)
+    console.log("Updating conversation 2.")
     chatdb.saveOrUpdateConversation(patch, function(err, doc) {
       console.log(">>> CONVERSATION ON TOPIC", topic, "UPDATED!")
       if (err) {
@@ -587,6 +594,7 @@ function process_archive(topic, payload, callback) {
       console.log("Webhook notified with err:", err)
     })
     console.log(">>> ON DISK... ARCHIVE CONVERSATION ON TOPIC", topic)
+    console.log("Updating conversation 3.")
     chatdb.saveOrUpdateConversation(conversation_archive_patch, function(err, msg) {
       console.log(">>> CONVERSATION ON TOPIC", topic, "ARCHIVED!")
       if (err) {
@@ -881,6 +889,7 @@ function closeOnErr(err) {
 
 var mongouri = process.env.MONGODB_URI || "mongodb://localhost:27017/chatdb";
 var mongodb = require("mongodb");
+const { Console } = require('console');
 // var ObjectID = mongodb.ObjectID;
 // Create a database variable outside of the
 // database connection callback to reuse the connection pool in the app.
@@ -894,8 +903,10 @@ mongodb.MongoClient.connect(mongouri, { useNewUrlParser: true, useUnifiedTopolog
     console.log("MongoDB successfully connected.")
   }
   db = client.db();
-  // var port = process.env.PORT || 3000;
-  // app.listen(port, () => {
+  var port = process.env.PORT || 3000;
+  app.listen(port, () => {
+    console.log('Web server started.');
+  })
   chatdb = new ChatDB({database: db})
   console.log('Starting observer.')
   startMQ();
@@ -949,8 +960,11 @@ function WHprocess_webhook_message_received(topic, message_string, callback) {
   if (!WHisMessageOnGroupTimeline(message)) {
     console.log("Discarding notification. Not to group.")
     return
+  } else if (!process.env.WEBHOOK_ENDPOINT) {
+    console.log("Discarding notification. process.env.WEBHOOK_ENDPOINT is undefined.")
+    return
   }
-  console.log("Sending notification to webhook:", process.env.WEBHOOK_ENDPOINT)
+  console.log("Sending notification to webhook (webhook_message_received) on process.env.WEBHOOK_ENDPOINT:", process.env.WEBHOOK_ENDPOINT)
   const message_id = message.message_id;
   const recipient_id = message.recipient;
   const app_id = message.app_id;
@@ -966,35 +980,6 @@ function WHprocess_webhook_message_received(topic, message_string, callback) {
   WHsendData(json, function(err, data) {
     console.log("sendata end with data:", data, "err:", err)
   })
-  // var q = url.parse(process.env.WEBHOOK_ENDPOINT, true);
-  // console.log("ENV WEBHOOK URL PARSED:", q)
-  // var protocol = (q.protocol == "http:") ? require('http') : require('https');
-  // // console.log("protocol:", protocol)
-  // let options = {
-  //   path:  q.pathname,
-  //   host: q.hostname,
-  //   port: q.port,
-  //   method: 'POST',
-  //   headers: {
-  //     "Content-Type": "application/json"
-  //   }
-  // };
-  // try {
-  //   const req = protocol.request(options, (response) => {
-  //     var respdata = ''
-  //     response.on('data', function (chunk) {
-  //       respdata += chunk;
-  //     });
-  //     response.on('end', function () {
-  //       console.log("WEBHOOK RESPONSE:", respdata);
-  //     });
-  //   });
-  //   req.write(JSON.stringify(json));
-  //   req.end();
-  // }
-  // catch(err) {
-  //   console.log("an error occurred:", err)
-  // }
 }
 
 function WHprocess_webhook_conversation_archived(topic, message_string, callback) {
@@ -1008,7 +993,12 @@ function WHprocess_webhook_conversation_archived(topic, message_string, callback
   //   return
   // }
 
-  console.log("Sending notification to webhook:", process.env.WEBHOOK_ENDPOINT)
+  if (!process.env.WEBHOOK_ENDPOINT) {
+    console.log("WHprocess_webhook_conversation_archived: Discarding notification. process.env.WEBHOOK_ENDPOINT is undefined.")
+    return
+  }
+
+  console.log("Sending notification to webhook (webhook_conversation_archived):", process.env.WEBHOOK_ENDPOINT)
   const conversWith = conversation.conversWith;
   const timelineOf = "system"; // conversation.timelineOf; temporary patch for Tiledesk
 
