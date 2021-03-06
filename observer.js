@@ -999,7 +999,7 @@ async function startServer() {
   console.log("[AMQP] connected.");
 }
 
-startServer()
+// startServer()
 
 // ************ WEBHOOKS *********** //
 
@@ -1175,3 +1175,5 @@ function WHsendData(json, callback) {
     callback(err, null)
   }
 }
+
+module.exports = {startServer: startServer};
