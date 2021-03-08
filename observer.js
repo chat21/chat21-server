@@ -30,64 +30,137 @@ const topic_webhook_conversation_archived = `observer.webhook.apps.${process.env
 var chatdb;
 var webhooks;
 
+function start() {
+  return startMQ()
+  // const resolve = startMQ();
+  // console.log("resolve", resolve);
+  // return resolve;
+}
+
+// function startMQ() {
+//   console.log("Connecting to RabbitMQ...")
+//   amqp.connect(process.env.RABBITMQ_URI, function (err, conn) {
+//     if (err) {
+//       console.error("[AMQP]...", err.message);
+//       return setTimeout(startMQ, 5000);
+//     }
+//     conn.on("error", function (err) {
+//       if (err.message !== "Connection closing") {
+//         console.error("[AMQP] conn error", err.message);
+//       }
+//     });
+//     conn.on("close", function () {
+//       console.error("[AMQP] reconnecting");
+//       return setTimeout(startMQ, 1000);
+//     });
+//     console.log("[AMQP] connected.");
+//     amqpConn = conn;
+//     whenConnected((pubChannel, offlinePubQueue) => {
+//       console.log("whenConnected()...")
+//       // webhooks = new Webhooks({amqp: amqp, exchange: exchange, pubChannel: pubChannel, offlinePubQueue: offlinePubQueue})
+//     });
+//   });
+// }
+
 function startMQ() {
-  console.log("Connecting to RabbitMQ...")
-  amqp.connect(process.env.RABBITMQ_URI, function (err, conn) {
-    if (err) {
-      console.error("[AMQP]...", err.message);
-      return setTimeout(startMQ, 5000);
-    }
-    conn.on("error", function (err) {
-      if (err.message !== "Connection closing") {
-        console.error("[AMQP] conn error", err.message);
-      }
-    });
-    conn.on("close", function () {
-      console.error("[AMQP] reconnecting");
-      return setTimeout(startMQ, 1000);
-    });
-    console.log("[AMQP] connected.");
-    amqpConn = conn;
-    whenConnected((pubChannel, offlinePubQueue) => {
-      console.log("whenConnected()...")
-      // webhooks = new Webhooks({amqp: amqp, exchange: exchange, pubChannel: pubChannel, offlinePubQueue: offlinePubQueue})
-    });
+  // const that = this;
+  return new Promise(function (resolve, reject) {
+      console.log("Connecting to RabbitMQ...")
+      amqp.connect(process.env.RABBITMQ_URI, (err, conn) => {
+        // console.log("connected.")
+          if (err) {
+              console.error("[AMQP]", err.message);                    
+              return setTimeout(() => { startMQ() }, 1000);
+          }
+          conn.on("error", (err) => {
+              if (err.message !== "Connection closing") {
+                  console.error("[AMQP] conn error", err.message);
+                  return reject(err);
+              }
+          });
+          conn.on("close", () => {
+              console.error("[AMQP] reconnecting");
+              return setTimeout(() => { startMQ() }, 1000);
+          });
+          amqpConn = conn;
+          whenConnected().then(function(ch) {
+            console.log("whenConnected() returned")
+            return resolve({conn: conn, ch: ch});
+          });
+      });
   });
 }
 
-function whenConnected(callback) {
-  startPublisher((pubChannel, offlinePubQueue) => {
-    startWorker();
-    if (callback) {
-      callback(pubChannel, offlinePubQueue)
-    }
-  });
+
+// function whenConnected(callback) {
+//   startPublisher((pubChannel, offlinePubQueue) => {
+//     startWorker();
+//     if (callback) {
+//       callback(pubChannel, offlinePubQueue)
+//     }
+//   });
+// }
+
+async function whenConnected() {
+  const resolve = await startPublisher();
+  startWorker();
+  return resolve;
 }
 
 var pubChannel = null;
 var offlinePubQueue = [];
-function startPublisher(callback) {
-  amqpConn.createConfirmChannel(function (err, ch) {
-    if (closeOnErr(err)) return;
-    ch.on("error", function (err) {
-      console.error("[AMQP] channel error", err);
-    });
-    ch.on("close", function () {
-      console.log("[AMQP] channel closed");
-    });
-    pubChannel = ch;
-    if (callback) {
-      callback(pubChannel, offlinePubQueue) // offlinePubQueue ??? only initialized to []!
-    }
-    if (offlinePubQueue.length > 0) {
-      while (true) {
-        console.log("here it is.")
-        var [exchange, routingKey, content] = offlinePubQueue.shift();
-        publish(exchange, routingKey, content);
-      }
-    }
+// function startPublisher(callback) {
+//   amqpConn.createConfirmChannel(function (err, ch) {
+//     if (closeOnErr(err)) return;
+//     ch.on("error", function (err) {
+//       console.error("[AMQP] channel error", err);
+//     });
+//     ch.on("close", function () {
+//       console.log("[AMQP] channel closed");
+//     });
+//     pubChannel = ch;
+//     if (callback) {
+//       callback(pubChannel, offlinePubQueue) // offlinePubQueue ??? only initialized to []!
+//     }
+//     if (offlinePubQueue.length > 0) {
+//       while (true) {
+//         console.log("here it is.")
+//         var [exchange, routingKey, content] = offlinePubQueue.shift();
+//         publish(exchange, routingKey, content);
+//       }
+//     }
+//   });
+// }
+
+function startPublisher() {
+  // var that = this;
+  return new Promise(function (resolve, reject) {
+      amqpConn.createConfirmChannel( (err, ch) => {
+          if (closeOnErr(err)) return;
+          ch.on("error", function (err) {
+              console.error("[AMQP] channel error", err.message);
+          });
+          ch.on("close", function () {
+              console.log("[AMQP] channel closed");
+          });
+          pubChannel = ch;
+          if (offlinePubQueue.length > 0) {
+              // while (true) {
+              //     var m = this.offlinePubQueue.shift();
+              //     if (!m) break;
+              //     this.publish(m[0], m[1], m[2]);
+              //   }
+
+              while (true) {
+                  var [exchange, routingKey, content] = offlinePubQueue.shift();
+                  publish(exchange, routingKey, content);
+              }
+          }
+          return resolve(ch)
+      });
   });
 }
+
 
 function publish(exchange, routingKey, content, callback) {
   try {
@@ -887,31 +960,46 @@ function closeOnErr(err) {
   return true;
 }
 
-var mongouri = process.env.MONGODB_URI || "mongodb://localhost:27017/chatdb";
-var mongodb = require("mongodb");
-const { Console } = require('console');
-// var ObjectID = mongodb.ObjectID;
-// Create a database variable outside of the
-// database connection callback to reuse the connection pool in the app.
-var db;
-console.log("connecting to mongodb...")
-mongodb.MongoClient.connect(mongouri, { useNewUrlParser: true, useUnifiedTopology: true }, function (err, client) {
-  if (err) {
-    console.log(err);
-    process.exit(1);
-  } else {
-    console.log("MongoDB successfully connected.")
-  }
+// var mongouri = process.env.MONGODB_URI || "mongodb://localhost:27017/chatdb";
+// var mongodb = require("mongodb");
+// const { Console } = require('console');
+// // var ObjectID = mongodb.ObjectID;
+// // Create a database variable outside of the
+// // database connection callback to reuse the connection pool in the app.
+// var db;
+// console.log("connecting to mongodb...")
+// mongodb.MongoClient.connect(mongouri, { useNewUrlParser: true, useUnifiedTopology: true }, function (err, client) {
+//   if (err) {
+//     console.log(err);
+//     process.exit(1);
+//   } else {
+//     console.log("MongoDB successfully connected.")
+//   }
+//   db = client.db();
+//   // var port = process.env.PORT || 3000;
+//   // app.listen(port, () => {
+//   //   console.log('Web server started.');
+//   // })
+//   chatdb = new ChatDB({database: db})
+//   console.log('Starting observer.')
+//   startMQ();
+// });
+
+async function startServer() {
+  var mongouri = process.env.MONGODB_URI || "mongodb://localhost:27017/chatdb";
+  var mongodb = require("mongodb");
+  var db;
+  console.log("connecting to mongodb...");
+  var client = await mongodb.MongoClient.connect(mongouri, { useNewUrlParser: true, useUnifiedTopology: true })
+  console.log("mongodb connected...", db);
   db = client.db();
-  var port = process.env.PORT || 3000;
-  app.listen(port, () => {
-    console.log('Web server started.');
-  })
   chatdb = new ChatDB({database: db})
   console.log('Starting observer.')
-  startMQ();
-});
+  var amqpConnection = await start();
+  console.log("[AMQP] connected.");
+}
 
+// startServer()
 
 // ************ WEBHOOKS *********** //
 
@@ -1087,3 +1175,5 @@ function WHsendData(json, callback) {
     callback(err, null)
   }
 }
+
+module.exports = {startServer: startServer};
