@@ -38,31 +38,31 @@ class Webhooks {
     this.exchange = options.exchange
     this.pubChannel = options.pubChannel
     this.offlinePubQueue = options.offlinePubQueue
-    console.log("webhooks inizialized: this.exchange:", this.exchange, "this.offlinePubQueue:", this.offlinePubQueue)
+    winston.debug("webhooks inizialized: this.exchange:", this.exchange, "this.offlinePubQueue:", this.offlinePubQueue)
   }
 
   notifyMessageReceived(message) {
-    console.log("NOTIFY MESSAGE:", message)
+    winston.debug("NOTIFY MESSAGE:", message)
     const notify_topic = `observer.webhook.apps.${process.env.APP_ID}.message_received`
-    console.log("notifying webhook notifyMessageReceived topic:", notify_topic)
+    winston.debug("notifying webhook notifyMessageReceived topic:", notify_topic)
     const message_payload = JSON.stringify(message)
     this.publish(this.exchange, notify_topic, Buffer.from(message_payload), (err) => {
       if (err) {
-        console.log("Err", err)
+        winston.debug("Err", err)
       }
     })
   }
 
   process_webhook_message_received(topic, message_string, callback) {
-    console.log("process_webhook_message_received.from.incoming:", message_string, "on topic", topic)
+    winston.debug("process_webhook_message_received.from.incoming:", message_string, "on topic", topic)
     var message = JSON.parse(message_string)
-    console.log("timelineOf...:", message.timelineOf)
+    winston.debug("timelineOf...:", message.timelineOf)
     if (callback) {
       callback(true)
     }
     
     if (this.isMessageOnGroupTimeline(message)) {
-      console.log("Sending this message for group timeline:", message)
+      winston.debug("Sending this message for group timeline:", message)
     }
     const message_id = message.message_id;
     const recipient_id = message.recipient_id;
@@ -78,7 +78,7 @@ class Webhooks {
     };
   
     var q = url.parse(process.env.WEBHOOK_ENDPOINT, true);
-    console.log("ENV WEBHOOK URL PARSED:", q)
+    winston.debug("ENV WEBHOOK URL PARSED:", q)
     var protocol = (q.protocol == "http") ? require('http') : require('https');
     let options = {
       path:  q.pathname,
@@ -97,7 +97,7 @@ class Webhooks {
       });
     
       response.on('end', function () {
-        console.log("WEBHOOK RESPONSE:", respdata);
+        winston.debug("WEBHOOK RESPONSE:", respdata);
       });
     }
     
@@ -118,7 +118,7 @@ class Webhooks {
 
   publish(exchange, routingKey, content, callback) {
     try {
-      console.log("TRYING TO PUB...")
+      winston.debug("TRYING TO PUB...")
       this.pubChannel.publish(exchange, routingKey, content, { persistent: true }, (err, ok) => {
           if (err) {
             console.error("[AMQP] publish ERROR:", err);
