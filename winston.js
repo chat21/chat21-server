@@ -1,7 +1,7 @@
 var appRoot = require('app-root-path');
 var winston = require('winston');
 
-var level = process.env.LOG_LEVEL || 'debug'
+var level = process.env.LOG_LEVEL || 'verbose'
 
 var options = {
     file: {

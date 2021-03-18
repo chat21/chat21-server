@@ -43,7 +43,7 @@ class Webhooks {
 
   notifyMessageReceived(message) {
     winston.debug("NOTIFY MESSAGE:", message)
-    const notify_topic = `observer.webhook.apps.${process.env.APP_ID}.message_received`
+    const notify_topic = `observer.webhook.apps.${app_id}.message_received`
     winston.debug("notifying webhook notifyMessageReceived topic:", notify_topic)
     const message_payload = JSON.stringify(message)
     this.publish(this.exchange, notify_topic, Buffer.from(message_payload), (err) => {

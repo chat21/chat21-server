@@ -19,7 +19,7 @@
   "devDependencies": {},
   "scripts": {
     "test": "mocha ./test/*.js",
-    "start": "node observer.js",
+    "start": "node index.js",
     "pretest": "mongodb-runner start",
     "posttest": "mongodb-runner stop"
   },
