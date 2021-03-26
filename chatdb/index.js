@@ -3,7 +3,6 @@
     Andrea Sponziello - (c) Tiledesk.com
 */
 
-var Message = require("../models/message");
 const winston = require("../winston");
 
 /**
