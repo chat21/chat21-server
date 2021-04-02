@@ -297,7 +297,7 @@ function subscribeTo(topic, channel, queue) {
       winston.error("Error:", err, " binding on queue:", queue, "topic:", topic)
     }
     else {
-      winston.debug("bind: '" + queue + "' on topic: " + topic);
+      winston.info("bind: '" + queue + "' on topic: " + topic);
     }
   });
 }
