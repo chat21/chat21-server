@@ -4,7 +4,7 @@
   "description": "Chat21 AMQP messages dispatcher",
   "dependencies": {
     "aedes": "^0.40.1",
-    "amqplib": "^0.5.5",
+    "amqplib": "^0.7.1",
     "app-root-path": "^3.0.0",
     "body-parser": "^1.19.0",
     "dotenv": "^8.2.0",

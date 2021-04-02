@@ -39,7 +39,7 @@ const topic_update = `apps.${app_id}.users.#.update`
 const topic_archive = `apps.${app_id}.users.#.archive`
 const topic_presence = `apps.${app_id}.users.*.presence.*`
 // FOR OBSERVER TOPICS
-const topic_incoming = `apps.observer.${app_id}.users.*.messages.*.incoming`
+const topic_persist = `apps.observer.${app_id}.users.*.messages.*.persist`
 const topic_delivered = `apps.observer.${app_id}.users.*.messages.*.delivered`
 const topic_create_group = `apps.observer.${app_id}.groups.create`
 const topic_update_group = `apps.observer.${app_id}.groups.update`
@@ -274,7 +274,7 @@ function startWorker() {
     ch.assertQueue("jobs", { durable: true }, function (err, _ok) {
       if (closeOnErr(err)) return;
       subscribeTo(topic_outgoing, ch, _ok.queue)
-      subscribeTo(topic_incoming, ch, _ok.queue)
+      subscribeTo(topic_persist, ch, _ok.queue)
       subscribeTo(topic_update, ch, _ok.queue)
       subscribeTo(topic_archive, ch, _ok.queue)
       subscribeTo(topic_presence, ch, _ok.queue)
@@ -323,8 +323,8 @@ function work(msg, callback) {
   if (topic.endsWith('.outgoing')) {
     process_outgoing(topic, message_string, callback);
   }
-  else if (topic.endsWith('.incoming')) {
-    process_incoming(topic, message_string, callback);
+  else if (topic.endsWith('.persist')) {
+    process_persist(topic, message_string, callback);
   }
   else if (topic.endsWith('.delivered')) {
     process_delivered(topic, message_string, callback);
@@ -476,11 +476,11 @@ function isGroup(group_id) {
 //deliverMessage(appid, message, inbox_of, convers_with, (err) => {
 function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
   winston.debug("DELIVERING:", message, "inbox_of:", inbox_of, "convers_with:", convers_with_id)
-  //questi sono interni
-  const incoming_topic = `apps.observer.${app_id}.users.${inbox_of}.messages.${convers_with_id}.incoming`
-  //questi sono per mqtt
+  // internal flow
+  const persist_topic = `apps.observer.${app_id}.users.${inbox_of}.messages.${convers_with_id}.persist`
+  // mqtt (client) flow
   const added_topic = `apps.${app_id}.users.${inbox_of}.messages.${convers_with_id}.clientadded`
-  winston.debug("incoming_topic:", incoming_topic)
+  winston.debug("persist_topic:", persist_topic)
   winston.debug("added_topic:", added_topic)
   const message_payload = JSON.stringify(message)
   // notifies to the client (on MQTT client topic)
@@ -491,15 +491,16 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
       return
     }
     // saves on db and creates conversation
-    winston.debug("ADDED. NOW TO INCOMING:", incoming_topic)
-    publish(exchange, incoming_topic, Buffer.from(message_payload), function(err, msg) { // .incoming
+    winston.debug("ADDED. NOW PUBLISH TO 'persist' TOPIC:", persist_topic)
+    publish(exchange, persist_topic, Buffer.from(message_payload), function(err, msg) { // .persist
       if (err) {
-        winston.error("Error:", incoming_topic)
+        winston.error("Error:", persist_topic)
         callback(false)
         return
       }
-      winston.debug("... ALL GOOD ON:", incoming_topic)
+      winston.debug("... ALL GOOD ON:", persist_topic)
       callback(true)
+      // publish convs .clientadded
     })
   })
 }
@@ -526,18 +527,18 @@ function process_delivered(topic, message_string, callback) {
   })
 }
 
-// This handler only saves messages and updates relative conversations.
+// This handler only persists messages and persists/updates conversations.
 // Original messages were already delivered with *.messages.*.clientadded
-function process_incoming(topic, message_string, callback) {
-  winston.debug(">>>>> INCOMING:", topic, "MESSAGE PAYLOAD:",message_string)
+function process_persist(topic, message_string, callback) {
+  winston.debug(">>>>> TOPIC persist:", topic, "MESSAGE PAYLOAD:",message_string)
   var topic_parts = topic.split(".")
-  // /apps/observer/tilechat/users/ME/messages/CONVERS_WITH/incoming -> WITH "SERVER" THIS MESSAGES WILL NOT BE DELIVERED TO CLIENTS
+  // /apps/observer/tilechat/users/ME/messages/CONVERS_WITH/persist -> WITH "SERVER" THIS MESSAGES WILL NOT BE DELIVERED TO CLIENTS
   const app_id = topic_parts[2]
   const me = topic_parts[4]
   const convers_with = topic_parts[6]
 
-  let incoming_message = JSON.parse(message_string)
-  let savedMessage = incoming_message
+  let persist_message = JSON.parse(message_string)
+  let savedMessage = persist_message
   savedMessage.app_id = app_id
   savedMessage.timelineOf = me
   savedMessage.conversWith = convers_with
@@ -549,7 +550,7 @@ function process_incoming(topic, message_string, callback) {
   winston.debug("updateconversation = ", update_conversation)
   // savedMessage.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED
   
-  winston.debug("NOTIFY VIA WEBHOOK ON INCOMING TOPIC", topic)
+  winston.debug("NOTIFY VIA WEBHOOK ON persist TOPIC", topic)
   WHnotifyMessageReceived(savedMessage, (err) => {
     if (err) {
       winston.error("Webhook notified with err:"+ err)
@@ -559,7 +560,6 @@ function process_incoming(topic, message_string, callback) {
     
   })
 
-  // winston.debug("saving incoming message:", savedMessage)
   chatdb.saveOrUpdateMessage(savedMessage, function(err, msg) {
     winston.debug("Message saved.")
 
@@ -576,20 +576,20 @@ function process_incoming(topic, message_string, callback) {
     winston.debug("Updating conversation? updateconversation is:", update_conversation)
     if (update_conversation) {
       const my_conversation_topic = 'apps.tilechat.users.' + me + '.conversations.' + convers_with + ".clientadded"
-      let conversation = incoming_message
+      let conversation = persist_message
       conversation.conversWith = convers_with // new!
       conversation.key = convers_with // retro comp
       conversation.is_new = true
       conversation.archived = false
       conversation.last_message_text = conversation.text // retro comp
       const conversation_payload = JSON.stringify(conversation)
-      winston.debug("PUB CONV:", conversation_payload)
-      publish(exchange, my_conversation_topic, Buffer.from(conversation_payload), function(err) {
-        if (err) {
-          winston.error("publish error", err)
-          callback(false) // TODO message was already saved! What todo? Remove?
-        }
-        winston.debug("Updating conversation 1.")
+      // winston.debug("PUB CONV:", conversation_payload)
+      // publish(exchange, my_conversation_topic, Buffer.from(conversation_payload), function(err) { // mqtt (client) notify
+      //   if (err) {
+      //     winston.error("publish error", err)
+      //     callback(false) // TODO message was already saved! What todo? Remove?
+      //   }
+        winston.debug("Updating conversation...")
         chatdb.saveOrUpdateConversation(conversation, (err, doc) => {
           if (err) {
             winston.error("(saveOrUpdateMessage, chatdb.saveOrUpdateConversation callback) ERROR: ", err)
@@ -605,11 +605,10 @@ function process_incoming(topic, message_string, callback) {
                 winston.debug("Webhook notified ok")
               }
             })
-
             callback(true)
           }
         })
-      });
+      // });
     }
     else {
       winston.debug("Skip updating conversation. (update_conversation = false)")
@@ -762,7 +761,7 @@ function process_archive(topic, payload, callback) {
       "conversWith": convers_with,
       "archived": true
     }
-    winston.debug("NOTIFY VIA WEBHOOK ON INCOMING TOPIC", topic)
+    winston.debug("NOTIFY VIA WEBHOOK ON SAVE TOPIC", topic)
     WHnotifyConversationArchived(conversation_archive_patch, (err) => {
        if (err) {
           winston.error("Webhook notified with err:"+ err)
