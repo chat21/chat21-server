@@ -12,7 +12,7 @@ var options = {
       maxsize: 5242880, // 5MB
       maxFiles: 5,
       colorize: false,
-      format: winston.format.simple()     
+      format: winston.format.simple()
     },
     console: {
       level: level,
