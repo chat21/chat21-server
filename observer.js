@@ -13,7 +13,7 @@ var url = require('url');
 const app = express();
 app.use(bodyParser.json());
 
-var webhook_endpoint = process.env.WEBHOOK_ENDPOINT || "http://localhost:3000/";
+var webhook_endpoint = process.env.WEBHOOK_ENDPOINT || "http://localhost:3000/chat21/requests";
 winston.info("webhook_endpoint: " + webhook_endpoint);
                                                                                       //mancano->
 var webhook_methods = process.env.WEBHOOK_METHODS || "new-message,deleted-conversation,join-member,leave-member,deleted-archivedconversation,typing-start,presence-change";
