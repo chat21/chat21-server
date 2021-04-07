@@ -460,11 +460,11 @@ function process_outgoing(topic, message_string, callback) {
         }
         group.members[me] = 1
       }
-      if (!group.members[me]) {
-        winston.debug(me + " can't write to this group")
-        callback(true)
-        return
-      }
+      // if (!group.members[me]) {
+      //   winston.debug(me + " can't write to this group")
+      //   callback(true)
+      //   return
+      // }
       // adding the group in the members so we easily get a copy of
       // all the group messages in timelineOf: group.uid
       group.members[group.uid] = 1
