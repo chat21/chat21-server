@@ -13,7 +13,7 @@ var url = require('url');
 const app = express();
 app.use(bodyParser.json());
 
-var webhook_endpoint = process.env.WEBHOOK_ENDPOINT || "http://localhost:3000/chat21/requests";
+var webhook_endpoint = process.env.WEBHOOK_ENDPOINT || "http://localhost:3000";
 winston.info("webhook_endpoint: " + webhook_endpoint);
                                                                                       //mancano->
 var webhook_methods = process.env.WEBHOOK_METHODS || "new-message,deleted-conversation,join-member,leave-member,deleted-archivedconversation,typing-start,presence-change";
@@ -26,6 +26,7 @@ winston.debug("webhook_methods_array: ", webhook_methods_array);
 
 var webhook_enabled = process.env.WEBHOOK_ENABLED || true;
 winston.info("webhook_enabled: " + webhook_enabled);
+console.log("..webhook_enabled: " + webhook_enabled);
 
 var app_id = process.env.APP_ID || "tilechat";
 winston.info("app_id: " + app_id);
