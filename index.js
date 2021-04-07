@@ -4,6 +4,8 @@
  * Module dependencies.
  */
  
+require('dotenv').config(); 
+
 const winston = require("./winston");
 
 var observer = require('./observer');

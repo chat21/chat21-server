@@ -1,4 +1,3 @@
-require('dotenv').config(); 
 const winston = require("./winston");
 
 var amqp = require('amqplib/callback_api');
