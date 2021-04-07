@@ -346,17 +346,38 @@ function work(msg, callback) {
   else if (topic.endsWith('.update')) {
     process_update(topic, message_string, callback);
   }
+  
   else if (topic.startsWith('observer.webhook.') && topic.endsWith('.message_received')) {
-    WHprocess_webhook_message_received(topic, message_string, callback);
+    if (webhook_enabled === false) {
+       winston.debug("work observer.webhook....message_received notification. webhook_enabled is false.");
+       callback(true);
+    } else {
+      WHprocess_webhook_message_received(topic, message_string, callback);
+    }
   }
   else if (topic.startsWith('observer.webhook.') && topic.endsWith('.message_saved')) {
+    if (webhook_enabled === false) {
+      winston.debug("work observer.webhook....message_saved notification. webhook_enabled is false.");
+      callback(true);
+   } else {
     WHprocess_webhook_message_saved(topic, message_string, callback);
+   }    
   }
   else if (topic.startsWith('observer.webhook.') && topic.endsWith('.conversation_saved')) {
+    if (webhook_enabled === false) {
+      winston.debug("work observer.webhook....conversation_saved notification. webhook_enabled is false.");
+      callback(true);
+   } else {
     WHprocess_webhook_conversation_saved(topic, message_string, callback);
+   }
   }
   else if (topic.startsWith('observer.webhook.') && topic.endsWith('.conversation_archived')) {
+    if (webhook_enabled === false) {
+      winston.debug("work observer.webhook....conversation_archived notification. webhook_enabled is false.");
+      callback(true);
+   } else {
     WHprocess_webhook_conversation_archived(topic, message_string, callback);
+   }    
   }
   else {
     winston.error("unhandled topic:", topic)
@@ -682,9 +703,9 @@ function process_update(topic, message_string, callback) {
         winston.debug(">>> ON DISK... RECIPIENT MESSAGE ON DB WITH", dest_message_patch)
         chatdb.saveOrUpdateMessage(dest_message_patch, function(err, msg) {
           const recipient_message_update_topic = 'apps.tilechat.users.' + convers_with + '.messages.' + me + '.' + message_id + '.clientupdated'
-          winston.debug(">>> NOW PUBLISHING... RECIPIENT MESSAGE TOPIC UPDATE", recipient_message_update_topic, "WITH PATCH", dest_message_patch)
+          winston.debug(">>> NOW PUBLISHING... RECIPIENT MESSAGE TOPIC UPDATE: " + recipient_message_update_topic + " WITH PATCH " + dest_message_patch)
           publish(exchange, recipient_message_update_topic, Buffer.from(dest_message_patch_payload), function(err) {
-            winston.debug(">>> PUBLISHED!!!! RECIPIENT MESSAGE TOPIC UPDATE", recipient_message_update_topic, "WITH PATCH", dest_message_patch)
+            winston.debug(">>> PUBLISHED!!!! RECIPIENT MESSAGE TOPIC UPDATE" + recipient_message_update_topic + " WITH PATCH " + dest_message_patch)
             if (err) {
               winston.error("error",err);
               callback(false)
@@ -703,7 +724,7 @@ function process_update(topic, message_string, callback) {
     const app_id = topic_parts[1]
     const user_id = topic_parts[3]
     const convers_with = topic_parts[5]
-    winston.debug("updating conversation:", convers_with, "for user", user_id, "patch", message_string)
+    winston.debug("updating conversation:" + convers_with + " for user " + user_id + " patch " + message_string)
     
     const patch = JSON.parse(message_string)
     // 1. Patch my conversation: convers_with
@@ -712,10 +733,10 @@ function process_update(topic, message_string, callback) {
     const me = user_id
     patch.timelineOf = me
     patch.conversWith = convers_with
-    winston.debug(">>> ON DISK... CONVERSATION TOPIC", topic, "WITH PATCH", patch)
+    winston.debug(">>> ON DISK... CONVERSATION TOPIC " + topic + " WITH PATCH " + patch)
     winston.debug("Updating conversation 2.")
     chatdb.saveOrUpdateConversation(patch, function(err, doc) {
-      winston.debug(">>> CONVERSATION ON TOPIC", topic, "UPDATED!")
+      winston.debug(">>> CONVERSATION ON TOPIC" + topic + " UPDATED!")
       if (err) {
         winston.error("error",err);
         callback(false)
@@ -723,9 +744,9 @@ function process_update(topic, message_string, callback) {
       }
       const patch_payload = JSON.stringify(patch)
       const my_conversation_update_topic = 'apps.tilechat.users.' + me + '.conversations.' + convers_with + '.clientupdated'
-      winston.debug(">>> NOW PUBLISHING... MY CONVERSATION UPDATE", my_conversation_update_topic, "WITH PATCH", patch_payload)
+      winston.debug(">>> NOW PUBLISHING... MY CONVERSATION UPDATE " + my_conversation_update_topic + " WITH PATCH " + patch_payload)
       publish(exchange, my_conversation_update_topic, Buffer.from(patch_payload), function(err) {
-        winston.debug(">>> PUBLISHED!!!! MY CONVERSATION UPDATE TOPIC", my_conversation_update_topic, "WITH PATCH", patch_payload, "err", err)
+        winston.debug(">>> PUBLISHED!!!! MY CONVERSATION UPDATE TOPIC " + my_conversation_update_topic + " WITH PATCH " + patch_payload)
         if (err) {
           winston.error("error",err);
           callback(false)
@@ -742,9 +763,9 @@ function process_update(topic, message_string, callback) {
 function process_archive(topic, payload, callback) {
   // Ex. apps/tilechat/users/USER_ID/conversations/CONVERS_WITH/archive
   var topic_parts = topic.split(".")
-  winston.debug("ARCHIVE. TOPIC PARTS:", topic_parts, "payload (ignored):", payload)
+  winston.debug("ARCHIVE. TOPIC PARTS:" + topic_parts + "payload (ignored): " + payload)
   if (topic_parts.length < 7) {
-    winston.debug("process_archive topic error. topic_parts.length < 7:", topic)
+    winston.debug("process_archive topic error. topic_parts.length < 7:" + topic)
     callback(true)
     return
   }
@@ -756,14 +777,14 @@ function process_archive(topic, payload, callback) {
     const app_id = topic_parts[1]
     const user_id = topic_parts[3]
     const convers_with = topic_parts[5]
-    winston.debug("archiving conversation:", convers_with, "for user", user_id, "payload", payload)
+    winston.debug("archiving conversation:" + convers_with + " for user " + user_id + " payload: "+ payload)
     const me = user_id
     conversation_archive_patch = {
       "timelineOf": me,
       "conversWith": convers_with,
       "archived": true
     }
-    winston.debug("NOTIFY VIA WEBHOOK ON SAVE TOPIC", topic)
+    winston.debug("NOTIFY VIA WEBHOOK ON SAVE TOPIC "+ topic)
     WHnotifyConversationArchived(conversation_archive_patch, (err) => {
        if (err) {
           winston.error("Webhook notified with err:"+ err)
@@ -771,20 +792,20 @@ function process_archive(topic, payload, callback) {
           winston.debug("Webhook notified WHnotifyConversationArchived ok")
         }
     })
-    winston.debug(">>> ON DISK... ARCHIVE CONVERSATION ON TOPIC", topic)
+    winston.debug(">>> ON DISK... ARCHIVE CONVERSATION ON TOPIC: " + topic)
     winston.debug("Updating conversation 3.")
     chatdb.saveOrUpdateConversation(conversation_archive_patch, function(err, msg) {
-      winston.debug(">>> CONVERSATION ON TOPIC", topic, "ARCHIVED!")
+      winston.debug(">>> CONVERSATION ON TOPIC: " + topic + " ARCHIVED!")
       if (err) {
         winston.error("error",err);
         callback(false)
         return
       }
       const conversation_deleted_topic = 'apps.tilechat.users.' + user_id + '.conversations.' + convers_with + '.clientdeleted'
-      winston.debug(">>> NOW PUBLISHING... CONVERSATION ARCHIVED (DELETED) TOPIC", conversation_deleted_topic)
+      winston.debug(">>> NOW PUBLISHING... CONVERSATION ARCHIVED (DELETED) TOPIC " + conversation_deleted_topic)
       const payload = JSON.stringify(conversation_archive_patch)
       publish(exchange, conversation_deleted_topic, Buffer.from(payload), function(err) {
-        winston.debug(">>> PUBLISHED!!!! CONVERSATION ON TOPIC", conversation_deleted_topic, "ARCHIVED (DELETED)", "payload:", payload, "buffered:", Buffer.from(payload))
+        winston.debug(">>> PUBLISHED!!!! CONVERSATION ON TOPIC: " + conversation_deleted_topic + " ARCHIVED (DELETED). Payload: " + payload + " buffered:" + Buffer.from(payload))
         if (err) {
           winston.error("error",err);
           callback(false)
@@ -792,10 +813,10 @@ function process_archive(topic, payload, callback) {
         else {
           // now publish new archived conversation added
           const archived_conversation_added_topic = 'apps.tilechat.users.' + user_id + '.archived_conversations.' + convers_with + '.clientadded'
-          winston.debug(">>> NOW PUBLISHING... CONVERSATION ARCHIVED (ADDED) TOPIC", archived_conversation_added_topic)
+          winston.debug(">>> NOW PUBLISHING... CONVERSATION ARCHIVED (ADDED) TOPIC: "+ archived_conversation_added_topic)
           // const success_payload = JSON.stringify({"success": true})
           publish(exchange, archived_conversation_added_topic, Buffer.from(payload), function(err) {
-            winston.debug(">>> PUBLISHED!!!! ARCHIVED (DELETED) CONVERSATION ON TOPIC", conversation_deleted_topic)
+            winston.debug(">>> PUBLISHED!!!! ARCHIVED (DELETED) CONVERSATION ON TOPIC: " + conversation_deleted_topic)
             if (err) {
               winston.error("error",err);
               callback(false)
@@ -812,11 +833,11 @@ function process_archive(topic, payload, callback) {
 
 function process_create_group(topic, payload, callback) {
   var topic_parts = topic.split(".")
-  winston.debug("process_create_group. TOPIC PARTS:", topic_parts, "payload:", payload)
+  winston.debug("process_create_group. TOPIC PARTS:" + topic_parts + " payload:" + payload)
   // `apps.observer.${app_id}.groups.create`
   const app_id = topic_parts[2]
-  winston.debug("app_id:", app_id)
-  winston.debug("payload:", payload)
+  winston.debug("app_id:" + app_id)
+  winston.debug("payload:"+ payload)
   const group = JSON.parse(payload)
   if (!group.uid || !group.name || !group.members || !group.owner) {
     winston.debug("group error.")
@@ -837,9 +858,9 @@ function process_create_group(topic, payload, callback) {
             }
             else {
               for (let [member_id, value] of Object.entries(group.members)) {
-                winston.debug(">>>>> JOINING MEMBER", member_id)
+                winston.debug(">>>>> JOINING MEMBER: "+member_id)
                 joinGroup(member_id, group, function(reply) {
-                    winston.debug("member", member_id, "invited on group", group, "result", reply)
+                    winston.debug("member: " + member_id + " invited on group " + group + " result " + reply)
                 })
               }
               callback(true)
@@ -869,7 +890,7 @@ function joinGroup(joined_member_id, group, callback) {
   winston.debug("SENDING 'ADDED TO GROUP' TO EACH MEMBER INCLUDING THE JOINED ONE...", group)
   const appid = group.appId
   for (let [member_id, value] of Object.entries(group.members)) {
-      winston.debug("to member:", member_id)
+      winston.debug("to member:" + member_id)
       const now = Date.now()
       const message = {
           message_id: uuid(),
@@ -904,7 +925,7 @@ function joinGroup(joined_member_id, group, callback) {
           return
         }
         else {
-          winston.debug("DELIVERED MESSAGE TO", inbox_of, "CONVERS_WITH", convers_with)
+          winston.debug("DELIVERED MESSAGE TO: " + inbox_of + " CONVERS_WITH " + convers_with)
         }
       })
   }
@@ -917,11 +938,11 @@ function joinGroup(joined_member_id, group, callback) {
           callback(err)
       }
       else if (!messages) {
-          winston.debug("No messages in group", group.uid)
+          winston.debug("No messages in group: " + group.uid)
           callback(null)
       }
       else {
-          winston.debug("delivering past group messages to:", joined_member_id, "messages", messages)
+          winston.debug("delivering past group messages to:" + joined_member_id + " messages: ", messages)
           const inbox_of = joined_member_id
           const convers_with = group.uid
           messages.forEach(message => {
@@ -929,10 +950,10 @@ function joinGroup(joined_member_id, group, callback) {
               winston.debug("Message:", message.text)
               deliverMessage(message, appid, inbox_of, convers_with, (err) => {
                   if (err) {
-                      winston.error("error delivering past message to joined member", inbox_of, "error", err)
+                      winston.error("error delivering past message to joined member: " + inbox_of, err)
                   }
                   else {
-                      winston.debug("DELIVERED PAST MESSAGE TO", inbox_of, "CONVERS_WITH", convers_with)
+                      winston.debug("DELIVERED PAST MESSAGE TO: " + inbox_of + " CONVERS_WITH : " + convers_with)
                   }
               })
           });
@@ -943,11 +964,11 @@ function joinGroup(joined_member_id, group, callback) {
 
 function process_update_group(topic, payload, callback) {
   var topic_parts = topic.split(".")
-  winston.debug("process_update_group. TOPIC PARTS:", topic_parts, "payload:", payload)
+  winston.debug("process_update_group. TOPIC PARTS:" + topic_parts + "payload:" + payload)
   // `apps.observer.${app_id}.groups.update`
   const app_id = topic_parts[2]
-  winston.debug("app_id:", app_id)
-  winston.debug("payload:", payload)
+  winston.debug("app_id:" + app_id)
+  winston.debug("payload:" + payload)
   const data = JSON.parse(payload)
   winston.debug("process_update_group DATA ", data)
   const group = data.group
@@ -1116,6 +1137,12 @@ async function startServer() {
 function WHnotifyMessageReceived(message, callback) {
   winston.debug("NOTIFY MESSAGE:", message);
   
+  if (webhook_enabled===false) {
+    winston.debug("WHnotifyMessageReceived Discarding notification. webhook_enabled is false.");
+    // callback({err: "WHnotifyMessageReceived Discarding notification. webhook_enabled is false."}); 
+    callback(null)
+    return
+  }
 
   const notify_topic = `observer.webhook.apps.${app_id}.message_received`
   winston.debug("notifying webhook notifyMessageReceived topic:" + notify_topic)
@@ -1135,6 +1162,13 @@ function WHnotifyMessageReceived(message, callback) {
 function WHnotifyMessageSaved(message, callback) {
   winston.debug("NOTIFY MESSAGE:", message)
 
+  if (webhook_enabled===false) {
+    winston.debug("WHnotifyMessageSaved Discarding notification. webhook_enabled is false.");
+    // callback({err: "WHnotifyMessageSaved Discarding notification. webhook_enabled is false."});
+    callback(null)
+    return
+  }
+
   // callback(null)
   const notify_topic = `observer.webhook.apps.${app_id}.message_saved`
   winston.debug("notifying webhook notifyMessageSaved topic: " + notify_topic)
@@ -1153,6 +1187,13 @@ function WHnotifyMessageSaved(message, callback) {
 
 function WHnotifyConversationSaved(conversation, callback) {
   winston.debug("NOTIFY CONVERSATION:", conversation)
+
+  if (webhook_enabled===false) {
+    winston.debug("WHnotifyConversationSaved Discarding notification. webhook_enabled is false.");
+    // callback({err: "WHnotifyConversationSaved Discarding notification. webhook_enabled is false."}); 
+    callback(null)
+    return
+  }
 
   // callback(null)
   const notify_topic = `observer.webhook.apps.${app_id}.conversation_saved`
@@ -1176,6 +1217,12 @@ function WHnotifyConversationSaved(conversation, callback) {
 function WHnotifyConversationArchived(conversation, callback) {
   winston.debug("NOTIFY CONVERSATION ARCHIVED:", conversation)
 
+  if (webhook_enabled===false) {
+    winston.debug("WHnotifyConversationArchived Discarding notification. webhook_enabled is false.");
+    // callback({err: "WHnotifyConversationArchived Discarding notification. webhook_enabled is false."}); 
+    callback(null)
+    return
+  }
 
   const notify_topic = `observer.webhook.apps.${app_id}.conversation_archived`
   winston.debug("notifying webhook notifyConversationArchived topic: " + notify_topic)
@@ -1433,6 +1480,9 @@ function WHisMessageOnGroupTimeline(message) {
   return false
 }
 
+function WHsendData2(json, callback) {
+  return callback(null, {ok:"ok"})
+}
 function WHsendData(json, callback) {
   var q = url.parse(webhook_endpoint, true);
   winston.debug("ENV WEBHOOK URL PARSED:", q)
