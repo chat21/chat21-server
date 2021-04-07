@@ -598,7 +598,7 @@ function process_persist(topic, message_string, callback) {
             callback(false)
           }
           else {
-            winston.debug("NOTIFY VIA WEBHOOK ON CONVERSATION SAVED");
+            winston.debug("NOTIFY VIA WHnotifyConversationSaved ON CONVERSATION SAVED");
             
             WHnotifyConversationSaved(conversation, (err) => {
               if (err) {
@@ -1114,12 +1114,13 @@ async function startServer() {
 // ************ WEBHOOKS *********** //
 
 function WHnotifyMessageReceived(message, callback) {
-  winston.debug("NOTIFY MESSAGE:", message)
-  // callback(null)
+  winston.debug("NOTIFY MESSAGE:", message);
+  
+
   const notify_topic = `observer.webhook.apps.${app_id}.message_received`
-  winston.debug("notifying webhook notifyMessageReceived topic:", notify_topic)
+  winston.debug("notifying webhook notifyMessageReceived topic:" + notify_topic)
   const message_payload = JSON.stringify(message)
-  winston.debug("MESSAGE_PAYLOAD:", message_payload)
+  winston.debug("MESSAGE_PAYLOAD: " + message_payload)
   publish(exchange, notify_topic, Buffer.from(message_payload), (err) => {
     if (err) {
       winston.error("Err", err)
@@ -1133,8 +1134,6 @@ function WHnotifyMessageReceived(message, callback) {
 
 function WHnotifyMessageSaved(message, callback) {
   winston.debug("NOTIFY MESSAGE:", message)
-
-
 
   // callback(null)
   const notify_topic = `observer.webhook.apps.${app_id}.message_saved`
@@ -1154,7 +1153,6 @@ function WHnotifyMessageSaved(message, callback) {
 
 function WHnotifyConversationSaved(conversation, callback) {
   winston.debug("NOTIFY CONVERSATION:", conversation)
-
 
   // callback(null)
   const notify_topic = `observer.webhook.apps.${app_id}.conversation_saved`
@@ -1203,7 +1201,7 @@ function WHprocess_webhook_message_received(topic, message_string, callback) {
   }
   if (webhook_enabled===false) {
     winston.debug("WHprocess_webhook_message_received Discarding notification. webhook_enabled is false.");
-    callback(true); 
+    // callback(true); 
     return
   }
 
@@ -1257,7 +1255,7 @@ function WHprocess_webhook_message_saved(topic, message_string, callback) {
 
   if (webhook_enabled===false) {
     winston.debug("WHprocess_webhook_message_saved Discarding notification. webhook_enabled is false.");
-    callback(true); 
+    // callback(true); 
     return
   }
 
@@ -1271,7 +1269,7 @@ function WHprocess_webhook_message_saved(topic, message_string, callback) {
 
   if (webhook_methods_array.indexOf("new-message-saved")==-1) {
     winston.debug("WHprocess_webhook_message_saved Discarding notification. new-message-saved not enabled.");
-    callback(true); 
+    // callback(true); 
     return
   }
 
@@ -1354,7 +1352,7 @@ function WHprocess_webhook_conversation_archived(topic, message_string, callback
 
   if (webhook_enabled===false) {
     winston.debug("Discarding notification. webhook_enabled is false.");
-    callback(true); 
+    // callback(true); 
     return
   }
 
@@ -1370,7 +1368,7 @@ function WHprocess_webhook_conversation_archived(topic, message_string, callback
 
   if (webhook_methods_array.indexOf("deleted-conversation")==-1) {
     winston.debug("Discarding notification. deleted-conversation not enabled.");
-    callback(true); 
+    // callback(true); 
     return
   }
 
