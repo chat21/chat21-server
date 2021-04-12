@@ -47,10 +47,6 @@ const topic_persist = `apps.observer.${app_id}.users.*.messages.*.persist`
 const topic_delivered = `apps.observer.${app_id}.users.*.messages.*.delivered`
 const topic_create_group = `apps.observer.${app_id}.groups.create`
 const topic_update_group = `apps.observer.${app_id}.groups.update`
-// const topic_webhook_message_received = `observer.webhook.apps.${app_id}.message_received`
-// const topic_webhook_message_saved = `observer.webhook.apps.${app_id}.message_saved`
-// const topic_webhook_conversation_saved = `observer.webhook.apps.${app_id}.conversation_saved`
-// const topic_webhook_conversation_archived = `observer.webhook.apps.${app_id}.conversation_archived`
 
 var chatdb;
 let webhooks;
@@ -72,35 +68,7 @@ function setWebHookEnabled(enabled) {
 
 function start() {
   return startMQ()
-  // const resolve = startMQ();
-  // winston.debug("resolve", resolve);
-  // return resolve;
 }
-
-// function startMQ() {
-//   winston.debug("Connecting to RabbitMQ...")
-//   amqp.connect(process.env.RABBITMQ_URI, function (err, conn) {
-//     if (err) {
-//       console.error("[AMQP]...", err.message);
-//       return setTimeout(startMQ, 5000);
-//     }
-//     conn.on("error", function (err) {
-//       if (err.message !== "Connection closing") {
-//         console.error("[AMQP] conn error", err.message);
-//       }
-//     });
-//     conn.on("close", function () {
-//       console.error("[AMQP] reconnecting");
-//       return setTimeout(startMQ, 1000);
-//     });
-//     winston.debug("[AMQP] connected.");
-//     amqpConn = conn;
-//     whenConnected((pubChannel, offlinePubQueue) => {
-//       winston.debug("whenConnected()...")
-//       // webhooks = new Webhooks({amqp: amqp, exchange: exchange, pubChannel: pubChannel, offlinePubQueue: offlinePubQueue})
-//     });
-//   });
-// }
 
 function startMQ() {
   return new Promise(function (resolve, reject) {
@@ -129,16 +97,6 @@ function startMQ() {
   });
 }
 
-
-// function whenConnected(callback) {
-//   startPublisher((pubChannel, offlinePubQueue) => {
-//     startWorker();
-//     if (callback) {
-//       callback(pubChannel, offlinePubQueue)
-//     }
-//   });
-// }
-
 async function whenConnected() {
   const resolve = await startPublisher();
   startWorker();
@@ -147,28 +105,6 @@ async function whenConnected() {
 
 var pubChannel = null;
 var offlinePubQueue = [];
-// function startPublisher(callback) {
-//   amqpConn.createConfirmChannel(function (err, ch) {
-//     if (closeOnErr(err)) return;
-//     ch.on("error", function (err) {
-//       console.error("[AMQP] channel error", err);
-//     });
-//     ch.on("close", function () {
-//       winston.debug("[AMQP] channel closed");
-//     });
-//     pubChannel = ch;
-//     if (callback) {
-//       callback(pubChannel, offlinePubQueue) // offlinePubQueue ??? only initialized to []!
-//     }
-//     if (offlinePubQueue.length > 0) {
-//       while (true) {
-//         winston.debug("here it is.")
-//         var [exchange, routingKey, content] = offlinePubQueue.shift();
-//         publish(exchange, routingKey, content);
-//       }
-//     }
-//   });
-// }
 
 function startPublisher() {
   // var that = this;
@@ -199,7 +135,6 @@ function startPublisher() {
   });
 }
 
-
 function publish(exchange, routingKey, content, callback) {
   try {
     pubChannel.publish(exchange, routingKey, content, { persistent: true },
@@ -221,42 +156,6 @@ function publish(exchange, routingKey, content, callback) {
     callback(e)
   }
 }
-
-function publishWithOptions(exchange, routingKey, content, options, callback) {
-  try {
-    pubChannel.publish(exchange, routingKey, content, options,
-      function (err, ok) {
-        if (err) {
-          winston.error("[AMQP] publish", err);
-          offlinePubQueue.push([exchange, routingKey, content]);
-          pubChannel.connection.close();
-          callback(err)
-        }
-        else {
-          // winston.debug("published to", routingKey, "result", ok)
-          callback(null)
-        }
-      });
-  } catch (e) {
-    console.error("[AMQP] publish", e.message);
-    offlinePubQueue.push([exchange, routingKey, content]);
-    callback(e)
-  }
-}
-
-
-// function publish(routingKey, content, callback) {
-//   try {
-//     _publish(exchange, routingKey, content, { persistent: true },
-//       function (err, ok) {
-//         callback(err, ok)
-//       });
-//   } catch (e) {
-//     console.error("[AMQP] publish", e.message);
-//     offlinePubQueue.push([exchange, routingKey, content]);
-//     callback(e)
-//   }
-// }
 
 var channel;
 function startWorker() {
@@ -283,12 +182,7 @@ function startWorker() {
       subscribeTo(topic_create_group, ch, _ok.queue)
       subscribeTo(topic_update_group, ch, _ok.queue)
       subscribeTo(topic_delivered, ch, _ok.queue)
-      // subscribeTo(topic_webhook_message_received, ch, _ok.queue)
-      // subscribeTo(topic_webhook_message_saved, ch, _ok.queue)
-      // subscribeTo(topic_webhook_conversation_saved, ch, _ok.queue)      
-      // subscribeTo(topic_webhook_conversation_archived, ch, _ok.queue)
       ch.consume("jobs", processMsg, { noAck: false });
-      // winston.debug("Worker is started:",process.env.RABBITMQ_URI);
     });
   });
 }
@@ -307,19 +201,23 @@ function subscribeTo(topic, channel, queue) {
 function processMsg(msg) {
   work(msg, function (ok) {
     try {
-      if (ok)
+      if (ok) {
+        console.debug("channel.ack(msg)");
         channel.ack(msg);
-      else
+      }
+      else {
+        console.debug("channel.reject(msg, true)");
         channel.reject(msg, true);
+      }
     } catch (e) {
-      winston.debug("gin:", e)
+      winston.debug("processMsgwork error ", e)
       closeOnErr(e);
     }
   });
 }
 
 function work(msg, callback) {
-  winston.debug("NEW TOPIC:"+msg.fields.routingKey) //, " message:", msg.content.toString());
+  winston.debug("work NEW TOPIC: " + msg.fields.routingKey) //, " message:", msg.content.toString());
   const topic = msg.fields.routingKey //.replace(/[.]/g, '/');
   const message_string = msg.content.toString();
   if (topic.endsWith('.outgoing')) {
@@ -346,39 +244,6 @@ function work(msg, callback) {
   else if (topic.endsWith('.update')) {
     process_update(topic, message_string, callback);
   }
-  
-  // else if (topic.startsWith('observer.webhook.') && topic.endsWith('.message_received')) {
-  //   if (webhook_enabled === false) {
-  //      winston.debug("work observer.webhook....message_received notification. webhook_enabled is false.");
-  //      callback(true);
-  //   } else {
-  //     WHprocess_webhook_message_received(topic, message_string, callback);
-  //   }
-  // }
-  // else if (topic.startsWith('observer.webhook.') && topic.endsWith('.message_saved')) {
-  //   if (webhook_enabled === false) {
-  //     winston.debug("work observer.webhook....message_saved notification. webhook_enabled is false.");
-  //     callback(true);
-  //  } else {
-  //   WHprocess_webhook_message_saved(topic, message_string, callback);
-  //  }    
-  // }
-  // else if (topic.startsWith('observer.webhook.') && topic.endsWith('.conversation_saved')) {
-  //   if (webhook_enabled === false) {
-  //     winston.debug("work observer.webhook....conversation_saved notification. webhook_enabled is false.");
-  //     callback(true);
-  //  } else {
-  //   WHprocess_webhook_conversation_saved(topic, message_string, callback);
-  //  }
-  // }
-  // else if (topic.startsWith('observer.webhook.') && topic.endsWith('.conversation_archived')) {
-  //   if (webhook_enabled === false) {
-  //     winston.debug("work observer.webhook....conversation_archived notification. webhook_enabled is false.");
-  //     callback(true);
-  //  } else {
-  //   WHprocess_webhook_conversation_archived(topic, message_string, callback);
-  //  }    
-  // }
   else {
     winston.error("unhandled topic:", topic)
     callback(true)
@@ -393,13 +258,12 @@ function process_presence(topic, message_string, callback) {
 }
 
 function process_outgoing(topic, message_string, callback) {
-  winston.debug("TOPIC OUTGOING:" + topic)
+  winston.debug("process outgoing topic:" + topic)
   var topic_parts = topic.split(".")
   // /apps/tilechat/users/(ME)SENDER_ID/messages/RECIPIENT_ID/outgoing
   const app_id = topic_parts[1]
   const sender_id = topic_parts[3]
   const recipient_id = topic_parts[5]
-  const convers_with = recipient_id
   const me = sender_id
 
   var message = JSON.parse(message_string)
@@ -411,48 +275,69 @@ function process_outgoing(topic, message_string, callback) {
   outgoing_message.recipient = recipient_id
   outgoing_message.app_id = app_id
   outgoing_message.timestamp = now
-  outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED // =150
+
+  let inbox_of;
+  let convers_with;
 
   if (!isGroup(recipient_id)) {
-    winston.debug("!isGroup")
-    let inbox_of = recipient_id
-    let convers_with = sender_id
+    winston.debug("Direct message.");
+    inbox_of = sender_id;
+    convers_with = recipient_id;
+    outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT // =100. DELIVERED (=150) it's better, but the JS client actually wants 100 to show the sent-checkbox
     deliverMessage(outgoing_message, app_id, inbox_of, convers_with, function(ok) {
-      winston.debug("outgoing_message1 OK?", ok)
+      console.debug("delivered to sender. OK?", ok);
       if (ok) {
-        if (recipient_id !== sender_id) {
-          inbox_of = sender_id
-          convers_with = recipient_id
-          outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT // =100. DELIVERED it's better, but the JS client actually wants 100 to show the sent-checkbox
-          deliverMessage(outgoing_message, app_id, inbox_of, convers_with, function(ok) {
-            winston.debug("outgoing_message2 OK?", ok)
-            if (ok) {
-              winston.debug("NOTIFY VIA WHnotifyMessageSent on topic: " + topic);
-              webhooks.WHnotifyMessageSent(outgoing_message, (err) => {
-                if (err) {
-                  winston.error("Webhook notified with err:"+ err)
-                  callback(false)
-                } else {
-                  winston.debug("Webhook notified WHnotifyMessageReceived ok")
-                  callback(true)
-                }
-              })
-            }
-            else {
-              callback(false)
-            }
-          })
-        }
-        else {
-          winston.debug("message sent to myself. not delivering")
-          callback(true)
-        }
+        outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED // =150
+        inbox_of = recipient_id;
+        convers_with = sender_id;
+        deliverMessage(outgoing_message, app_id, inbox_of, convers_with, function(ok) {
+          console.debug("delivered to recipient. OK?", ok);
+          if (ok) {
+            callback(true);
+          }
+          else {
+            callback(false);
+          }
+        });
       }
       else {
-        winston.debug("!ok")
-        callback(false)
+        winston.debug("Error delivering: ", outgoing_message)
+        callback(false);
       }
-    })
+    });
+
+    // winston.debug("!isGroup")
+    // let inbox_of = recipient_id
+    // let convers_with = sender_id
+    // deliverMessage(outgoing_message, app_id, inbox_of, convers_with, function(ok) {
+    //   // WEBHOOK DELIVERED STATUS // outgoing_message.status
+    //   winston.debug("outgoing_message1 OK?", ok)
+    //   if (ok) {
+    //     if (recipient_id !== sender_id) {
+          // inbox_of = sender_id
+          // convers_with = recipient_id
+          // outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT // =100. DELIVERED it's better, but the JS client actually wants 100 to show the sent-checkbox
+          // deliverMessage(outgoing_message, app_id, inbox_of, convers_with, function(ok) {
+          //   winston.debug("outgoing_message2 OK?", ok)
+          //   if (ok) {
+          //     callback(true)
+          //   }
+          //   else {
+          //     winston.debug("Error delivering: ", outgoing_message)
+          //     callback(false)
+          //   }
+          // })
+    //     }
+    //     else {
+    //       winston.debug("message sent to myself. not delivering")
+    //       callback(true)
+    //     }
+    //   }
+    //   else {
+    //     winston.debug("!ok")
+    //     callback(false)
+    //   }
+    // })
   }
   else {
     const group_id = recipient_id
@@ -501,16 +386,7 @@ function process_outgoing(topic, message_string, callback) {
               callback(false)
             }
             else {
-              winston.debug("NOTIFY VIA WHnotifyMessageSent, topic: " + topic)
-              webhooks.WHnotifyMessageSent(message, (err) => {
-                if (err) {
-                  winston.error("Webhook notified with err:" + err)
-                  callback(false)
-                } else {
-                  winston.debug("Webhook notified WHnotifyMessageSent ok")
-                  callback(true)
-                }
-              })
+              callback(true);
             }
           }
         })
@@ -539,26 +415,39 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
   // notifies to the client (on MQTT client topic)
   publish(exchange, added_topic, Buffer.from(message_payload), function(err, msg) { // .clientadded
     if (err) {
-      winston.error("an error occurred while delivering to topic:", added_topic, "err:", err)
+      console.error("Error on topic: ", added_topic, " Err:", err);
       callback(false)
       return
     }
-
-    // // webhook
-    // winston.debug("NOTIFY VIA WHnotifyMessageReceived, topic: " + added_topic)
-    // webhooks.WHnotifyMessageDelivered(message, (err) => {
-    //   if (err) {
-    //     winston.error("Webhook notified with err:"+ err)
-    //   } else {
-    //     winston.debug("Webhook notified WHnotifyMessageReceived ok")
-    //   }
-    // })
-
+    webhooks
+    winston.debug("NOTIFY VIA WHnotifyMessageStatusDelivered, topic: " + added_topic)
+    console.log("process.env.WEBHOOK_ENABLED:", process.env.WEBHOOK_ENABLED)
+    if (process.env.WEBHOOK_ENABLED === 'true') {
+      console.log("process.env.WEBHOOK_ENABLED!!!!!", process.env.WEBHOOK_ENABLED)
+      if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED) {
+        webhooks.WHnotifyMessageStatusDelivered(message, (err) => {
+          if (err) {
+            winston.error("WHnotifyMessageStatusDelivered with err:"+ err)
+          } else {
+            winston.debug("WHnotifyMessageStatusDelivered ok")
+          }
+        })
+      }
+      else if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT) {
+        webhooks.WHnotifyMessageStatusSent(message, (err) => {
+          if (err) {
+            winston.error("Webhook notified with err:"+ err)
+          } else {
+            winston.debug("Webhook notified WHnotifyMessageReceived ok")
+          }
+        })
+      }
+    }
     // saves on db and creates conversation
     winston.debug("ADDED. NOW PUBLISH TO 'persist' TOPIC: " + persist_topic)
     publish(exchange, persist_topic, Buffer.from(message_payload), function(err, msg) { // .persist
       if (err) {
-        winston.error("Error:", persist_topic)
+        console.error("Error PUBLISH TO 'persist' TOPIC:", err)
         callback(false)
         return
       }
@@ -612,21 +501,8 @@ function process_persist(topic, message_string, callback) {
     update_conversation = false
   }
   winston.debug("updateconversation = " + update_conversation)
-  // savedMessage.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED
-
   chatdb.saveOrUpdateMessage(savedMessage, function(err, msg) {
     winston.debug("Message saved.")
-
-    winston.debug("NOTIFY VIA WEBHOOK ON MESSAGE SAVED");
-    
-    // WHnotifyMessageSaved(savedMessage, (err) => {
-    //   if (err) {
-    //     winston.error("Webhook notified with err:"+ err)
-    //   }else {
-    //     winston.debug("Webhook notified WHnotifyMessageSaved ok")
-    //   }
-    // })
-
     winston.debug("Updating conversation? updateconversation is: " + update_conversation)
     if (update_conversation) {
       const my_conversation_topic = 'apps.tilechat.users.' + me + '.conversations.' + convers_with + ".clientadded"
@@ -637,31 +513,16 @@ function process_persist(topic, message_string, callback) {
       conversation.archived = false
       conversation.last_message_text = conversation.text // retro comp
       const conversation_payload = JSON.stringify(conversation)
-      // winston.debug("PUB CONV:", conversation_payload)
-      // publish(exchange, my_conversation_topic, Buffer.from(conversation_payload), function(err) { // mqtt (client) notify
-      //   if (err) {
-      //     winston.error("publish error", err)
-      //     callback(false) // TODO message was already saved! What todo? Remove?
-      //   }
-        winston.debug("Updating conversation...")
-        chatdb.saveOrUpdateConversation(conversation, (err, doc) => {
-          if (err) {
-            winston.error("(saveOrUpdateMessage, chatdb.saveOrUpdateConversation callback) ERROR: ", err)
-            callback(false)
-          }
-          else {
-            // winston.debug("NOTIFY VIA WHnotifyConversationSaved ON CONVERSATION SAVED");
-            // WHnotifyConversationSaved(conversation, (err) => {
-            //   if (err) {
-            //     winston.error("Webhook notified with err:"+ err)
-            //   }else {
-            //     winston.debug("Webhook notified WHnotifyConversationSaved ok")
-            //   }
-            // })
-            callback(true)
-          }
-        })
-      // });
+      winston.debug("Updating conversation...")
+      chatdb.saveOrUpdateConversation(conversation, (err, doc) => {
+        if (err) {
+          console.error("(chatdb.saveOrUpdateConversation callback) ERROR: ", err)
+          callback(false)
+        }
+        else {
+          callback(true)
+        }
+      })
     }
     else {
       winston.debug("Skip updating conversation. (update_conversation = false)")
@@ -672,7 +533,8 @@ function process_persist(topic, message_string, callback) {
 
 function process_update(topic, message_string, callback) {
   var topic_parts = topic.split(".")
-  winston.debug("UPDATE. TOPIC PARTS:", topic_parts, "payload:", message_string)
+  winston.debug("UPDATE. TOPIC PARTS:", topic_parts)
+  winston.debug("payload:" + message_string)
   if (topic_parts.length < 5) {
     winston.debug("process_update topic error.")
     callback(false)
@@ -687,7 +549,7 @@ function process_update(topic, message_string, callback) {
     const user_id = topic_parts[3]
     const convers_with = topic_parts[5]
     const message_id = topic_parts[6]
-    winston.debug("updating message:", message_id, "on convers_with", convers_with, "for user", user_id, "patch", message_string)
+    console.debug("updating message:", message_id, "on convers_with", convers_with, "for user", user_id, "patch", message_string)
     
     const patch = JSON.parse(message_string)
     if (!patch.status || patch.status != 200) {
@@ -704,47 +566,61 @@ function process_update(topic, message_string, callback) {
     const my_message_patch = {
       "timelineOf": me,
       "message_id": message_id,
-      "status": patch.status // for the moment this is always = 200 (SENT)
+      "status": patch.status // actually this is always = 200 (SENT)
     }
     const my_message_patch_payload = JSON.stringify(my_message_patch)
-    winston.debug(">>> ON DISK... WITH A STATUS ON MY MESSAGE-UPDATE TOPIC", topic, "WITH PATCH", my_message_patch)
-    chatdb.saveOrUpdateMessage(my_message_patch, function(err, msg) {
-      winston.debug(">>> MESSAGE ON TOPIC", topic, "UPDATED!")
+    const dest_message_patch = {
+      "timelineOf": convers_with,
+      "message_id": message_id,
+      "status": MessageConstants.CHAT_MESSAGE_STATUS_CODE.RETURN_RECEIPT
+    }
+    const dest_message_patch_payload = JSON.stringify(dest_message_patch)
+    // PUBLISH DEST_PATCH: RETURN_RECEIPT
+    const recipient_message_update_topic = 'apps.tilechat.users.' + convers_with + '.messages.' + me + '.' + message_id + '.clientupdated'
+    winston.debug(">>> NOW PUBLISHING... DEST_PATCH: RETURN_RECEIPT. TOPIC: " + recipient_message_update_topic + ", PATCH ", dest_message_patch)
+    publish(exchange, recipient_message_update_topic, Buffer.from(dest_message_patch_payload), function(err) {
+      winston.debug(">>> PUBLISHED!!!! RECIPIENT MESSAGE TOPIC UPDATE" + recipient_message_update_topic + " WITH PATCH " , dest_message_patch)
       if (err) {
         winston.error("error",err);
         callback(false)
-        return
       }
-      // DISABLE BECAUSE NOT REALLY NECESSARY (FOR PERF) TO NOTIFY STATUS MODIFICATION TO THE ONE WHO COMMITED THE SAME MOD
-      // const my_message_update_topic = 'apps.tilechat.users.' + me + '.messages.' + convers_with + '.' + message_id + '.clientupdate'
-      // winston.debug(">>> NOW PUBLISHING... MY MESSAGE TOPIC UPDATE", my_message_update_topic, "WITH PATCH", my_message_patch)
-      // publish(exchange, my_message_update_topic, Buffer.from(my_message_patch_payload), function(err) {
-      //   winston.debug(">>> PUBLISHED!!!! MY MESSAGE TOPIC UPDATE", my_message_update_topic, "WITH PATCH", my_message_patch)
-      //   if (err) {
-      //     callback(false)
-      //     return
-      //   }
-        const dest_message_patch = {
-          "timelineOf": convers_with,
-          "message_id": message_id,
-          "status": MessageConstants.CHAT_MESSAGE_STATUS_CODE.RETURN_RECEIPT
-        }
-        const dest_message_patch_payload = JSON.stringify(dest_message_patch)
-        winston.debug(">>> ON DISK... RECIPIENT MESSAGE ON DB WITH", dest_message_patch)
-        chatdb.saveOrUpdateMessage(dest_message_patch, function(err, msg) {
-          const recipient_message_update_topic = 'apps.tilechat.users.' + convers_with + '.messages.' + me + '.' + message_id + '.clientupdated'
-          winston.debug(">>> NOW PUBLISHING... RECIPIENT MESSAGE TOPIC UPDATE: " + recipient_message_update_topic + " WITH PATCH " + dest_message_patch)
-          publish(exchange, recipient_message_update_topic, Buffer.from(dest_message_patch_payload), function(err) {
-            winston.debug(">>> PUBLISHED!!!! RECIPIENT MESSAGE TOPIC UPDATE" + recipient_message_update_topic + " WITH PATCH " + dest_message_patch)
+      else {
+        console.log("process.env.WEBHOOK_ENABLED?????", process.env.WEBHOOK_ENABLED);
+        if (process.env.WEBHOOK_ENABLED === 'true') {
+          webhooks.WHnotifyMessageStatusReturnReceipt(dest_message_patch, (err) => {
             if (err) {
-              winston.error("error",err);
-              callback(false)
+              winston.error("WHnotifyMessageStatusReturnReceipt with err:" + err)
+            } else {
+              winston.debug("WHnotifyMessageStatusReturnReceipt ok")
             }
-            else {
-              callback(true)
-            }
+          })
+        }
+        // DISABLED BECAUSE NOT REALLY NECESSARY (FOR PERF) TO NOTIFY STATUS MODIFICATION TO THE ONE WHO COMMITED THE SAME MOD
+        // PUBLISH MY_PATCH: RECEIVED
+        // const my_message_update_topic = 'apps.tilechat.users.' + me + '.messages.' + convers_with + '.' + message_id + '.clientupdate'
+        // winston.debug(">>> NOW PUBLISHING... MY MESSAGE TOPIC UPDATE", my_message_update_topic, "WITH PATCH", my_message_patch)
+        // publish(exchange, my_message_update_topic, Buffer.from(my_message_patch_payload), function(err) {
+        //   winston.debug(">>> PUBLISHED!!!! MY MESSAGE TOPIC UPDATE", my_message_update_topic, "WITH PATCH", my_message_patch)
+        //   if (err) {
+        //     callback(false)
+        //     return
+        //   }
+
+        // TODO: MOVE TO A PERSIST_UPDATED TOPIC/QUEUE...
+        winston.debug(">>> ON DISK... WITH A STATUS ON MY MESSAGE-UPDATE TOPIC", topic, "WITH PATCH", my_message_patch)
+        chatdb.saveOrUpdateMessage(my_message_patch, function(err, msg) {
+          winston.debug(">>> MESSAGE ON TOPIC", topic, "UPDATED!")
+          if (err) {
+            winston.error("error",err);
+            callback(false)
+            return
+          }
+          winston.debug(">>> ON DISK... RECIPIENT MESSAGE ON DB WITH", dest_message_patch)
+          chatdb.saveOrUpdateMessage(dest_message_patch, function(err, msg) {
+            callback(true)
           });
         });
+      }
     });
   }
   else if (topic_parts[4] === "conversations") {
@@ -815,13 +691,15 @@ function process_archive(topic, payload, callback) {
       "archived": true
     }
     winston.debug("NOTIFY VIA WEBHOOK ON SAVE TOPIC "+ topic)
-    webhooks.WHnotifyConversationArchived(conversation_archive_patch, (err) => {
-       if (err) {
-          winston.error("Webhook notified with err:"+ err)
-        }else {
-          winston.debug("Webhook notified WHnotifyConversationArchived ok")
-        }
-    })
+    if (process.env.WEBHOOK_ENABLED === 'true') {
+      webhooks.WHnotifyConversationArchived(conversation_archive_patch, (err) => {
+        if (err) {
+            winston.error("Webhook notified with err:"+ err)
+          }else {
+            winston.debug("Webhook notified WHnotifyConversationArchived ok")
+          }
+      });
+    }
     winston.debug(">>> ON DISK... ARCHIVE CONVERSATION ON TOPIC: " + topic)
     winston.debug("Updating conversation 3.")
     chatdb.saveOrUpdateConversation(conversation_archive_patch, function(err, msg) {
@@ -870,39 +748,41 @@ function process_create_group(topic, payload, callback) {
   winston.debug("payload:"+ payload)
   const group = JSON.parse(payload)
   if (!group.uid || !group.name || !group.members || !group.owner) {
-    winston.debug("group error.")
-    callback(true)
+    winston.debug("group error.");
+    callback(true);
     return
   }
   group.appId = app_id
-  saveOrUpdateGroup(group, function(ok) {
-    if (ok) {
-      deliverGroupAdded(group, function(ok) {
+  // saveOrUpdateGroup(group, function(ok) {
+  //   if (ok) {
+
+  deliverGroupAdded(group, function(ok) {
+    if (!ok) {
+      callback(false)
+    }
+    else {
+      sendGroupWelcomeMessageToInitialMembers(app_id, group, function(ok) {
         if (!ok) {
           callback(false)
         }
         else {
-          sendGroupWelcomeMessageToInitialMembers(app_id, group, function(ok) {
-            if (!ok) {
-              callback(false)
-            }
-            else {
-              for (let [member_id, value] of Object.entries(group.members)) {
-                winston.debug(">>>>> JOINING MEMBER: "+member_id)
-                joinGroup(member_id, group, function(reply) {
-                    winston.debug("member: " + member_id + " invited on group " + group + " result " + reply)
-                })
-              }
-              callback(true)
-            }
-          })
+          for (let [member_id, value] of Object.entries(group.members)) {
+            winston.debug(">>>>> JOINING MEMBER: "+member_id)
+            joinGroup(member_id, group, function(reply) {
+                winston.debug("member: " + member_id + " invited on group " + group + " result " + reply)
+            })
+          }
+          callback(true)
         }
       })
     }
-    else {
-      callback(false)
-    }
   })
+
+    // }
+    // else {
+    //   callback(false)
+    // }
+  // })
 }
 
 /**
@@ -1015,19 +895,19 @@ function process_update_group(topic, payload, callback) {
   })
 }
 
-// enqueues group saving on db
-function saveOrUpdateGroup(group, callback) {
-  chatdb.saveOrUpdateGroup(group, function(err, doc) {
-    if (err) {
-      winston.error("Error saving group:", err)
-      callback(false)
-      return
-    }
-    else {
-      callback(true)
-    }
-  })
-}
+// enqueues group saving on db DEPRECATED
+// function saveOrUpdateGroup(group, callback) {
+//   chatdb.saveOrUpdateGroup(group, function(err, doc) {
+//     if (err) {
+//       winston.error("Error saving group:", err)
+//       callback(false)
+//       return
+//     }
+//     else {
+//       callback(true)
+//     }
+//   })
+// }
 
 function deliverGroupAdded(group, callback) {
   const app_id = group.appId
@@ -1158,9 +1038,8 @@ async function startServer() {
   winston.debug('Starting observer.')
   var amqpConnection = await start();
   winston.debug("[Observer.AMQP] connected.");
-  // webhooks = new Webhooks({amqp: amqp, exchange: exchange, pubChannel: pubChannel, offlinePubQueue: offlinePubQueue})
+  winston.info("Starting webhooks...");
   webhooks = new Webhooks({appId: app_id, RABBITMQ_URI: process.env.RABBITMQ_URI, exchange: exchange, webhook_endpoint: webhook_endpoint, webhook_methods: webhook_methods_array, queue_name: 'webhooks'});
-  winston.info("Starting webhooks");
   await webhooks.start();
   winston.info("Webhooks started.");
   webhooks.enabled = webhook_enabled;

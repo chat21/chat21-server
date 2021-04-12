@@ -59,13 +59,14 @@ class ChatDB {
     // winston.debug("saving conversation...", conversation)
     this.db.collection(this.conversations_collection).updateOne({timelineOf: conversation.timelineOf, conversWith: conversation.conversWith}, { $set: conversation}, { upsert: true }, function(err, doc) {
       if (err) {
+        console.error("error saveOrUpdateConversation", err)
         if (callback) {
           callback(err, null)
         }
       }
       else {
         if (callback) {
-          winston.debug("Conversation saved.")
+          console.debug("Conversation saved.")
           callback(null, doc)
         }
       }

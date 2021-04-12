@@ -19,4 +19,10 @@ module.exports = {
         SEEN : 300 //seen
 
     },
+    WEBHOOK_EVENTS : {
+        MESSAGE_SENT: 'message-sent',
+        MESSAGE_DELIVERED: 'message-delivered',
+        MESSAGE_RECEIVED: 'message-received',
+        MESSAGE_RETURN_RECEIPT: 'message-return-receipt'
+    }
 }
