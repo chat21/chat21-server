@@ -171,6 +171,32 @@ class Webhooks {
 
   // ************ WEBHOOKS *********** //
 
+  WHnotifyMessageStatusSentOrDelivered(message, callback) {
+    console.log("WHnotifyMessageStatusSentOrDelivered", message)
+    if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT) {
+      console.log("SENT...")
+      this.WHnotifyMessageStatusSent(message, (err) => {
+        if (callback) {
+          callback(err);
+        }
+        else {
+          callback(null);
+        }
+      })
+    }
+    else if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED) {
+      console.log("DELIVERED...")
+      this.WHnotifyMessageStatusDelivered(message, (err) => {
+        if (callback) {
+          callback(err);
+        }
+        else {
+          callback(null);
+        }
+      })
+    }
+  }
+
   WHnotifyMessageStatusSent(message, callback) {
     console.log("WH Sent method.");
     if (this.webhook_events.indexOf(MessageConstants.WEBHOOK_EVENTS.MESSAGE_SENT) == -1) {

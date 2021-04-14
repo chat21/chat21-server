@@ -18,10 +18,11 @@ winston.info("webhook_endpoint: " + webhook_endpoint);
 
 let webhook_events_array = null;
 if (process.env.WEBHOOK_EVENTS) {
+  console.log(typeof process.env.WEBHOOK_EVENTS);
   const webhook_events = process.env.WEBHOOK_EVENTS;
   webhook_events_array = webhook_events.split(",");
 }
-winston.info("webhook_events_array: " + webhook_events_array);
+winston.info("webhook_events_array: " , webhook_events_array);
 
 var webhook_enabled = process.env.WEBHOOK_ENABLED;
 if (webhook_enabled == undefined || webhook_enabled === "true" || webhook_enabled === true ) {
@@ -233,7 +234,7 @@ function processMsg(msg) {
 }
 
 function work(msg, callback) {
-  winston.debug("work NEW TOPIC: " + msg.fields.routingKey) //, " message:", msg.content.toString());
+  console.debug("work NEW TOPIC: " + msg.fields.routingKey) //, " message:", msg.content.toString());
   const topic = msg.fields.routingKey //.replace(/[.]/g, '/');
   const message_string = msg.content.toString();
   if (topic.endsWith('.outgoing')) {
@@ -296,7 +297,7 @@ function process_outgoing(topic, message_string, callback) {
   let convers_with;
 
   if (!isMessageGroup(outgoing_message)) {
-    winston.debug("Direct message.");
+    console.debug("Direct message.");
     inbox_of = sender_id;
     convers_with = recipient_id;
     outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT // =100. DELIVERED (=150) it's better, but the JS client actually wants 100 to show the sent-checkbox
@@ -356,6 +357,7 @@ function process_outgoing(topic, message_string, callback) {
     // })
   }
   else {
+    console.log("message group.");
     const group_id = recipient_id
     chatdb.getGroup(group_id, function(err, group) { // REDIS?
       // winston.debug("group found!", group)
@@ -415,9 +417,12 @@ function process_outgoing(topic, message_string, callback) {
 }
 
 function isMessageGroup(message) {
+  // console.debug("checking is group", message);
   if (message.channel_type === 'group') {
+    // console.log("is group!")
     return true
   }
+  // console.log("not a group")
   return false
 }
 
@@ -442,49 +447,69 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
   publish(exchange, added_topic, Buffer.from(message_payload), function(err, msg) { // .clientadded
     if (err) {
       console.error("Error on topic: ", added_topic, " Err:", err);
-      callback(false)
-      return
+      callback(false);
+      return;
     }
-    webhooks
-    winston.debug("NOTIFY VIA WHnotifyMessageStatusDelivered, topic: " + added_topic)
-    console.log("webhook_enabled:", webhook_enabled)
+    console.debug("NOTIFY VIA WHnotifyMessageStatusDelivered, topic: " + added_topic);
+    console.log("webhook_enabled:", webhook_enabled);
     if (webhook_enabled) {
-      console.log("webhook_enabled!!!!!", webhook_enabled, message.status)
-      if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED) {
-        winston.debug("WHnotifyMessageStatusDelivered before message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED");
-        webhooks.WHnotifyMessageStatusDelivered(message, (err) => {
-          if (err) {
-            winston.error("WHnotifyMessageStatusDelivered with err:"+ err)
-          } else {
-            winston.debug("WHnotifyMessageStatusDelivered ok")
-          }
-        })
-      }
-      else if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT) {
-        winston.debug("WHnotifyMessageStatusDelivered before message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT");
-        webhooks.WHnotifyMessageStatusSent(message, (err) => {
-          if (err) {
-            winston.error("Webhook notified with err:"+ err)
-          } else {
-            winston.debug("Webhook notified WHnotifyMessageReceived ok")
-          }
-        })
-      }else {
-        winston.debug("WHnotifyMessageStatusDelivered before else other???");
-      }
+      webhooks.WHnotifyMessageStatusSentOrDelivered(message, (err) => {
+        if (err) {
+          console.error("WHnotifyMessageStatusSentOrDelivered with err:"+ err);
+          callback(false);
+        }
+        else {
+          console.debug("WHnotifyMessageStatusSentOrDelivered ok");
+          console.debug("ADDED. NOW PUBLISH TO 'persist' TOPIC: " + persist_topic);
+          publish(exchange, persist_topic, Buffer.from(message_payload), function(err, msg) { // .persist
+            if (err) {
+              console.error("Error PUBLISH TO 'persist' TOPIC:", err);
+              callback(false);
+              return;
+            }
+            console.debug("... ALL GOOD ON:", persist_topic);
+            callback(true);
+          })
+        }
+      });
     }
+    // if (webhook_enabled) {
+    //   console.log("webhook_enabled!!!!!", webhook_enabled, message.status)
+    //   if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED) {
+    //     winston.debug("WHnotifyMessageStatusDelivered before message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED");
+    //     webhooks.WHnotifyMessageStatusDelivered(message, (err) => {
+    //       if (err) {
+    //         winston.error("WHnotifyMessageStatusDelivered with err:"+ err)
+    //       } else {
+    //         winston.debug("WHnotifyMessageStatusDelivered ok")
+    //       }
+    //     })
+    //   }
+    //   else if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT) {
+    //     winston.debug("WHnotifyMessageStatusDelivered before message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT");
+    //     webhooks.WHnotifyMessageStatusSent(message, (err) => {
+    //       if (err) {
+    //         winston.error("Webhook notified with err:"+ err)
+    //       } else {
+    //         winston.debug("Webhook notified WHnotifyMessageReceived ok")
+    //       }
+    //     })
+    //   }else {
+    //     winston.debug("WHnotifyMessageStatusDelivered before else other???");
+    //   }
+    // }
     // saves on db and creates conversation
-    winston.debug("ADDED. NOW PUBLISH TO 'persist' TOPIC: " + persist_topic)
-    publish(exchange, persist_topic, Buffer.from(message_payload), function(err, msg) { // .persist
-      if (err) {
-        console.error("Error PUBLISH TO 'persist' TOPIC:", err)
-        callback(false)
-        return
-      }
-      winston.debug("... ALL GOOD ON:", persist_topic)
-      callback(true)
-      // publish convs .clientadded
-    })
+    // winston.debug("ADDED. NOW PUBLISH TO 'persist' TOPIC: " + persist_topic)
+    // publish(exchange, persist_topic, Buffer.from(message_payload), function(err, msg) { // .persist
+    //   if (err) {
+    //     console.error("Error PUBLISH TO 'persist' TOPIC:", err)
+    //     callback(false)
+    //     return
+    //   }
+    //   winston.debug("... ALL GOOD ON:", persist_topic)
+    //   callback(true)
+    //   // publish convs .clientadded
+    // })
   })
 }
 
