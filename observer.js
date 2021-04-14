@@ -14,14 +14,14 @@ app.use(bodyParser.json());
 
 var webhook_endpoint = process.env.WEBHOOK_ENDPOINT || "http://localhost:3000/chat21/requests";
 winston.info("webhook_endpoint: " + webhook_endpoint);
-                                                                                      //mancano->
-var webhook_methods = process.env.WEBHOOK_METHODS || "new-message,deleted-conversation,join-member,leave-member,deleted-archivedconversation,typing-start,presence-change";
-winston.info("webhook_methods: "+ webhook_methods);
 
-// var webhook_methods_array = JSON.parse("[" + webhook_methods + "]");
-var webhook_methods_array = webhook_methods.split(",");
-winston.debug("webhook_methods_array: ", webhook_methods_array);
-
+let webhook_events_array
+if (process.env.WEBHOOK_EVENTS) {
+  const webhook_events = process.env.WEBHOOK_EVENTS;
+  const webhook_events_array = webhook_events.split(",");
+  winston.debug("webhook_events_array: ", webhook_events_array);
+}
+winston.info("webhook_events_array: " + webhook_events_array);
 
 var webhook_enabled = process.env.WEBHOOK_ENABLED;
 if (webhook_enabled == undefined || webhook_enabled === "true" || webhook_enabled === true ) {
@@ -1039,7 +1039,7 @@ async function startServer() {
   var amqpConnection = await start();
   winston.debug("[Observer.AMQP] connected.");
   winston.info("Starting webhooks...");
-  webhooks = new Webhooks({appId: app_id, RABBITMQ_URI: process.env.RABBITMQ_URI, exchange: exchange, webhook_endpoint: webhook_endpoint, webhook_methods: webhook_methods_array, queue_name: 'webhooks'});
+  webhooks = new Webhooks({appId: app_id, RABBITMQ_URI: process.env.RABBITMQ_URI, exchange: exchange, webhook_endpoint: webhook_endpoint, webhook_events: webhook_events_array, queue_name: 'webhooks'});
   await webhooks.start();
   winston.info("Webhooks started.");
   webhooks.enabled = webhook_enabled;
