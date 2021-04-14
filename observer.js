@@ -436,9 +436,9 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
     }
     webhooks
     winston.debug("NOTIFY VIA WHnotifyMessageStatusDelivered, topic: " + added_topic)
-    console.log("process.env.WEBHOOK_ENABLED:", process.env.WEBHOOK_ENABLED)
-    if (process.env.WEBHOOK_ENABLED === 'true') {
-      console.log("process.env.WEBHOOK_ENABLED!!!!!", process.env.WEBHOOK_ENABLED)
+    console.log("webhook_enabled:", webhook_enabled)
+    if (webhook_enabled) {
+      console.log("webhook_enabled!!!!!", webhook_enabled)
       if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED) {
         webhooks.WHnotifyMessageStatusDelivered(message, (err) => {
           if (err) {
@@ -600,8 +600,8 @@ function process_update(topic, message_string, callback) {
         callback(false)
       }
       else {
-        console.log("process.env.WEBHOOK_ENABLED?????", process.env.WEBHOOK_ENABLED);
-        if (process.env.WEBHOOK_ENABLED === 'true') {
+        console.log("webhook_enabled?????", webhook_enabled);
+        if (webhook_enabled) {
           webhooks.WHnotifyMessageStatusReturnReceipt(dest_message_patch, (err) => {
             if (err) {
               winston.error("WHnotifyMessageStatusReturnReceipt with err:" + err)
@@ -706,7 +706,7 @@ function process_archive(topic, payload, callback) {
       "archived": true
     }
     winston.debug("NOTIFY VIA WEBHOOK ON SAVE TOPIC "+ topic)
-    if (process.env.WEBHOOK_ENABLED === 'true') {
+    if (webhook_enabled) {
       webhooks.WHnotifyConversationArchived(conversation_archive_patch, (err) => {
         if (err) {
             winston.error("Webhook notified with err:"+ err)
