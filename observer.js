@@ -295,7 +295,7 @@ function process_outgoing(topic, message_string, callback) {
   let inbox_of;
   let convers_with;
 
-  if (!isGroup(recipient_id)) {
+  if (!isMessageGroup(outgoing_message)) {
     winston.debug("Direct message.");
     inbox_of = sender_id;
     convers_with = recipient_id;
@@ -388,8 +388,7 @@ function process_outgoing(topic, message_string, callback) {
         const convers_with = recipient_id
         winston.debug("inbox_of: "+ inbox_of)
         winston.debug("convers_with: "  + convers_with)
-        outgoing_message.channel_type = "group"
-        
+        outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT
         deliverMessage(outgoing_message, app_id, inbox_of, convers_with, function(ok) {
           winston.debug("MESSAGE DELIVERED?", ok)
           count++;
@@ -415,12 +414,19 @@ function process_outgoing(topic, message_string, callback) {
   }
 }
 
-function isGroup(group_id) {
-  if (group_id.indexOf('group-') >= 0) {
+function isMessageGroup(message) {
+  if (message.channel_type === 'group') {
     return true
   }
   return false
 }
+
+// function isGroup(group_id) {
+//   if (group_id.indexOf('group-') >= 0 || ) {
+//     return true
+//   }
+//   return false
+// }
 
 //deliverMessage(appid, message, inbox_of, convers_with, (err) => {
 function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
@@ -1061,7 +1067,6 @@ async function startServer() {
   winston.info("Starting webhooks...");
   webhooks = new Webhooks({appId: app_id, RABBITMQ_URI: process.env.RABBITMQ_URI, exchange: exchange, webhook_endpoint: webhook_endpoint, webhook_events: webhook_events_array, queue_name: 'webhooks'});
   await webhooks.start();
-  winston.info("Webhooks started:", webhooks);
   webhooks.enabled = webhook_enabled;
 }
 
