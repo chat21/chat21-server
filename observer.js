@@ -15,11 +15,10 @@ app.use(bodyParser.json());
 var webhook_endpoint = process.env.WEBHOOK_ENDPOINT || "http://localhost:3000/chat21/requests";
 winston.info("webhook_endpoint: " + webhook_endpoint);
 
-let webhook_events_array
+let webhook_events_array = null;
 if (process.env.WEBHOOK_EVENTS) {
   const webhook_events = process.env.WEBHOOK_EVENTS;
-  const webhook_events_array = webhook_events.split(",");
-  winston.debug("webhook_events_array: ", webhook_events_array);
+  webhook_events_array = webhook_events.split(",");
 }
 winston.info("webhook_events_array: " + webhook_events_array);
 
