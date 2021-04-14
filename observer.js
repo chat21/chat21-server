@@ -443,8 +443,9 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
     winston.debug("NOTIFY VIA WHnotifyMessageStatusDelivered, topic: " + added_topic)
     console.log("webhook_enabled:", webhook_enabled)
     if (webhook_enabled) {
-      console.log("webhook_enabled!!!!!", webhook_enabled)
+      console.log("webhook_enabled!!!!!", webhook_enabled, message.status)
       if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED) {
+        winston.debug("WHnotifyMessageStatusDelivered before message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED");
         webhooks.WHnotifyMessageStatusDelivered(message, (err) => {
           if (err) {
             winston.error("WHnotifyMessageStatusDelivered with err:"+ err)
@@ -454,6 +455,7 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
         })
       }
       else if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT) {
+        winston.debug("WHnotifyMessageStatusDelivered before message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT");
         webhooks.WHnotifyMessageStatusSent(message, (err) => {
           if (err) {
             winston.error("Webhook notified with err:"+ err)
@@ -461,6 +463,8 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
             winston.debug("Webhook notified WHnotifyMessageReceived ok")
           }
         })
+      }else {
+        winston.debug("WHnotifyMessageStatusDelivered before else other???");
       }
     }
     // saves on db and creates conversation
