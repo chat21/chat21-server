@@ -70,12 +70,23 @@ function start() {
 }
 
 function startMQ() {
+  var autoRestart = process.env.AUTO_RESTART;
+  if (autoRestart===undefined || autoRestart==="true" || autoRestart===true) {
+      autoRestart=true;
+  } else {
+      autoRestart=false;
+  }
   return new Promise(function (resolve, reject) {
       winston.debug("Connecting to RabbitMQ...")
       amqp.connect(process.env.RABBITMQ_URI, (err, conn) => {
           if (err) {
               winston.error("[AMQP]", err);                    
-              return setTimeout(() => { startMQ() }, 1000);
+              if (autoRestart) {
+                console.error("[AMQP] reconnecting");
+                return setTimeout(() => { startMQ() }, 1000);
+              } else {
+                  process.exit(1);
+              }                     
           }
           conn.on("error", (err) => {
               if (err.message !== "Connection closing") {
@@ -84,8 +95,13 @@ function startMQ() {
               }
           });
           conn.on("close", () => {
-              console.error("[AMQP] reconnecting");
-              return setTimeout(() => { startMQ() }, 1000);
+            console.error("[AMQP] close");
+            if (autoRestart) {
+                console.error("[AMQP] reconnecting");
+                return setTimeout(() => { startMQ() }, 1000);
+            } else {
+                process.exit(1);
+            }                                 
           });
           amqpConn = conn;
           whenConnected().then(function(ch) {
