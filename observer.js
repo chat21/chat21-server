@@ -68,24 +68,25 @@ function setWebHookEnabled(enabled) {
 }
 
 function start() {
-  return startMQ()
+  return new Promise(function (resolve, reject) {
+    return startMQ(resolve, reject);
+  });
 }
 
-function startMQ() {
+function startMQ(resolve, reject) {
   var autoRestart = process.env.AUTO_RESTART;
   if (autoRestart===undefined || autoRestart==="true" || autoRestart===true) {
       autoRestart=true;
   } else {
       autoRestart=false;
-  }
-  return new Promise(function (resolve, reject) {
+  }  
       winston.debug("Connecting to RabbitMQ...")
       amqp.connect(process.env.RABBITMQ_URI, (err, conn) => {
           if (err) {
               winston.error("[AMQP]", err);                    
               if (autoRestart) {
                 console.error("[AMQP] reconnecting");
-                return setTimeout(() => { startMQ() }, 1000);
+                return setTimeout(() => { startMQ(resolve, reject) }, 1000);
               } else {
                   process.exit(1);
               }                     
@@ -100,7 +101,7 @@ function startMQ() {
             console.error("[AMQP] close");
             if (autoRestart) {
                 console.error("[AMQP] reconnecting");
-                return setTimeout(() => { startMQ() }, 1000);
+                return setTimeout(() => { startMQ(resolve, reject) }, 1000);
             } else {
                 process.exit(1);
             }                                 
@@ -110,8 +111,7 @@ function startMQ() {
             winston.debug("whenConnected() returned")
             return resolve({conn: conn, ch: ch});
           });
-      });
-  });
+      });  
 }
 
 async function whenConnected() {

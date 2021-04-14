@@ -17,5 +17,5 @@ async function start() {
 }
 start();
 
-// module.exports = { observer: observer};
+module.exports = { observer: observer};
 

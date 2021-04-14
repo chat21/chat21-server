@@ -823,36 +823,39 @@ work(msg, callback) {
 }
 
 start() {
-  return this.startMQ();
-}
-
-startMQ() {
   const that = this;
   return new Promise(function (resolve, reject) {
-      winston.debug("Webooks. Connecting to RabbitMQ...")
-      amqp.connect(that.RABBITMQ_URI, (err, conn) => {
-          if (err) {
-              winston.error("[Webooks.AMQP]", err);                    
-              return setTimeout(() => { startMQ() }, 1000);
+    return that.startMQ(resolve, reject);
+  });
+}
+
+startMQ(resolve, reject) {
+  const that = this;
+  
+  winston.debug("Webooks. Connecting to RabbitMQ...")
+  amqp.connect(that.RABBITMQ_URI, (err, conn) => {
+      if (err) {
+          winston.error("[Webooks.AMQP]", err);                    
+          return setTimeout(() => { that.startMQ(resolve, reject) }, 1000);
+      }
+      conn.on("error", (err) => {
+          if (err.message !== "Connection closing") {
+            winston.error("[Webooks.AMQP] conn error", err);
+              return reject(err);
           }
-          conn.on("error", (err) => {
-              if (err.message !== "Connection closing") {
-                winston.error("[Webooks.AMQP] conn error", err);
-                  return reject(err);
-              }
-          });
-          conn.on("close", () => {
-              console.error("[Webooks.AMQP] reconnecting");
-              return setTimeout(() => { that.startMQ() }, 1000);
-          });
-          winston.info("Webooks. AMQP connected.")
-          that.amqpConn = conn;
-          that.whenConnected().then(function(ch) {
-            winston.debug("Webooks. whenConnected() returned")
-            return resolve({conn: conn, ch: ch});
-          });
+      });
+      conn.on("close", () => {
+          console.error("[Webooks.AMQP] reconnecting");
+          return setTimeout(() => { that.startMQ(resolve, reject) }, 1000);
+      });
+      winston.info("Webooks. AMQP connected.")
+      that.amqpConn = conn;
+      that.whenConnected().then(function(ch) {
+        winston.debug("Webooks. whenConnected() returned")
+         resolve({conn: conn, ch: ch});
       });
   });
+  
 }
 
   publish(exchange, routingKey, content, callback) {
