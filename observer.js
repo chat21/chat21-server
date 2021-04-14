@@ -9,6 +9,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 var url = require('url');
 const { Webhooks } = require("./webhooks");
+const { Console } = require("console");
 const app = express();
 app.use(bodyParser.json());
 
@@ -376,15 +377,19 @@ function process_outgoing(topic, message_string, callback) {
         deliverMessage(outgoing_message, app_id, inbox_of, convers_with, function(ok) {
           winston.debug("MESSAGE DELIVERED?", ok)
           count++;
+          console.log("Sent Counting:", count);
+          console.log("Max:", max);
           if (!ok) {
             winston.debug("Error sending message to group " + group.uid);
             error_encoutered = true
           }
           if (count == max) {
             if (error_encoutered) {
+              console.error("ERROR SENDING MESSAGE TO GROUP!");
               callback(false)
             }
             else {
+              console.log("ALL OK! MESSAGE SENT TO GRUP! ACK!");
               callback(true);
             }
           }
@@ -1040,7 +1045,7 @@ async function startServer() {
   winston.info("Starting webhooks...");
   webhooks = new Webhooks({appId: app_id, RABBITMQ_URI: process.env.RABBITMQ_URI, exchange: exchange, webhook_endpoint: webhook_endpoint, webhook_events: webhook_events_array, queue_name: 'webhooks'});
   await webhooks.start();
-  winston.info("Webhooks started.");
+  winston.info("Webhooks started:", webhooks);
   webhooks.enabled = webhook_enabled;
 }
 

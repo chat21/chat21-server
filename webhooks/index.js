@@ -172,10 +172,12 @@ class Webhooks {
   // ************ WEBHOOKS *********** //
 
   WHnotifyMessageStatusSent(message, callback) {
+    console.log("WH Sent method.");
     if (this.webhook_events.indexOf(MessageConstants.WEBHOOK_EVENTS.MESSAGE_SENT) == -1) {
       winston.debug("WH MESSAGE_SENT disabled.");
       callback(null);
     } else {
+      console.log("WH MESSAGE_SENT enabled");
       this.WHnotifyMessageDeliver(message, (err) => {
         callback(err);
       });
@@ -205,7 +207,7 @@ class Webhooks {
   }
 
   WHnotifyMessageDeliver(message, callback) {
-    winston.debug("NOTIFY MESSAGE:", message);
+    winston.debug("WH NOTIFY MESSAGE:", message);
     if (this.enabled===false) {
       winston.debug("webhooks disabled");
       callback(null)
