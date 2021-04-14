@@ -178,6 +178,7 @@ class Webhooks {
       callback(null);
     } else {
       console.log("WH MESSAGE_SENT enabled");
+      winston.debug("WH MESSAGE_DELIVERED enabled.");
       this.WHnotifyMessageDeliver(message, (err) => {
         callback(err);
       });
@@ -189,6 +190,7 @@ class Webhooks {
       winston.debug("WH MESSAGE_DELIVERED disabled.");
       callback(null);
     } else {
+      winston.debug("WH MESSAGE_DELIVERED enabled.");
       this.WHnotifyMessageDeliver(message, (err) => {
         callback(err);
       });
