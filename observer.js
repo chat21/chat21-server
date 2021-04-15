@@ -234,7 +234,7 @@ function processMsg(msg) {
 }
 
 function work(msg, callback) {
-  console.debug("work NEW TOPIC: " + msg.fields.routingKey) //, " message:", msg.content.toString());
+  winston.debug("work NEW TOPIC: " + msg.fields.routingKey) //, " message:", msg.content.toString());
   const topic = msg.fields.routingKey //.replace(/[.]/g, '/');
   const message_string = msg.content.toString();
   if (topic.endsWith('.outgoing')) {
