@@ -157,7 +157,7 @@ function publish(exchange, routingKey, content, callback) {
     pubChannel.publish(exchange, routingKey, content, { persistent: true },
       function (err, ok) {
         if (err) {
-          winston.error("[AMQP] publish", err);
+          winston.error("[AMQP] publish error:", err);
           offlinePubQueue.push([exchange, routingKey, content]);
           pubChannel.connection.close();
           callback(err)
@@ -283,10 +283,10 @@ function process_outgoing(topic, message_string, callback) {
   const recipient_id = topic_parts[5]
   const me = sender_id
 
-  var message = JSON.parse(message_string)
-  var messageId = uuid()
+  let message = JSON.parse(message_string)
+  let messageId = uuid()
   const now = Date.now()
-  var outgoing_message = message
+  let outgoing_message = message
   outgoing_message.message_id = messageId
   outgoing_message.sender = me
   outgoing_message.recipient = recipient_id
@@ -383,16 +383,26 @@ function process_outgoing(topic, message_string, callback) {
       group.members[group.uid] = 1
       // winston.debug("Writing to group:", group)
       let count = 0;
-      let max = group.members.length;
+      console.log("group members", group.members);
+      let max = Object.keys(group.members).length;
       let error_encoutered = false;
       for (let [member_id, value] of Object.entries(group.members)) {
-        const inbox_of = member_id
-        const convers_with = recipient_id
-        winston.debug("inbox_of: "+ inbox_of)
-        winston.debug("convers_with: "  + convers_with)
-        outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT
+        const inbox_of = member_id;
+        const convers_with = recipient_id;
+        winston.debug("inbox_of: "+ inbox_of);
+        winston.debug("convers_with: "  + convers_with);
+        console.log("sending group outgoing message to member", member_id);
+        if (inbox_of === outgoing_message.sender) {
+          console.log("inbox_of === outgoing_message.sender. status=SENT");
+          outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT;
+        }
+        else {
+          console.log("inbox_of != outgoing_message.sender. status=DELIVERED");
+          outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED;
+        }
+        console.log("delivering group message wit status...", outgoing_message.status);
         deliverMessage(outgoing_message, app_id, inbox_of, convers_with, function(ok) {
-          winston.debug("MESSAGE DELIVERED?", ok)
+          winston.debug("GROUP MESSAGE DELIVERED?", ok)
           count++;
           console.log("Sent Counting:", count);
           console.log("Max:", max);
@@ -435,6 +445,7 @@ function isMessageGroup(message) {
 
 //deliverMessage(appid, message, inbox_of, convers_with, (err) => {
 function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
+  console.log("DELIVERINGMESSAGE:",message)
   winston.debug("DELIVERING:", message, "inbox_of:", inbox_of, "convers_with:", convers_with_id)
   // internal flow
   const persist_topic = `apps.observer.${app_id}.users.${inbox_of}.messages.${convers_with_id}.persist`
@@ -442,6 +453,8 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
   const added_topic = `apps.${app_id}.users.${inbox_of}.messages.${convers_with_id}.clientadded`
   winston.debug("persist_topic: " + persist_topic)
   winston.debug("added_topic: " + added_topic)
+  const mstatus = message.status;
+  console.log("mstatus:", mstatus)
   const message_payload = JSON.stringify(message)
   // notifies to the client (on MQTT client topic)
   publish(exchange, added_topic, Buffer.from(message_payload), function(err, msg) { // .clientadded
@@ -451,9 +464,8 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
       return;
     }
     console.debug("NOTIFY VIA WHnotifyMessageStatusDelivered, topic: " + added_topic);
-    console.log("webhook_enabled:", webhook_enabled);
     if (webhook_enabled) {
-      webhooks.WHnotifyMessageStatusSentOrDelivered(message, (err) => {
+      webhooks.WHnotifyMessageStatusSentOrDelivered(message_payload, (err) => {
         if (err) {
           console.error("WHnotifyMessageStatusSentOrDelivered with err:"+ err);
           callback(false);
@@ -472,6 +484,18 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
           })
         }
       });
+    }
+    else {
+      console.debug("ADDED. NOW PUBLISH TO 'persist' TOPIC: " + persist_topic);
+      publish(exchange, persist_topic, Buffer.from(message_payload), function(err, msg) { // .persist
+        if (err) {
+          console.error("Error PUBLISH TO 'persist' TOPIC:", err);
+          callback(false);
+          return;
+        }
+        console.debug("... ALL GOOD ON:", persist_topic);
+        callback(true);
+      })
     }
     // if (webhook_enabled) {
     //   console.log("webhook_enabled!!!!!", webhook_enabled, message.status)

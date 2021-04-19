@@ -171,8 +171,9 @@ class Webhooks {
 
   // ************ WEBHOOKS *********** //
 
-  WHnotifyMessageStatusSentOrDelivered(message, callback) {
-    console.log("WHnotifyMessageStatusSentOrDelivered", message)
+  WHnotifyMessageStatusSentOrDelivered(message_payload, callback) {
+    console.log("WHnotifyMessageStatusSentOrDelivered", message_payload)
+    const message = JSON.parse(message_payload);
     if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT) {
       console.log("SENT...")
       this.WHnotifyMessageStatusSent(message, (err) => {
@@ -413,7 +414,7 @@ WHprocess_webhook_message_deliver(topic, message_string, callback) {
   const recipient_id = message.recipient;
   const app_id = message.app_id;
   let event_type;
-  if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT) {
+  if (message.status === MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT) {
     event_type = MessageConstants.WEBHOOK_EVENTS.MESSAGE_SENT;
   }
   else {
