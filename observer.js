@@ -93,19 +93,32 @@ function getWebhooks() {
   return webhooks;
 }
 
+
+function getWebHookEnabled() {
+  return webhook_enabled;
+}
+
+function getWebHookEndpoint() {
+  return webhook_endpoint;
+}
+
+function getWebHookEvents() {
+  return webhook_events_array;
+}
+
+
+
+
 function setWebHookEnabled(enabled) {
   webhook_enabled = enabled;
-  return webhook_enabled; 
 }
 
 function setWebHookEndpoint(url) {
   webhook_endpoint = url;
-  return webhook_endpoint;
 }
 
 function setWebHookEvents(events) {
   webhook_events_array = events;
-  return webhook_events_array;
 }
 
 

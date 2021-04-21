@@ -90,6 +90,30 @@ class Webhooks {
     winston.debug("webhooks inizialized: this.exchange:", this.exchange, "this.offlinePubQueue:", this.offlinePubQueue)
   }
 
+
+  getWebHookEnabled() {
+    return this.webhook_enabled;
+  }
+
+  setWebHookEnabled(enabled) {
+    this.webhook_enabled = enabled;
+  }
+
+  getWebHookEndpoint() {
+    return this.webhook_endpoint;
+  }
+  setWebHookEndpoint(url) {
+    this.webhook_endpoint = url;
+  }
+  
+  getWebHookEvents() {
+    return this.webhook_events_array;
+  }
+  setWebHookEvents(events) {
+    this.webhook_events_array = events;
+  }
+  
+
   // WHnotifyMessageReceived
   // notifyMessageReceived(message) {
   //   winston.debug("NOTIFY MESSAGE:", message)
