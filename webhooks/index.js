@@ -78,13 +78,14 @@ class Webhooks {
     this.offlinePubQueue = [];
     this.enabled = true
     this.queue = options.queue_name || 'webhooks';
+
     const DEFAULT_WEBHOOK_EVENTS = [
       MessageConstants.WEBHOOK_EVENTS.MESSAGE_SENT,
       MessageConstants.WEBHOOK_EVENTS.MESSAGE_DELIVERED,
       MessageConstants.WEBHOOK_EVENTS.MESSAGE_RECEIVED,
       MessageConstants.WEBHOOK_EVENTS.MESSAGE_RETURN_RECEIPT,
     ]
-    this.webhook_events = options.webhook_events || DEFAULT_WEBHOOK_EVENTS;
+    this.webhook_events_array = options.webhook_events || DEFAULT_WEBHOOK_EVENTS;
         
 
     winston.debug("webhooks inizialized: this.exchange:", this.exchange, "this.offlinePubQueue:", this.offlinePubQueue)
@@ -226,7 +227,7 @@ class Webhooks {
 
   WHnotifyMessageStatusSent(message, callback) {
     console.log("WH Sent method.");
-    if (this.webhook_events.indexOf(MessageConstants.WEBHOOK_EVENTS.MESSAGE_SENT) == -1) {
+    if (this.webhook_events_array.indexOf(MessageConstants.WEBHOOK_EVENTS.MESSAGE_SENT) == -1) {
       winston.debug("WH MESSAGE_SENT disabled.");
       callback(null);
     } else {
@@ -239,7 +240,7 @@ class Webhooks {
   }
 
   WHnotifyMessageStatusDelivered(message, callback) {
-    if (this.webhook_events.indexOf(MessageConstants.WEBHOOK_EVENTS.MESSAGE_DELIVERED) == -1) {
+    if (this.webhook_events_array.indexOf(MessageConstants.WEBHOOK_EVENTS.MESSAGE_DELIVERED) == -1) {
       winston.debug("WH MESSAGE_DELIVERED disabled.");
       callback(null);
     } else {
@@ -251,7 +252,7 @@ class Webhooks {
   }
 
   WHnotifyMessageStatusReturnReceipt(message, callback) {
-    if (this.webhook_events.indexOf(MessageConstants.WEBHOOK_EVENTS.MESSAGE_RETURN_RECEIPT) == -1) {
+    if (this.webhook_events_array.indexOf(MessageConstants.WEBHOOK_EVENTS.MESSAGE_RETURN_RECEIPT) == -1) {
       winston.debug("WH MESSAGE_RETURN_RECEIPT disabled.");
       callback(null);
     } else {
