@@ -4,6 +4,7 @@ const { ChatDB } = require('./chatdb/index.js');
 // const { Webhooks } = require('./webhooks/index.js');
 // const uuidv4 = require('uuid/v4');
 const { uuid } = require('uuidv4');
+var mongodb = require("mongodb");
 var MessageConstants = require("./models/messageConstants");
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -13,6 +14,7 @@ const { Console } = require("console");
 const app = express();
 app.use(bodyParser.json());
 
+/*
 var webhook_endpoint = process.env.WEBHOOK_ENDPOINT || "http://localhost:3000/chat21/requests";
 winston.info("webhook_endpoint: " + webhook_endpoint);
 
@@ -32,13 +34,22 @@ if (webhook_enabled == undefined || webhook_enabled === "true" || webhook_enable
 }
 winston.info("webhook_enabled: " + webhook_enabled);
 
+*/
+
+/*
 var app_id = process.env.APP_ID || "tilechat";
 winston.info("app_id: " + app_id);
+*/
 
 
 var amqpConn = null;
-var exchange = 'amq.topic';
 
+/*
+var exchange = 'amq.topic';
+*/
+let exchange;
+
+/*
 const topic_outgoing = `apps.${app_id}.users.*.messages.*.outgoing`
 const topic_update = `apps.${app_id}.users.#.update`
 const topic_archive = `apps.${app_id}.users.#.archive`
@@ -48,19 +59,36 @@ const topic_persist = `apps.observer.${app_id}.users.*.messages.*.persist`
 const topic_delivered = `apps.observer.${app_id}.users.*.messages.*.delivered`
 const topic_create_group = `apps.observer.${app_id}.groups.create`
 const topic_update_group = `apps.observer.${app_id}.groups.update`
+*/
+
+let app_id;
+
+
+let topic_outgoing;
+let topic_update;
+let topic_archive;
+let topic_presence;
+// FOR OBSERVER TOPICS
+let topic_persist;
+let topic_delivered;
+let topic_create_group;
+let topic_update_group;
 
 var chatdb;
 let webhooks;
+
+function getWebhooks() {
+  return webhooks;
+}
 
 function setWebHookEndpoint(url) {
   webhook_endpoint = url;
   return webhook_endpoint;
 }
 
-function setWebHookMethods(methods) {
-  webhook_methods = methods;
-  webhook_methods_array = webhook_methods.split(",");
-  return webhook_methods_array;
+function setWebHookEvents(events) {
+  webhook_events_array = events;
+  return webhook_events_array;
 }
 
 function setWebHookEnabled(enabled) {
@@ -81,7 +109,7 @@ function startMQ(resolve, reject) {
       autoRestart=false;
   }  
       winston.debug("Connecting to RabbitMQ...")
-      amqp.connect(process.env.RABBITMQ_URI, (err, conn) => {
+      amqp.connect(rabbitmq_uri, (err, conn) => {
           if (err) {
               winston.error("[AMQP]", err);                    
               if (autoRestart) {
@@ -1105,12 +1133,30 @@ function closeOnErr(err) {
 //   startMQ();
 // });
 
-async function startServer() {
-  var mongouri = process.env.MONGODB_URI || "mongodb://localhost:27017/chatdb";
-  var mongodb = require("mongodb");
+async function startServer(config) {
+  
+  app_id = config.app_id || "tilechat";
+
+  exchange = config.exchange;
+
+  rabbitmq_uri = config.rabbitmq_uri;
+
+  topic_outgoing = `apps.${app_id}.users.*.messages.*.outgoing`
+  topic_update = `apps.${app_id}.users.#.update`
+  topic_archive = `apps.${app_id}.users.#.archive`
+  topic_presence = `apps.${app_id}.users.*.presence.*`
+// FOR OBSERVER TOPICS
+  topic_persist = `apps.observer.${app_id}.users.*.messages.*.persist`
+  topic_delivered = `apps.observer.${app_id}.users.*.messages.*.delivered`
+  topic_create_group = `apps.observer.${app_id}.groups.create`
+  topic_update_group = `apps.observer.${app_id}.groups.update`
+
+
+  mongo_uri = config.mongo_uri || "mongodb://localhost:27017/chatdb";
+
   var db;
   winston.debug("connecting to mongodb...");
-  var client = await mongodb.MongoClient.connect(mongouri, { useNewUrlParser: true, useUnifiedTopology: true })
+  var client = await mongodb.MongoClient.connect(mongo_uri, { useNewUrlParser: true, useUnifiedTopology: true })
   winston.debug("mongodb connected...", db);
   db = client.db();
   chatdb = new ChatDB({database: db})
@@ -1118,7 +1164,7 @@ async function startServer() {
   var amqpConnection = await start();
   winston.debug("[Observer.AMQP] connected.");
   winston.info("Starting webhooks...");
-  webhooks = new Webhooks({appId: app_id, RABBITMQ_URI: process.env.RABBITMQ_URI, exchange: exchange, webhook_endpoint: webhook_endpoint, webhook_events: webhook_events_array, queue_name: 'webhooks'});
+  webhooks = new Webhooks({appId: app_id, RABBITMQ_URI: rabbitmq_uri, exchange: exchange, webhook_endpoint: webhook_endpoint, webhook_events: webhook_events_array, queue_name: 'webhooks'});
   await webhooks.start();
   webhooks.enabled = webhook_enabled;
 }
@@ -1520,4 +1566,4 @@ async function startServer() {
 //   }
 // }
 
-module.exports = {startServer: startServer, setWebHookEndpoint: setWebHookEndpoint, setWebHookMethods:setWebHookMethods, setWebHookEnabled:setWebHookEnabled };
+module.exports = {startServer: startServer, getWebhooks:getWebhooks, setWebHookEndpoint: setWebHookEndpoint, setWebHookEvents:setWebHookEvents, setWebHookEnabled:setWebHookEnabled };

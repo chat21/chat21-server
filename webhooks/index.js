@@ -85,6 +85,8 @@ class Webhooks {
       MessageConstants.WEBHOOK_EVENTS.MESSAGE_RETURN_RECEIPT,
     ]
     this.webhook_events = options.webhook_events || DEFAULT_WEBHOOK_EVENTS;
+        
+
     winston.debug("webhooks inizialized: this.exchange:", this.exchange, "this.offlinePubQueue:", this.offlinePubQueue)
   }
 
@@ -825,6 +827,7 @@ work(msg, callback) {
 
 start() {
   const that = this;
+  winston.info("Webhook config: ", this);
   return new Promise(function (resolve, reject) {
     return that.startMQ(resolve, reject);
   });
