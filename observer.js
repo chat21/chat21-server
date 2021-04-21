@@ -77,18 +77,12 @@ let topic_update_group;
 var chatdb;
 let webhooks;
 
+let webhook_enabled;
+let webhook_endpoint;
+let webhook_events_array;
+
 function getWebhooks() {
   return webhooks;
-}
-
-function setWebHookEndpoint(url) {
-  webhook_endpoint = url;
-  return webhook_endpoint;
-}
-
-function setWebHookEvents(events) {
-  webhook_events_array = events;
-  return webhook_events_array;
 }
 
 function setWebHookEnabled(enabled) {
@@ -101,6 +95,17 @@ function setWebHookEnabled(enabled) {
   winston.info("webhook_enabled: " + webhook_enabled);
 
 }
+
+function setWebHookEndpoint(url) {
+  webhook_endpoint = url;
+  return webhook_endpoint;
+}
+
+function setWebHookEvents(events) {
+  webhook_events_array = events;
+  return webhook_events_array;
+}
+
 
 function start() {
   return new Promise(function (resolve, reject) {
