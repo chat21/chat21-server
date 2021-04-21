@@ -93,6 +93,13 @@ function setWebHookEvents(events) {
 
 function setWebHookEnabled(enabled) {
   webhook_enabled = enabled;
+  if (webhook_enabled == undefined || webhook_enabled === "true" || webhook_enabled === true ) {
+    webhook_enabled = true;
+  }else {
+    webhook_enabled = false;
+  }
+  winston.info("webhook_enabled: " + webhook_enabled);
+
 }
 
 function start() {
@@ -1135,9 +1142,13 @@ function closeOnErr(err) {
 
 async function startServer(config) {
   
+  if (!config) {
+    config = {}
+  }
+
   app_id = config.app_id || "tilechat";
 
-  exchange = config.exchange;
+  exchange = config.exchange || 'amq.topic';
 
   rabbitmq_uri = config.rabbitmq_uri;
 
