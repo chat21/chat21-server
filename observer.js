@@ -78,6 +78,14 @@ var chatdb;
 let webhooks;
 
 let webhook_enabled;
+
+if (webhook_enabled == undefined || webhook_enabled === "true" || webhook_enabled === true ) {
+  webhook_enabled = true;
+}else {
+  webhook_enabled = false;
+}
+winston.info("webhook_enabled: " + webhook_enabled);
+
 let webhook_endpoint;
 let webhook_events_array;
 
@@ -87,13 +95,7 @@ function getWebhooks() {
 
 function setWebHookEnabled(enabled) {
   webhook_enabled = enabled;
-  if (webhook_enabled == undefined || webhook_enabled === "true" || webhook_enabled === true ) {
-    webhook_enabled = true;
-  }else {
-    webhook_enabled = false;
-  }
-  winston.info("webhook_enabled: " + webhook_enabled);
-
+  return webhook_enabled; 
 }
 
 function setWebHookEndpoint(url) {
