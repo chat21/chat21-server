@@ -453,7 +453,8 @@ WHprocess_webhook_message_deliver(topic, message_string, callback) {
     recipient_id: recipient_id,
     app_id: app_id, // or this.appId?
     message_id: message_id,
-    data: message
+    data: message,
+    extras: {topic: topic}
   };
   winston.debug("WHprocess_webhook_message_received Sending JSON webhook:", json)
   this.WHsendData(json, function(err, data) {
@@ -493,7 +494,8 @@ WHprocess_webhook_message_update(topic, message_string, callback) {
     recipient_id: recipient_id,
     app_id: app_id, // or this.appId?
     message_id: message_id,
-    data: message
+    data: message,
+    extras: {topic: topic}
   };
   winston.debug("WHprocess_webhook_message_received Sending JSON webhook:", json)
   this.WHsendData(json, function(err, data) {
@@ -643,7 +645,8 @@ WHprocess_webhook_conversation_archived(topic, message_string, callback) {
       app_id: conversation.app_id,
       user_id: "system", // temporary patch for Tiledesk
       recipient_id: conversWith,
-      data: conversation
+      data: conversation,
+      extras: {topic: topic}
     };
     winston.debug("Sending JSON webhook:", json)
     this.WHsendData(json, function(err, data) {
