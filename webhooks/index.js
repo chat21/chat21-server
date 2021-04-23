@@ -198,9 +198,10 @@ class Webhooks {
 
   // ************ WEBHOOKS *********** //
 
-  WHnotifyMessageStatusSentOrDelivered(message_payload, callback) {
+  WHnotifyMessageStatusSentOrDelivered(message_payload, topic, callback) {
     console.log("WHnotifyMessageStatusSentOrDelivered", message_payload)
-    const message = JSON.parse(message_payload);
+    let message = JSON.parse(message_payload);
+    message['chat_topic'] = topic;
     if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT) {
       console.log("SENT...")
       this.WHnotifyMessageStatusSent(message, (err) => {
@@ -454,8 +455,9 @@ WHprocess_webhook_message_deliver(topic, message_string, callback) {
     app_id: app_id, // or this.appId?
     message_id: message_id,
     data: message,
-    extras: {topic: topic}
+    extras: {topic: message.chat_topic}
   };
+  delete message.chat_topic;
   winston.debug("WHprocess_webhook_message_received Sending JSON webhook:", json)
   this.WHsendData(json, function(err, data) {
     if (err)  {
