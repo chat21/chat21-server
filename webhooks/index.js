@@ -347,7 +347,7 @@ WHnotifyConversationArchived(conversation, callback) {
   winston.debug("notifying webhook notifyConversationArchived topic: " + notify_topic)
   const payload = JSON.stringify(conversation)
   winston.debug("PAYLOAD:", payload)
-  this.publish(exchange, notify_topic, Buffer.from(payload), (err) => {
+  this.publish(this.exchange, notify_topic, Buffer.from(payload), (err) => {
     if (err) {
       winston.error("Err", err)
       callback(err)
