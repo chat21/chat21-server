@@ -498,7 +498,7 @@ function isMessageGroup(message) {
 //   return false
 // }
 
-//deliverMessage(appid, message, inbox_of, convers_with, (err) => {
+// Places te message in the inbox of the recipient
 function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
   console.log("DELIVERINGMESSAGE:",message)
   winston.debug("DELIVERING:", message, "inbox_of:", inbox_of, "convers_with:", convers_with_id)
@@ -519,8 +519,8 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
       return;
     }
     console.debug("NOTIFY VIA WHnotifyMessageStatusDelivered, topic: " + added_topic);
-    if (webhook_enabled) {
-      webhooks.WHnotifyMessageStatusSentOrDelivered(message_payload, (err) => {
+    if (webhooks && webhook_enabled) {
+      webhooks.WHnotifyMessageStatusSentOrDelivered(message_payload, added_topic, (err) => {
         if (err) {
           console.error("WHnotifyMessageStatusSentOrDelivered with err:"+ err);
           callback(false);
@@ -1191,13 +1191,14 @@ async function startServer(config) {
   winston.debug("mongodb connected...", db);
   db = client.db();
   chatdb = new ChatDB({database: db})
-  winston.debug('Starting observer.')
-  var amqpConnection = await start();
-  winston.debug("[Observer.AMQP] connected.");
   winston.info("Starting webhooks...");
   webhooks = new Webhooks({appId: app_id, RABBITMQ_URI: rabbitmq_uri, exchange: exchange, webhook_endpoint: webhook_endpoint, webhook_events: webhook_events_array, queue_name: 'webhooks'});
   await webhooks.start();
   webhooks.enabled = webhook_enabled;
+  winston.debug('Starting observer.')
+  var amqpConnection = await start();
+  winston.debug("[Observer.AMQP] connected.");
+  
 }
 
 // startServer()
