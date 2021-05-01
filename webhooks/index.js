@@ -348,7 +348,7 @@ WHnotifyConversationArchived(conversation, callback) {
   winston.debug("notifying webhook notifyConversationArchived topic: " + notify_topic)
   const payload = JSON.stringify(conversation)
   winston.debug("PAYLOAD:", payload)
-  this.publish(exchange, notify_topic, Buffer.from(payload), (err) => {
+  this.publish(this.exchange, notify_topic, Buffer.from(payload), (err) => {
     if (err) {
       winston.error("Err", err)
       callback(err)
@@ -476,7 +476,7 @@ WHprocess_webhook_message_update(topic, message_string, callback) {
     callback(true)
   }
   if (!this.webhook_endpoint) {
-    winston.debug("WHprocess_webhook_message_deliver Discarding notification. webhook_endpoint is undefined.")
+    winston.debug("WHprocess_webhook_message_update Discarding notification. webhook_endpoint is undefined.")
     return
   }
   winston.verbose("Sending notification to webhook (message_deliver) on webhook_endpoint:" + this.webhook_endpoint);
