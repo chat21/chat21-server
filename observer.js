@@ -179,7 +179,6 @@ var pubChannel = null;
 var offlinePubQueue = [];
 
 function startPublisher() {
-  // var that = this;
   return new Promise(function (resolve, reject) {
       amqpConn.createConfirmChannel( (err, ch) => {
           if (closeOnErr(err)) return;
@@ -190,18 +189,12 @@ function startPublisher() {
               winston.debug("[AMQP] channel closed");
           });
           pubChannel = ch;
-          if (offlinePubQueue.length > 0) {
-              // while (true) {
-              //     var m = this.offlinePubQueue.shift();
-              //     if (!m) break;
-              //     this.publish(m[0], m[1], m[2]);
-              //   }
-
-              while (true) {
-                  var [exchange, routingKey, content] = offlinePubQueue.shift();
-                  publish(exchange, routingKey, content);
-              }
-          }
+          // if (offlinePubQueue.length > 0) {
+          //     while (true) {
+          //         var [exchange, routingKey, content] = offlinePubQueue.shift();
+          //         publish(exchange, routingKey, content);
+          //     }
+          // }
           return resolve(ch)
       });
   });
