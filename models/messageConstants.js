@@ -23,6 +23,8 @@ module.exports = {
         MESSAGE_SENT: 'message-sent',
         MESSAGE_DELIVERED: 'message-delivered',
         MESSAGE_RECEIVED: 'message-received',
-        MESSAGE_RETURN_RECEIPT: 'message-return-receipt'
+        MESSAGE_RETURN_RECEIPT: 'message-return-receipt',
+        CONVERSATION_ARCHIVED: 'conversation-archived',
+        CONVERSATION_UNARCHIVED: 'conversation-unarchived'
     }
 }

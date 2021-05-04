@@ -795,7 +795,7 @@ function process_update(topic, message_string, callback) {
 
 function process_archive(topic, payload, callback) {
   // Ex. apps/tilechat/users/USER_ID/conversations/CONVERS_WITH/archive
-  var topic_parts = topic.split(".")
+  const topic_parts = topic.split(".")
   winston.debug("ARCHIVE. TOPIC PARTS:" + topic_parts + "payload (ignored): " + payload)
   if (topic_parts.length < 7) {
     winston.debug("process_archive topic error. topic_parts.length < 7:" + topic)
@@ -819,10 +819,11 @@ function process_archive(topic, payload, callback) {
     }
     winston.debug("NOTIFY VIA WEBHOOK ON SAVE TOPIC "+ topic)
     if (webhook_enabled) {
-      webhooks.WHnotifyConversationArchived(conversation_archive_patch, (err) => {
+      webhooks.WHnotifyConversationArchived(conversation_archive_patch, topic, (err) => {
         if (err) {
             winston.error("Webhook notified with err:"+ err)
-          }else {
+          }
+          else {
             winston.debug("Webhook notified WHnotifyConversationArchived ok")
           }
       });
