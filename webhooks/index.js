@@ -466,9 +466,9 @@ class Webhooks {
       winston.debug("process_archive topic error. topic_parts.length < 7:" + topic)
       return
     }
-    const app_id = topic_parts[1]
-    const user_id = topic_parts[3]
-    const convers_with = topic_parts[5]
+    const app_id = topic_parts[1];
+    const user_id = topic_parts[3];
+    const convers_with = topic_parts[5];
 
     // chatdb.getConversation(timelineOf, conversWith, function(err, conversation) {
     var json = {
@@ -479,8 +479,9 @@ class Webhooks {
       recipient_id: convers_with,
       convers_with: convers_with,
       data: conversation,
-      extras: {topic: topic}
+      extras: {topic: conversation['temp_field_chat_topic']}
     };
+    delete conversation['temp_field_chat_topic'];
     winston.debug("Sending JSON webhook:", json)
     this.WHsendData(json, function(err, data) {
       if (err)  {
