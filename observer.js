@@ -869,14 +869,14 @@ function process_archive(topic, payload, callback) {
 
 function process_create_group(topic, payload, callback) {
   var topic_parts = topic.split(".")
-  winston.debug("process_create_group. TOPIC PARTS:" + topic_parts + " payload:" + payload)
+  console.debug("process_create_group. TOPIC PARTS:" + topic_parts + " payload:" + payload)
   // `apps.observer.${app_id}.groups.create`
   const app_id = topic_parts[2]
-  winston.debug("app_id:" + app_id)
-  winston.debug("payload:"+ payload)
+  console.debug("app_id:" + app_id)
+  console.debug("payload:"+ payload)
   const group = JSON.parse(payload)
   if (!group.uid || !group.name || !group.members || !group.owner) {
-    winston.debug("group error.");
+    console.error("Group error during creation. Metadata missed.");
     callback(true);
     return
   }
@@ -895,9 +895,9 @@ function process_create_group(topic, payload, callback) {
         }
         else {
           for (let [member_id, value] of Object.entries(group.members)) {
-            winston.debug(">>>>> JOINING MEMBER: "+member_id)
+            console.debug(">>>>> JOINING MEMBER: "+member_id)
             joinGroup(member_id, group, function(reply) {
-                winston.debug("member: " + member_id + " invited on group " + group + " result " + reply)
+              console.debug("member: " + member_id + " invited on group " + group + " result " + reply)
             })
           }
           callback(true)
@@ -1012,9 +1012,9 @@ function process_update_group(topic, payload, callback) {
   const group = data.group
   winston.debug("process_update_group DATA.group ", data.group)
   const notify_to = data.notify_to
-  winston.debug("process_update_group DATA.notify_to ", data.notify_to)
+  winston.debug("process_update_group DATA.notify_to ", data.notify_to);
   if (!group || !group.uid) {
-    winston.debug("group error.")
+    winston.error("Group not found!");
     callback(true)
     return
   }
@@ -1090,7 +1090,7 @@ function sendGroupWelcomeMessageToInitialMembers(app_id, group, callback) {
       status: MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT,
       attributes: {
         subtype: "info",
-        updateconversation: true, // TO BE USED LATER
+        updateconversation: true,
         messagelabel: {
           key: "GROUP_CREATED",
           parameters:
@@ -1108,8 +1108,9 @@ function sendGroupWelcomeMessageToInitialMembers(app_id, group, callback) {
     // }
     const user_id = member_id
     const convers_with = group.uid
-    winston.debug("user_id: " + user_id)
-    winston.debug("convers_with: " + convers_with)
+    console.debug("group_created_message: ", group_created_message)
+    console.debug("user_id: " + user_id)
+    console.debug("convers_with: " + convers_with)
     deliverMessage(group_created_message, app_id, user_id, convers_with, function(ok) {
       winston.debug("MESSAGE DELIVERED?", ok)
       if (!ok) {
