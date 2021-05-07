@@ -237,7 +237,7 @@ function startWorker() {
     ch.assertExchange(exchange, 'topic', {
       durable: true
     });
-    ch.assertQueue("jobs", { durable: true }, function (err, _ok) {
+    ch.assertQueue("messages", { durable: true }, function (err, _ok) {
       if (closeOnErr(err)) return;
       subscribeTo(topic_outgoing, ch, _ok.queue)
       subscribeTo(topic_persist, ch, _ok.queue)
@@ -247,7 +247,7 @@ function startWorker() {
       subscribeTo(topic_create_group, ch, _ok.queue)
       subscribeTo(topic_update_group, ch, _ok.queue)
       subscribeTo(topic_delivered, ch, _ok.queue)
-      ch.consume("jobs", processMsg, { noAck: false });
+      ch.consume("messages", processMsg, { noAck: false });
     });
   });
 }
