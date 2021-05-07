@@ -282,10 +282,11 @@ function processMsg(msg) {
 }
 
 function work(msg, callback) {
-  console.debug("work: NEW msg: " + msg);
+  console.debug("work: NEW msg: ", msg);
   if (!msg) {
     console.error("Error. Work Message is empty. Removing this job with ack=ok.");
     callback(true);
+    return;
   }
   console.debug("work NEW TOPIC: " + msg.fields.routingKey) //, " message:", msg.content.toString());
   const topic = msg.fields.routingKey //.replace(/[.]/g, '/');
