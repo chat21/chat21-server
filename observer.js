@@ -1046,9 +1046,9 @@ function deliverGroupAdded(group, callback) {
     const payload = JSON.stringify(group)
     publish(exchange, added_group_topic, Buffer.from(payload), function(err, msg) {
       if (err) {
-        winston.error("error",err);
-        callback(false)
-        return
+        winston.error("error publish deliverGroupAdded",err);
+        // callback(false)
+        // return
       }
     })
   }
@@ -1064,9 +1064,9 @@ function deliverGroupUpdated(group, notify_to, callback) {
     const payload = JSON.stringify(group)
     publish(exchange, updated_group_topic, Buffer.from(payload), function(err, msg) {
       if (err) {
-        winston.error("error",err);
-        callback(false)
-        return
+        winston.error("error publish deliverGroupUpdated",err);
+        // callback(false)
+        // return
       }
     })
   }
