@@ -226,6 +226,10 @@ class Webhooks {
         }
       })
     }
+    else {
+      console.log("FUCK THIS DELIVERED...")
+      callback(null);
+    }
   }
 
   WHnotifyMessageStatusSent(message, callback) {

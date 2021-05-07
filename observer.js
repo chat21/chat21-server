@@ -264,6 +264,11 @@ function subscribeTo(topic, channel, queue) {
 }
 
 function processMsg(msg) {
+  console.debug("processMsgw. New msg:", msg);
+  if (msg == null) {
+    console.error("Msg is null. Stop job")
+    return;
+  }
   work(msg, function (ok) {
     try {
       if (ok) {
@@ -282,9 +287,8 @@ function processMsg(msg) {
 }
 
 function work(msg, callback) {
-  console.debug("work: NEW msg: ", msg);
   if (!msg) {
-    console.error("Error. Work Message is empty. Removing this job with ack=ok.");
+    console.error("Error. Work Message is empty. Removing this job with ack=ok.", msg);
     callback(true);
     return;
   }
@@ -519,6 +523,7 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
     }
     console.debug("NOTIFY VIA WHnotifyMessageStatusDelivered, topic: " + added_topic);
     if (webhooks && webhook_enabled) {
+      console.log("webhooks && webhook_enabled ON, processing webhooks, message:", message);
       webhooks.WHnotifyMessageStatusSentOrDelivered(message_payload, added_topic, (err) => {
         if (err) {
           console.error("WHnotifyMessageStatusSentOrDelivered with err:"+ err);
@@ -601,12 +606,12 @@ function process_delivered(topic, message_string, callback) {
   const inbox_of = topic_parts[4]
   const convers_with = topic_parts[6]
   const message = JSON.parse(message_string)
-  console.debug("____DELIVER MESSAGE ", message.message_id)
+  console.debug("____DELIVER MESSAGE:", message.message_id)
   deliverMessage(message, app_id, inbox_of, convers_with, function(ok) {
     console.debug("MESSAGE DELIVERED?: "+ ok)
     if (!ok) {
-      console.error("____Error delivering message. NOACKED", message)
-      console.log("____DELIVER MESSAGE ", message.message_id, " NOACKED!")
+      console.error("____Error delivering message. NOACKED:", message)
+      console.log("____DELIVER MESSAGE:", message.message_id, " NOACKED!")
       callback(false)
     }
     else {
@@ -638,7 +643,7 @@ function process_persist(topic, message_string, callback) {
   }
   winston.debug("updateconversation = " + update_conversation)
   chatdb.saveOrUpdateMessage(savedMessage, function(err, msg) {
-    winston.debug("Message saved.")
+    winston.debug("Message saved", savedMessage)
     winston.debug("Updating conversation? updateconversation is: " + update_conversation)
     if (update_conversation) {
       const my_conversation_topic = 'apps.tilechat.users.' + me + '.conversations.' + convers_with + ".clientadded"
