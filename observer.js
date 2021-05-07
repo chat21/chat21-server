@@ -282,7 +282,12 @@ function processMsg(msg) {
 }
 
 function work(msg, callback) {
-  winston.debug("work NEW TOPIC: " + msg.fields.routingKey) //, " message:", msg.content.toString());
+  console.debug("work: NEW msg: " + msg);
+  if (!msg) {
+    console.error("Error. Work Message is empty. Removing this job with ack=ok.");
+    callback(true);
+  }
+  console.debug("work NEW TOPIC: " + msg.fields.routingKey) //, " message:", msg.content.toString());
   const topic = msg.fields.routingKey //.replace(/[.]/g, '/');
   const message_string = msg.content.toString();
   if (topic.endsWith('.outgoing')) {
@@ -600,11 +605,11 @@ function process_delivered(topic, message_string, callback) {
     console.debug("MESSAGE DELIVERED?: "+ ok)
     if (!ok) {
       console.error("____Error delivering message. NOACKED", message)
-      console.debug("____DELIVER MESSAGE ", message.message_id, " NOACKED!")
+      console.log("____DELIVER MESSAGE ", message.message_id, " NOACKED!")
       callback(false)
     }
     else {
-      console.debug("____DELIVER MESSAGE ", message.message_id, " ACKED")
+      console.log("____DELIVER MESSAGE ", message.message_id, " ACKED")
       callback(true)
     }
   })
