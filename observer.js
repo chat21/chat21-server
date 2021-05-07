@@ -587,7 +587,7 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
 
 // delivers messages to inboxes with rabbitmq queues
 function process_delivered(topic, message_string, callback) {
-  winston.debug(">>>>> DELIVERED:", topic, "MESSAGE PAYLOAD:",message_string)
+  console.debug(">>>>> DELIVERING:", topic, "MESSAGE PAYLOAD:",message_string)
   var topic_parts = topic.split(".")
   // delivers the message payload in INBOX_OF -> CONVERS_WITH timeline
   // /apps/observer/tilechat/users/INBOX_OF/messages/CONVERS_WITH/delivered
@@ -595,13 +595,16 @@ function process_delivered(topic, message_string, callback) {
   const inbox_of = topic_parts[4]
   const convers_with = topic_parts[6]
   const message = JSON.parse(message_string)
+  console.debug("____DELIVER MESSAGE ", message.message_id)
   deliverMessage(message, app_id, inbox_of, convers_with, function(ok) {
-    winston.debug("MESSAGE DELIVERED?: "+ ok)
+    console.debug("MESSAGE DELIVERED?: "+ ok)
     if (!ok) {
-      winston.error("Error delivering message.", message)
+      console.error("____Error delivering message. NOACKED", message)
+      console.debug("____DELIVER MESSAGE ", message.message_id, " NOACKED!")
       callback(false)
     }
     else {
+      console.debug("____DELIVER MESSAGE ", message.message_id, " ACKED")
       callback(true)
     }
   })
@@ -877,7 +880,7 @@ function process_create_group(topic, payload, callback) {
   const group = JSON.parse(payload)
   if (!group.uid || !group.name || !group.members || !group.owner) {
     console.error("Group error during creation. Metadata missed.");
-    callback(true);
+    callback(true); // dequeue
     return
   }
   group.appId = app_id
@@ -1042,11 +1045,11 @@ function deliverGroupAdded(group, callback) {
   for (let [key, value] of Object.entries(group.members)) {
     const member_id = key
     const added_group_topic = `apps.${app_id}.users.${member_id}.groups.${group.uid}.clientadded`
-    winston.debug("added_group_topic:", added_group_topic)
+    console.debug("added_group_topic:", added_group_topic)
     const payload = JSON.stringify(group)
     publish(exchange, added_group_topic, Buffer.from(payload), function(err, msg) {
       if (err) {
-        winston.error("error publish deliverGroupAdded",err);
+        console.error("error publish deliverGroupAdded",err);
         // callback(false)
         // return
       }
