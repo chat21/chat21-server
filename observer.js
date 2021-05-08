@@ -71,7 +71,7 @@ let topic_presence;
 // FOR OBSERVER TOPICS
 let topic_persist;
 let topic_delivered;
-let topic_create_group;
+// let topic_create_group;
 let topic_update_group;
 
 var chatdb;
@@ -244,7 +244,7 @@ function startWorker() {
       subscribeTo(topic_update, ch, _ok.queue)
       subscribeTo(topic_archive, ch, _ok.queue)
       subscribeTo(topic_presence, ch, _ok.queue)
-      subscribeTo(topic_create_group, ch, _ok.queue)
+      // subscribeTo(topic_create_group, ch, _ok.queue)
       subscribeTo(topic_update_group, ch, _ok.queue)
       subscribeTo(topic_delivered, ch, _ok.queue)
       ch.consume("messages", processMsg, { noAck: false });
@@ -264,9 +264,9 @@ function subscribeTo(topic, channel, queue) {
 }
 
 function processMsg(msg) {
-  console.debug("processMsgw. New msg:", msg);
+  // console.debug("processMsgw. New msg:", msg);
   if (msg == null) {
-    console.error("Msg is null. Stop job")
+    console.error("Error. Msg is null. Stop job")
     return;
   }
   work(msg, function (ok) {
@@ -310,9 +310,9 @@ function work(msg, callback) {
   else if (topic.includes('.presence.')) {
     process_presence(topic, message_string, callback);
   }
-  else if (topic.endsWith('.groups.create')) {
-    process_create_group(topic, message_string, callback);
-  }
+  // else if (topic.endsWith('.groups.create')) {
+  //   process_create_group(topic, message_string, callback);
+  // }
   else if (topic.endsWith('.groups.update')) {
     process_update_group(topic, message_string, callback);
   }
@@ -881,51 +881,42 @@ function process_archive(topic, payload, callback) {
   }
 }
 
-function process_create_group(topic, payload, callback) {
-  var topic_parts = topic.split(".")
-  console.debug("process_create_group. TOPIC PARTS:" + topic_parts + " payload:" + payload)
-  // `apps.observer.${app_id}.groups.create`
-  const app_id = topic_parts[2]
-  console.debug("app_id:" + app_id)
-  console.debug("payload:"+ payload)
-  const group = JSON.parse(payload)
-  if (!group.uid || !group.name || !group.members || !group.owner) {
-    console.error("Group error during creation. Metadata missed.");
-    callback(true); // dequeue
-    return
-  }
-  group.appId = app_id
-  // saveOrUpdateGroup(group, function(ok) {
-  //   if (ok) {
-
-  deliverGroupAdded(group, function(ok) {
-    if (!ok) {
-      callback(false)
-    }
-    else {
-      sendGroupWelcomeMessageToInitialMembers(app_id, group, function(ok) {
-        if (!ok) {
-          callback(false)
-        }
-        else {
-          for (let [member_id, value] of Object.entries(group.members)) {
-            console.debug(">>>>> JOINING MEMBER: "+member_id)
-            joinGroup(member_id, group, function(reply) {
-              console.debug("member: " + member_id + " invited on group " + group + " result " + reply)
-            })
-          }
-          callback(true)
-        }
-      })
-    }
-  })
-
-    // }
-    // else {
-    //   callback(false)
-    // }
-  // })
-}
+// function process_create_group(topic, payload, callback) {
+//   var topic_parts = topic.split(".")
+//   console.debug("process_create_group. TOPIC PARTS:" + topic_parts + " payload:" + payload)
+//   // `apps.observer.${app_id}.groups.create`
+//   const app_id = topic_parts[2]
+//   console.debug("app_id:" + app_id)
+//   console.debug("payload:"+ payload)
+//   const group = JSON.parse(payload)
+//   if (!group.uid || !group.name || !group.members || !group.owner) {
+//     console.error("Group error during creation. Metadata missed.");
+//     callback(true); // dequeue
+//     return
+//   }
+//   group.appId = app_id
+//   deliverGroupAdded(group, function(ok) {
+//     if (!ok) {
+//       callback(false)
+//     }
+//     else {
+//       sendGroupWelcomeMessageToInitialMembers(app_id, group, function(ok) {
+//         if (!ok) {
+//           callback(false)
+//         }
+//         else {
+//           for (let [member_id, value] of Object.entries(group.members)) {
+//             console.debug(">>>>> JOINING MEMBER: "+member_id)
+//             joinGroup(member_id, group, function(reply) {
+//               console.debug("member: " + member_id + " invited on group " + group + " result " + reply)
+//             })
+//           }
+//           callback(true)
+//         }
+//       })
+//     }
+//   })
+// }
 
 /**
  * Adds a member to a group.
@@ -1051,23 +1042,23 @@ function process_update_group(topic, payload, callback) {
 //   })
 // }
 
-function deliverGroupAdded(group, callback) {
-  const app_id = group.appId
-  for (let [key, value] of Object.entries(group.members)) {
-    const member_id = key
-    const added_group_topic = `apps.${app_id}.users.${member_id}.groups.${group.uid}.clientadded`
-    console.debug("added_group_topic:", added_group_topic)
-    const payload = JSON.stringify(group)
-    publish(exchange, added_group_topic, Buffer.from(payload), function(err, msg) {
-      if (err) {
-        console.error("error publish deliverGroupAdded",err);
-        // callback(false)
-        // return
-      }
-    })
-  }
-  callback(true)
-}
+// function deliverGroupAdded(group, callback) {
+//   const app_id = group.appId
+//   for (let [key, value] of Object.entries(group.members)) {
+//     const member_id = key
+//     const added_group_topic = `apps.${app_id}.users.${member_id}.groups.${group.uid}.clientadded`
+//     console.debug("added_group_topic:", added_group_topic)
+//     const payload = JSON.stringify(group)
+//     publish(exchange, added_group_topic, Buffer.from(payload), function(err, msg) {
+//       if (err) {
+//         console.error("error publish deliverGroupAdded",err);
+//         // callback(false)
+//         // return
+//       }
+//     })
+//   }
+//   callback(true)
+// }
 
 function deliverGroupUpdated(group, notify_to, callback) {
   const app_id = group.appId
@@ -1087,55 +1078,49 @@ function deliverGroupUpdated(group, notify_to, callback) {
   callback(true)
 }
 
-function sendGroupWelcomeMessageToInitialMembers(app_id, group, callback) {
-  for (let [key, value] of Object.entries(group.members)) {
-    const member_id = key
-    const now = Date.now()
-    var group_created_message = {
-      message_id: uuid(),
-      type: "text",
-      text: "Group created",
-      timestamp: now,
-      channel_type: "group",
-      sender_fullname: "System",
-      sender: "system",
-      recipient_fullname: group.name,
-      recipient: group.uid,
-      status: MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT,
-      attributes: {
-        subtype: "info",
-        updateconversation: true,
-        messagelabel: {
-          key: "GROUP_CREATED",
-          parameters:
-          {
-            creator: group.owner
-          }
-        }
-      }
-    }
-    // if (member_id !== group.owner) {
-    //   group_created_message.text = "You was added to this group"
-    // }
-    // else {
-    //   group_created_message.text = "You created this group"
-    // }
-    const user_id = member_id
-    const convers_with = group.uid
-    console.debug("group_created_message: ", group_created_message)
-    console.debug("user_id: " + user_id)
-    console.debug("convers_with: " + convers_with)
-    deliverMessage(group_created_message, app_id, user_id, convers_with, function(ok) {
-      winston.debug("MESSAGE DELIVERED?", ok)
-      if (!ok) {
-        winston.debug("Error sending group creation message.", group_created_message)
-        callback(false)
-        return
-      }
-    })
-  }
-  callback(true)
-}
+// function sendGroupWelcomeMessageToInitialMembers(app_id, group, callback) {
+//   for (let [key, value] of Object.entries(group.members)) {
+//     const member_id = key
+//     const now = Date.now()
+//     var group_created_message = {
+//       message_id: uuid(),
+//       type: "text",
+//       text: "Group created",
+//       timestamp: now,
+//       channel_type: "group",
+//       sender_fullname: "System",
+//       sender: "system",
+//       recipient_fullname: group.name,
+//       recipient: group.uid,
+//       status: MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT,
+//       attributes: {
+//         subtype: "info",
+//         updateconversation: true,
+//         messagelabel: {
+//           key: "GROUP_CREATED",
+//           parameters:
+//           {
+//             creator: group.owner
+//           }
+//         }
+//       }
+//     }
+//     const user_id = member_id
+//     const convers_with = group.uid
+//     console.debug("group_created_message: ", group_created_message)
+//     console.debug("user_id: " + user_id)
+//     console.debug("convers_with: " + convers_with)
+//     deliverMessage(group_created_message, app_id, user_id, convers_with, function(ok) {
+//       winston.debug("MESSAGE DELIVERED?", ok)
+//       if (!ok) {
+//         winston.debug("Error sending group creation message.", group_created_message)
+//         callback(false)
+//         return
+//       }
+//     })
+//   }
+//   callback(true)
+// }
 
 function closeOnErr(err) {
   if (!err) return false;
@@ -1188,7 +1173,7 @@ async function startServer(config) {
 // FOR OBSERVER TOPICS
   topic_persist = `apps.observer.${app_id}.users.*.messages.*.persist`
   topic_delivered = `apps.observer.${app_id}.users.*.messages.*.delivered`
-  topic_create_group = `apps.observer.${app_id}.groups.create`
+  // topic_create_group = `apps.observer.${app_id}.groups.create`
   topic_update_group = `apps.observer.${app_id}.groups.update`
 
 
