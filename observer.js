@@ -451,14 +451,14 @@ function process_outgoing(topic, message_string, callback) {
         winston.debug("convers_with: "  + convers_with);
         console.log("sending group outgoing message to member", member_id);
         if (inbox_of === outgoing_message.sender) {
-          console.log("inbox_of === outgoing_message.sender. status=SENT");
+          console.log("inbox_of === outgoing_message.sender. status=SENT system YES?", inbox_of);
           outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT;
         }
         else {
-          console.log("inbox_of != outgoing_message.sender. status=DELIVERED");
+          console.log("inbox_of != outgoing_message.sender. status=DELIVERED no system, is:", inbox_of);
           outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED;
         }
-        console.log("delivering group message wit status...", outgoing_message.status);
+        console.log("delivering group message with status...", outgoing_message.status, " to:", inbox_of);
         deliverMessage(outgoing_message, app_id, inbox_of, convers_with, function(ok) {
           winston.debug("GROUP MESSAGE DELIVERED?", ok)
           count++;

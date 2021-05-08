@@ -201,7 +201,7 @@ class Webhooks {
   // ************ WEBHOOKS *********** //
 
   WHnotifyMessageStatusSentOrDelivered(message_payload, topic, callback) {
-    console.log("WHnotifyMessageStatusSentOrDelivered", message_payload)
+    console.log("WHnotifyMessageStatusSentOrDelivered()", message_payload)
     let message = JSON.parse(message_payload);
     message['temp_field_chat_topic'] = topic;
     if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT) {
