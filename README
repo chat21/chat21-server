@@ -1,4 +1,0 @@
-
-Start rabbit with: brew services start rabbitmq
-
-Run with : npm start
