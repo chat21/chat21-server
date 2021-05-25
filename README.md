@@ -9,19 +9,25 @@ allows him to write.
 
 MQTT Outgoing path example:
 
+```
 /apps/tilechat/users/USER-ID/RECIPIENT-USER-ID/messages/outgoing
+```
 
 The Client application connected with MQTT to RabbitMQ, sends the message as a JSON payload
-to the "/outgoing" path.
+to the **/outgoing** path.
 
 The observer subscribes himself to these paths. As soon as he gets notified of an _outgoing_ message
 the same message payload is forwarded (AMQP publish operation) to the recipient path:
 
+```
 /apps/tilechat/users/RECIPIENT-USER-ID/SENDER-USER-ID/messages/clientadded
+```
 
 The recipient will receive the MQTT publish notification on the incoming path decoding it as
 a new message based on the final part of the path, that always indicates the type of operation
-on that path ("/clientadded" = new payload arrived on the path).
+on that path:
+
+**/clientadded** = new payload (a message) arrived on the path.
 
 Using this observer Chat21 implements the use of the "inbox" concept. Messages will never arrive
 directly with a client-to-client communication, but always through the observer who can take additional
@@ -31,8 +37,8 @@ Moreover, a granular security can be applied with the "inbox" patterns, using Ra
 where a user can only read and write on his own, specific paths, never reading or writing directly on
 other users inboxes.
 
-The "inbox" pattern works just like email SMTP/POP3 protocol. The message is sent from the user
-to his own SMTP server inbox, as an _outgoing_ message. This "observer", gets the message and
-sends it to the recipient's SMTP server (the recipient inbox path) where the recipient itself
-will read the message as soon as he connect to RabbitMQ through MQTT.
+The **inbox** pattern just works like email _SMTP/POP3_ protocols. The message is sent from the user
+to his own SMTP server inbox (the _/outgoing_ path), as an _outgoing_ message. The "observer" (this application),
+gets the message and sends it to the recipient's SMTP server (the recipient inbox path) with a */clientadded* action
+where the recipient itself will receive the message as soon as he connects to RabbitMQ through MQTT.
 
