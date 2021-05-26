@@ -29,9 +29,9 @@ on that path:
 
 **/clientadded** = new payload (a message) arrived on the path.
 
-Using this observer Chat21 implements the use of the "inbox" concept. Messages will never arrive
-directly with a client-to-client communication, but always through the observer who can take additional
-actions to improve privacy, security, persistence and other policies on messages.
+Using this observer Chat21 implements the "inbox" concept. Messages are not delivered 
+directly with shared path between the two clients, but rather delivered through this _observer_ who can take additional
+actions to improve privacy, security, persistence and apply other policies on messages (i.e. blocking users).
 
 Moreover, a granular security can be applied with the "inbox" patterns, using RabbitMQ JWT Tokens,
 where a user can only read and write on his own, specific paths, never reading or writing directly on
