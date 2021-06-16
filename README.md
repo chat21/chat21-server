@@ -33,7 +33,7 @@ Using this observer Chat21 implements the "inbox" concept. Messages are not deli
 directly with shared path between the two clients, but rather delivered through this _observer_ who can take additional
 actions to improve privacy, security, persistence and apply other policies on messages (i.e. blocking users).
 
-Moreover, a granular security can be applied with the "inbox" patterns, using RabbitMQ JWT Tokens,
+Moreover, a granular security can be applied with the "inbox" pattern, using RabbitMQ JWT Tokens specification,
 where a user can only read and write on his own, specific paths, never reading or writing directly on
 other users inboxes.
 

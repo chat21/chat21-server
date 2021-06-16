@@ -9,6 +9,7 @@
     "body-parser": "^1.19.0",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
+    "mocha": "^9.0.0",
     "mongodb": "^3.5.6",
     "mongoose": "^5.9.10",
     "mqtt": "^3.0.0",
@@ -17,12 +18,12 @@
     "websocket-stream": "^5.5.2",
     "winston": "^3.3.3"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "axios": "^0.21.1"
+  },
   "scripts": {
     "test": "mocha ./test/*.js",
-    "start": "node chatservermq.js",
-    "pretest": "mongodb-runner start",
-    "posttest": "mongodb-runner stop"
+    "start": "node chatservermq.js"
   },
   "author": "",
   "license": "MIT"

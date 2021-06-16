@@ -10,7 +10,10 @@
 // import mqtt from 'mqtt.d';
 // import * as mqtt from 'mqtt';
 // import * as mqtt from 'mqtt/mqtt';
-var mqtt = require('mqtt');
+if (!isBrowser()) {
+    var mqtt = require('mqtt');
+    var axios = require('axios');
+}
 
 const _CLIENTADDED = "/clientadded"
 const _CLIENTUPDATED = "/clientupdated"
@@ -22,7 +25,7 @@ class Chat21Client {
     
     constructor(options) {
 
-        console.log('CHAT21-CLIENT.JS  HELLO ', mqtt)
+        // console.log('CHAT21-CLIENT.JS  HELLO ', mqtt)
         this.client = null;
         this.reconnections = 0 // just to check how many reconnections
         this.client_id = Date.now();
@@ -156,34 +159,75 @@ class Chat21Client {
     }
 
     createGroup(name, group_id, members, callback) {
+        // example:
+        // {
+        //     "group_id":"group-tiledeskteam",
+        //     "group_name":"Tiledesk Team",
+        //     "group_members":{
+        //         "608bc83b3d0b3e494f4d0578":1,
+        //         "608bc81f3d0b3e494f4d0575":1,
+        //         "6067513cb64a9b1ba259839c":1
+        //     }
+        // }
+
         // callback - function (err)
         console.log("creating group:", name, "id", group_id, "members", members)
-        // who creates the group is also group-admin
-        // ex.: http://localhost:8004/tilechat/04-ANDREASPONZIELLO/conversations
+        // who creates the group is also group-owner
+        // ex.: http://localhost:8004/api/tilechat/04-ANDREASPONZIELLO/groups
+        // let data = {
+        //     group_name: name,
+        //     group_id: group_id,
+        //     group_members: members
+        // }
+        // let headers = {
+        //     "authorization": this.jwt,
+        //     "Content-Type": "application/json;charset=UTF-8"
+        // }
+
         const URL = `${this.APIendpoint}/${this.appid}/groups`
         console.log("creating group...", URL)
-        let data = {
-            group_name: name,
-            group_id: group_id,
-            group_members: members
+        let options = {
+            url: URL,
+            headers: {
+                "Authorization": this.jwt,
+                "Content-Type": "application/json;charset=UTF-8"
+            },
+            data: {
+                group_name: name,
+                group_id: group_id,
+                group_members: members
+            },
+            method: 'POST'
+            // url: options.url,
+        // headers: options.headers,
+        // json: options.json,
+        // method: options.method
         }
-        var xmlhttp = new XMLHttpRequest();
-        xmlhttp.open("POST", URL, true);
-        xmlhttp.setRequestHeader("authorization", this.jwt);
-        xmlhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-        xmlhttp.onreadystatechange = function() {
-            if (callback && xmlhttp.readyState == 4 && xmlhttp.status == 200 && xmlhttp.responseText) {
-                try {
-                    const json = JSON.parse(xmlhttp.responseText)
-                    callback(null, json.result)
-                }
-                catch (err) {
-                    console.log("parsing json ERROR", err)
-                    callback(err, null)
-                }
+        Chat21Client.myrequest(options, (err, response, json) => {
+            if (err) {
+                callback(err, null);
             }
-        };
-        xmlhttp.send(JSON.stringify(data));
+            else if (json && callback) {
+                callback(null, json);
+            }
+        }, true);
+        // var xmlhttp = new XMLHttpRequest();
+        // xmlhttp.open("POST", URL, true);
+        // xmlhttp.setRequestHeader("authorization", this.jwt);
+        // xmlhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        // xmlhttp.onreadystatechange = function() {
+        //     if (callback && xmlhttp.readyState == 4 && xmlhttp.status == 200 && xmlhttp.responseText) {
+        //         try {
+        //             const json = JSON.parse(xmlhttp.responseText)
+        //             callback(null, json.result)
+        //         }
+        //         catch (err) {
+        //             console.log("parsing json ERROR", err)
+        //             callback(err, null)
+        //         }
+        //     }
+        // };
+        // xmlhttp.send(JSON.stringify(data));
     }
 
     archiveConversation(conversWith, callback) {
@@ -309,7 +353,7 @@ class Chat21Client {
         this.subscribeToMyConversations()
         // no more then one "on_message" handler, thanks.
         this.on_message_handler = this.client.on('message', (topic, message) => {
-            console.log("topic:" + topic + "\nmessage payload:" + message)
+            // console.log("topic:" + topic + "\nmessage payload:" + message)
             const _topic = this.parseTopic(topic)
             if (!_topic) {
                 console.log("Invalid message topic:", topic);
@@ -600,6 +644,84 @@ class Chat21Client {
         xmlhttp.send(null);
     }
 
+    static myrequest(options, callback, log) {
+        // url: options.url,
+        // headers: options.headers,
+        // data: options.data,
+        // method: options.method
+        if (log) {
+          console.log("HTTP Request:", options);
+        }
+        if (isBrowser()) {
+            let xmlhttp = new XMLHttpRequest();
+            xmlhttp.open(options.method, options.url, true);
+            Object.keys(options.headers).forEach((key) => {
+                xmlhttp.setRequestHeader(key, options.headers[key]);
+            });
+            xmlhttp.onreadystatechange = function() {
+                if (callback && xmlhttp.readyState == 4 && xmlhttp.status == 200 && xmlhttp.responseText) {
+                    try {
+                        const json = JSON.parse(xmlhttp.responseText)
+                        callback(null, null, json)
+                    }
+                    catch (err) {
+                        console.log("parsing json ERROR", err)
+                        callback(err, null)
+                    }
+                }
+            };
+            if (options.method === 'POST') {
+                xmlhttp.send(JSON.stringify(options.data));
+            }
+            else {
+                xmlhttp.send(null);
+            }
+        }
+        else {
+            axios(
+                {
+                  url: options.url,
+                  method: options.method,
+                  data: options.data,
+                  headers: options.headers
+                })
+              .then(function (response) {
+                console.log("response.status:", response.status);
+                if (callback) {
+                    callback(null, response.headers, response.data);
+                }
+              })
+              .catch(function (error) {
+                console.error(error);
+                if (callback) {
+                    callback(error, null, null);
+                }
+              });
+
+            // request(
+            //     {
+            //       url: options.url,
+            //       headers: options.headers,
+            //       json: options.json,
+            //       method: options.method
+            //     },
+            //     function(err, res, resbody) {
+            //       if (log) {
+            //         console.log("** For url:", options.url);
+            //         console.log("** Options:", options);
+            //         console.log("** Err:", err);
+            //         console.log("** Response headers:\n", res.headers);
+            //         console.log("** Response body:\n", res.body);
+            //       }
+            //       if (callback) {
+            //         callback(err, res, resbody);
+            //       }
+            //     }
+            // );
+        }
+        
+    }
+
     connect(user_id, jwt, callback) {
         this.user_id = user_id;
         // console.log("userid:", this.user_id)
@@ -692,5 +814,14 @@ class Chat21Client {
     }
 }
 
-//export { Chat21Client }
-module.exports = { Chat21Client };
+if (isBrowser()) {
+    // export { Chat21Client };
+}
+else {
+    module.exports = { Chat21Client };
+}
+
+function isBrowser() {
+    browser = this.window ? true : false;
+    console.log("browser:", browser);
+}
