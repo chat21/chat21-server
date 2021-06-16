@@ -4,7 +4,8 @@
 */
 
 const amqp = require('amqplib/callback_api');
-const winston = require("../winston");
+// const winston = require("../winston");
+const logger = require('../tiledesk-logger').logger;
 var url = require('url');
 const MessageConstants = require("../models/messageConstants");
 // const messageConstants = require('../models/messageConstants');
@@ -90,7 +91,7 @@ class Webhooks {
     this.webhook_events_array = options.webhook_events || DEFAULT_WEBHOOK_EVENTS;
         
 
-    winston.debug("webhooks inizialized: this.exchange:", this.exchange, "this.offlinePubQueue:", this.offlinePubQueue)
+    logger.debug("webhooks inizialized: this.exchange:", this.exchange, "this.offlinePubQueue:", this.offlinePubQueue)
   }
 
 
@@ -119,13 +120,13 @@ class Webhooks {
 
   // WHnotifyMessageReceived
   // notifyMessageReceived(message) {
-  //   winston.debug("NOTIFY MESSAGE:", message)
+  //   logger.debug("NOTIFY MESSAGE:", message)
   //   const notify_topic = `observer.webhook.apps.${app_id}.message_received`
-  //   winston.debug("notifying webhook notifyMessageReceived topic:", notify_topic)
+  //   logger.debug("notifying webhook notifyMessageReceived topic:", notify_topic)
   //   const message_payload = JSON.stringify(message)
   //   this.publish(this.exchange, notify_topic, Buffer.from(message_payload), (err) => {
   //     if (err) {
-  //       winston.debug("Err", err)
+  //       logger.debug("Err", err)
   //     }
   //   })
   // }
@@ -133,15 +134,15 @@ class Webhooks {
 
   // WHprocess_webhook_message_received
   // process_webhook_message_received(topic, message_string, callback) {
-  //   winston.debug("process_webhook_message_received.from.incoming:", message_string, "on topic", topic)
+  //   logger.debug("process_webhook_message_received.from.incoming:", message_string, "on topic", topic)
   //   var message = JSON.parse(message_string)
-  //   winston.debug("timelineOf...:", message.timelineOf)
+  //   logger.debug("timelineOf...:", message.timelineOf)
   //   if (callback) {
   //     callback(true)
   //   }
     
   //   if (this.isMessageOnGroupTimeline(message)) {
-  //     winston.debug("Sending this message for group timeline:", message)
+  //     logger.debug("Sending this message for group timeline:", message)
   //   }
   //   const message_id = message.message_id;
   //   const recipient_id = message.recipient_id;
@@ -157,7 +158,7 @@ class Webhooks {
   //   };
   
   //   var q = url.parse(process.env.WEBHOOK_ENDPOINT, true);
-  //   winston.debug("ENV WEBHOOK URL PARSED:", q)
+  //   logger.debug("ENV WEBHOOK URL PARSED:", q)
   //   var protocol = (q.protocol == "http") ? require('http') : require('https');
   //   let options = {
   //     path:  q.pathname,
@@ -176,7 +177,7 @@ class Webhooks {
   //     });
     
   //     response.on('end', function () {
-  //       winston.debug("WEBHOOK RESPONSE:", respdata);
+  //       logger.debug("WEBHOOK RESPONSE:", respdata);
   //     });
   //   }
     
@@ -201,11 +202,11 @@ class Webhooks {
   // ************ WEBHOOKS *********** //
 
   WHnotifyMessageStatusSentOrDelivered(message_payload, topic, callback) {
-    console.log("WHnotifyMessageStatusSentOrDelivered()", message_payload)
+    logger.log("WHnotifyMessageStatusSentOrDelivered()", message_payload)
     let message = JSON.parse(message_payload);
     message['temp_field_chat_topic'] = topic;
     if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT) {
-      console.log("SENT...")
+      logger.log("SENT...")
       this.WHnotifyMessageStatusSent(message, (err) => {
         if (callback) {
           callback(err);
@@ -216,7 +217,7 @@ class Webhooks {
       })
     }
     else if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED) {
-      console.log("DELIVERED...")
+      logger.log("DELIVERED...")
       this.WHnotifyMessageStatusDelivered(message, (err) => {
         if (callback) {
           callback(err);
@@ -227,19 +228,19 @@ class Webhooks {
       })
     }
     else {
-      console.log("FUCK THIS DELIVERED...")
+      logger.log("FUCK THIS DELIVERED...")
       callback(null);
     }
   }
 
   WHnotifyMessageStatusSent(message, callback) {
-    console.log("WH Sent method.");
+    logger.log("WH Sent method.");
     if (this.webhook_events_array.indexOf(MessageConstants.WEBHOOK_EVENTS.MESSAGE_SENT) == -1) {
-      winston.debug("WH MESSAGE_SENT disabled.");
+      logger.debug("WH MESSAGE_SENT disabled.");
       callback(null);
     } else {
-      console.log("WH MESSAGE_SENT enabled");
-      winston.debug("WH MESSAGE_DELIVERED enabled.");
+      logger.log("WH MESSAGE_SENT enabled");
+      logger.debug("WH MESSAGE_DELIVERED enabled.");
       this.WHnotifyMessageDeliver(message, (err) => {
         callback(err);
       });
@@ -248,10 +249,10 @@ class Webhooks {
 
   WHnotifyMessageStatusDelivered(message, callback) {
     if (this.webhook_events_array.indexOf(MessageConstants.WEBHOOK_EVENTS.MESSAGE_DELIVERED) == -1) {
-      winston.debug("WH MESSAGE_DELIVERED disabled.");
+      logger.debug("WH MESSAGE_DELIVERED disabled.");
       callback(null);
     } else {
-      winston.debug("WH MESSAGE_DELIVERED enabled.");
+      logger.debug("WH MESSAGE_DELIVERED enabled.");
       this.WHnotifyMessageDeliver(message, (err) => {
         callback(err);
       });
@@ -260,7 +261,7 @@ class Webhooks {
 
   WHnotifyMessageStatusReturnReceipt(message, callback) {
     if (this.webhook_events_array.indexOf(MessageConstants.WEBHOOK_EVENTS.MESSAGE_RETURN_RECEIPT) == -1) {
-      winston.debug("WH MESSAGE_RETURN_RECEIPT disabled.");
+      logger.debug("WH MESSAGE_RETURN_RECEIPT disabled.");
       callback(null);
     } else {
       this.WHnotifyMessageUpdate(message, (err) => {
@@ -270,19 +271,19 @@ class Webhooks {
   }
 
   WHnotifyMessageDeliver(message, callback) {
-    winston.debug("WH NOTIFY MESSAGE:", message);
+    logger.debug("WH NOTIFY MESSAGE:", message);
     if (this.enabled===false) {
-      winston.debug("webhooks disabled");
+      logger.debug("webhooks disabled");
       callback(null)
       return
     }
     const notify_topic = `observer.webhook.apps.${this.appId}.message_deliver`
-    winston.debug("notifying webhook MessageSent topic:" + notify_topic)
+    logger.debug("notifying webhook MessageSent topic:" + notify_topic)
     const message_payload = JSON.stringify(message)
-    winston.debug("MESSAGE_PAYLOAD: " + message_payload)
+    logger.debug("MESSAGE_PAYLOAD: " + message_payload)
     this.publish(this.exchange, notify_topic, Buffer.from(message_payload), (err) => {
       if (err) {
-        winston.error("Err", err)
+        logger.error("Err", err)
         callback(err)
       }
       else {
@@ -292,19 +293,19 @@ class Webhooks {
   }
 
   WHnotifyMessageUpdate(message, callback) {
-    winston.debug("NOTIFY MESSAGE UPDATE:", message);
+    logger.debug("NOTIFY MESSAGE UPDATE:", message);
     if (this.enabled===false) {
-      winston.debug("webhooks disabled");
+      logger.debug("webhooks disabled");
       callback(null)
       return
     }
     const notify_topic = `observer.webhook.apps.${this.appId}.message_update`
-    winston.debug("notifying webhook message_update topic:" + notify_topic)
+    logger.debug("notifying webhook message_update topic:" + notify_topic)
     const message_payload = JSON.stringify(message)
-    winston.debug("MESSAGE_PAYLOAD: " + message_payload)
+    logger.debug("MESSAGE_PAYLOAD: " + message_payload)
     this.publish(this.exchange, notify_topic, Buffer.from(message_payload), (err) => {
       if (err) {
-        winston.error("Err", err)
+        logger.error("Err", err)
         callback(err)
       }
       else {
@@ -314,10 +315,10 @@ class Webhooks {
   }
 
   WHnotifyConversationArchived(conversation, topic, callback) {
-    winston.debug("NOTIFY CONVERSATION ARCHIVED:", conversation)
+    logger.debug("NOTIFY CONVERSATION ARCHIVED:", conversation)
 
     if (this.enabled===false) {
-      winston.debug("WHnotifyConversationArchived Discarding notification. webhook_enabled is false.");
+      logger.debug("WHnotifyConversationArchived Discarding notification. webhook_enabled is false.");
       // callback({err: "WHnotifyConversationArchived Discarding notification. webhook_enabled is false."}); 
       callback(null)
       return
@@ -326,12 +327,12 @@ class Webhooks {
     conversation['temp_field_chat_topic'] = topic;
 
     const notify_topic = `observer.webhook.apps.${this.appId}.conversation_archived`
-    winston.debug("notifying webhook notifyConversationArchived topic: " + notify_topic)
+    logger.debug("notifying webhook notifyConversationArchived topic: " + notify_topic)
     const payload = JSON.stringify(conversation)
-    winston.debug("PAYLOAD:", payload)
+    logger.debug("PAYLOAD:", payload)
     this.publish(this.exchange, notify_topic, Buffer.from(payload), (err) => {
       if (err) {
-        winston.error("Err", err)
+        logger.error("Err", err)
         callback(err)
       }
       else {
@@ -341,33 +342,33 @@ class Webhooks {
   }
 
   WHprocess_webhook_message_deliver(topic, message_string, callback) {
-    winston.debug("process WHprocess_webhook_message_deliver: " + message_string + " on topic: " + topic)
+    logger.debug("process WHprocess_webhook_message_deliver: " + message_string + " on topic: " + topic)
     var message = JSON.parse(message_string)
     if (callback) {
       callback(true)
     }
     // if (this.enabled===false) {
-    //   winston.debug("WHprocess_webhook_message_deliver Discarding notification. webhook_enabled is false.");
+    //   logger.debug("WHprocess_webhook_message_deliver Discarding notification. webhook_enabled is false.");
     //   return
     // }
 
     // if (!this.WHisMessageOnGroupTimeline(message)) {
-    //   winston.debug("WHprocess_webhook_message_deliver Discarding notification. Not to group.");
+    //   logger.debug("WHprocess_webhook_message_deliver Discarding notification. Not to group.");
     //   // callback(true);
     //   return
     // }
     if (!this.webhook_endpoint) {
-      winston.debug("WHprocess_webhook_message_deliver Discarding notification. webhook_endpoint is undefined.")
+      logger.debug("WHprocess_webhook_message_deliver Discarding notification. webhook_endpoint is undefined.")
       // callback(true);
       return
     }
     // if (this.webhook_methods_array.indexOf("new-message")==-1) {
-    //   winston.debug("WHprocess_webhook_message_deliver Discarding notification. new-message not enabled.");
+    //   logger.debug("WHprocess_webhook_message_deliver Discarding notification. new-message not enabled.");
     //   // callback(true); 
     //   return
     // }
 
-    winston.verbose("Sending notification to webhook (message_deliver) on webhook_endpoint:" + this.webhook_endpoint);
+    logger.debug("Sending notification to webhook (message_deliver) on webhook_endpoint:" + this.webhook_endpoint);
     const message_id = message.message_id;
     const recipient_id = message.recipient;
     const app_id = message.app_id;
@@ -388,28 +389,28 @@ class Webhooks {
       extras: {topic: message['temp_field_chat_topic']}
     };
     delete message['temp_field_chat_topic'];
-    winston.debug("WHprocess_webhook_message_received Sending JSON webhook:", json)
+    logger.debug("WHprocess_webhook_message_received Sending JSON webhook:", json)
     this.WHsendData(json, function(err, data) {
       if (err)  {
-        winston.error("Err WHsendData callback", err);
+        logger.error("Err WHsendData callback", err);
       } else {
-        winston.debug("WHsendData sendata end with data:" + data);
+        logger.debug("WHsendData sendata end with data:" + data);
       }
     })
   }
 
   WHprocess_webhook_message_update(topic, message_string, callback) {
-    winston.debug("process WHprocess_webhook_message_update: " + message_string + " on topic: " + topic)
+    logger.debug("process WHprocess_webhook_message_update: " + message_string + " on topic: " + topic)
     var message = JSON.parse(message_string)
-    winston.debug("timelineOf:" + message.timelineOf)
+    logger.debug("timelineOf:" + message.timelineOf)
     if (callback) {
       callback(true)
     }
     if (!this.webhook_endpoint) {
-      winston.debug("WHprocess_webhook_message_update Discarding notification. webhook_endpoint is undefined.")
+      logger.debug("WHprocess_webhook_message_update Discarding notification. webhook_endpoint is undefined.")
       return
     }
-    winston.verbose("Sending notification to webhook (message_deliver) on webhook_endpoint:" + this.webhook_endpoint);
+    logger.debug("Sending notification to webhook (message_deliver) on webhook_endpoint:" + this.webhook_endpoint);
     const message_id = message.message_id;
     const recipient_id = message.recipient;
     const app_id = message.app_id;
@@ -429,45 +430,45 @@ class Webhooks {
       data: message,
       extras: {topic: topic}
     };
-    winston.debug("WHprocess_webhook_message_received Sending JSON webhook:", json)
+    logger.debug("WHprocess_webhook_message_received Sending JSON webhook:", json)
     this.WHsendData(json, function(err, data) {
       if (err)  {
-        winston.error("Err WHsendData callback", err);
+        logger.error("Err WHsendData callback", err);
       } else {
-        winston.debug("WHsendData sendata end with data:" + data);
+        logger.debug("WHsendData sendata end with data:" + data);
       }
     })
   }
 
   WHprocess_webhook_conversation_archived(topic, payload, callback) {
-    winston.debug("process webhook_conversation_archived on topic" + topic)
-    winston.debug("process webhook_conversation_archived on payload" + payload)
+    logger.debug("process webhook_conversation_archived on topic" + topic)
+    logger.debug("process webhook_conversation_archived on payload" + payload)
     
     var conversation = JSON.parse(payload)
-    console.debug("conversation['temp_field_chat_topic']", conversation['temp_field_chat_topic']);
+    logger.debug("conversation['temp_field_chat_topic']", conversation['temp_field_chat_topic']);
     if (callback) {
       callback(true)
     }
 
     if (this.enabled===false) {
-      winston.debug("Discarding notification. webhook_enabled is false.");
+      logger.debug("Discarding notification. webhook_enabled is false.");
       // callback(true);
       return
     }
 
     if (!this.webhook_endpoint) {
-      winston.debug("WHprocess_webhook_conversation_archived: Discarding notification. webhook_endpoint is undefined.")
+      logger.debug("WHprocess_webhook_conversation_archived: Discarding notification. webhook_endpoint is undefined.")
       return
     }
 
-    winston.verbose("Sending notification to webhook (webhook_conversation_archived):", this.webhook_endpoint)
+    logger.debug("Sending notification to webhook (webhook_conversation_archived):", this.webhook_endpoint)
     if (!conversation['temp_field_chat_topic']) {
-      winston.debug("WHprocess_webhook_conversation_archived NO 'temp_field_chat_topic' error.")
+      logger.debug("WHprocess_webhook_conversation_archived NO 'temp_field_chat_topic' error.")
     }
     var topic_parts = conversation['temp_field_chat_topic'].split(".")
-    winston.debug("ARCHIVE. TOPIC PARTS:", topic_parts)
+    logger.debug("ARCHIVE. TOPIC PARTS:", topic_parts)
     if (topic_parts.length < 7) {
-      winston.debug("process_archive topic error. topic_parts.length < 7:" + topic)
+      logger.debug("process_archive topic error. topic_parts.length < 7:" + topic)
       return
     }
     const app_id = topic_parts[1];
@@ -486,12 +487,12 @@ class Webhooks {
       extras: {topic: conversation['temp_field_chat_topic']}
     };
     delete conversation['temp_field_chat_topic'];
-    winston.debug("Sending JSON webhook:", json)
+    logger.debug("Sending JSON webhook:", json)
     this.WHsendData(json, function(err, data) {
       if (err)  {
-        winston.error("Err WHsendData callback", err);
+        logger.error("Err WHsendData callback", err);
       } else {
-        winston.debug("WHsendData sendata end with data:" + data);
+        logger.debug("WHsendData sendata end with data:" + data);
       }
     })
   }
@@ -507,7 +508,7 @@ class Webhooks {
 
   WHsendData(json, callback) {
     var q = url.parse(this.webhook_endpoint, true);
-    winston.debug("ENV WEBHOOK URL PARSED:", q)
+    logger.debug("ENV WEBHOOK URL PARSED:", q)
     var protocol = (q.protocol == "http:") ? require('http') : require('https');
     let options = {
       path:  q.pathname,
@@ -520,40 +521,40 @@ class Webhooks {
     };
     try {
       const req = protocol.request(options, (response) => {
-        winston.debug("statusCode: "+  response.statusCode + " for webhook_endpoint: " + this.webhook_endpoint);
+        logger.debug("statusCode: "+  response.statusCode + " for webhook_endpoint: " + this.webhook_endpoint);
         if (response.statusCode < 200 || response.statusCode > 299) { // (I don"t know if the 3xx responses come here, if so you"ll want to handle them appropriately
-          winston.debug("http statusCode error "+  response.statusCode + " for webhook_endpoint: " + this.webhook_endpoint);
+          logger.debug("http statusCode error "+  response.statusCode + " for webhook_endpoint: " + this.webhook_endpoint);
           return callback({statusCode:response.statusCode}, null)
         }
         var respdata = ''
         response.on('data', (chunk) => {
-          // winston.debug("chunk"+chunk)
+          // logger.debug("chunk"+chunk)
           respdata += chunk;
         });
         response.on('end', () => {
-          winston.info("WEBHOOK RESPONSE: "+ respdata + " for webhook_endpoint: " + this.webhook_endpoint);
+          logger.info("WEBHOOK RESPONSE: "+ respdata + " for webhook_endpoint: " + this.webhook_endpoint);
           return callback(null, respdata) //TODO SE IL WEBHOOK NN RITORNA SEMBRA CHE SI BLOCCI
         });
       });
       req.on('error', (err) => {
-        winston.error("WEBHOOK RESPONSE Error: ", err);
+        logger.error("WEBHOOK RESPONSE Error: ", err);
         return callback(err, null)
       });
       req.write(JSON.stringify(json));
       req.end();
-      // winston.debug("end")
+      // logger.debug("end")
     }
     catch(err) {
-      winston.error("an error occurred while posting this json " + JSON.stringify(json), err)
+      logger.error("an error occurred while posting this json " + JSON.stringify(json), err)
       return callback(err, null)
     }
   }
 
   async whenConnected() {
     const resolve = await this.startPublisher();
-    winston.info("webhook publisher started.");
+    logger.info("webhook publisher started.");
     this.startWorker();
-    winston.info("webhook worker started.");
+    logger.info("webhook worker started.");
     return resolve;
   }
 
@@ -563,10 +564,10 @@ class Webhooks {
         that.amqpConn.createConfirmChannel( (err, ch) => {
             if (that.closeOnErr(err)) return;
             ch.on("error", function (err) {
-                winston.error("[Webooks.AMQP] channel error", err);
+                logger.error("[Webooks.AMQP] channel error", err);
             });
             ch.on("close", function () {
-                winston.debug("[Webooks.AMQP] channel closed");
+                logger.debug("[Webooks.AMQP] channel closed");
             });
             that.pubChannel = ch;
             // if (that.offlinePubQueue.length > 0) {
@@ -588,21 +589,21 @@ class Webhooks {
 
   closeOnErr(err) {
     if (!err) return false;
-    console.error("[Webooks.AMQP] error", err);
+    logger.error("[Webooks.AMQP] error", err);
     this.amqpConn.close();
     return true;
   }
 
   startWorker() {
-    winston.debug("starting webhook worker.");
+    logger.debug("starting webhook worker.");
     this.amqpConn.createChannel((err, ch) => {
       this.channel = ch;
       if (this.closeOnErr(err)) return;
       ch.on("error", function (err) {
-        winston.error("[Webooks.AMQP] channel error", err);
+        logger.error("[Webooks.AMQP] channel error", err);
       });
       ch.on("close", function () {
-        winston.debug("[Webooks.AMQP] channel closed");
+        logger.debug("[Webooks.AMQP] channel closed");
       });
       ch.prefetch(10);
       ch.assertExchange(this.exchange, 'topic', {
@@ -610,7 +611,7 @@ class Webhooks {
       });
       ch.assertQueue(this.queue, { durable: true }, (err, _ok) => {
         if (this.closeOnErr(err)) return;
-        winston.debug("subscribed to _ok.queue: " + _ok.queue);
+        logger.debug("subscribed to _ok.queue: " + _ok.queue);
         this.subscribeTo(this.topic_webhook_message_deliver, ch, _ok.queue)
         this.subscribeTo(this.topic_webhook_message_update, ch, _ok.queue)
         this.subscribeTo(this.topic_webhook_conversation_archived, ch, _ok.queue)
@@ -622,37 +623,37 @@ class Webhooks {
   subscribeTo(topic, channel, queue) {
     channel.bindQueue(queue, this.exchange, topic, {}, function (err, oka) {
       if (err) {
-        winston.error("Webooks.Error:", err, " binding on queue:", queue, "topic:", topic)
+        logger.error("Webooks.Error:", err, " binding on queue:", queue, "topic:", topic)
       }
       else {
-        winston.info("Webooks.bind: '" + queue + "' on topic: " + topic);
+        logger.info("Webooks.bind: '" + queue + "' on topic: " + topic);
       }
     });
   }
 
   processMsg(msg) {
-    winston.debug("Webhooks.subscribeTo:" + this);
+    logger.debug("Webhooks.subscribeTo:" + this);
     this.work(msg, (ok) => {
-      winston.debug("Webhooks.worked.");
+      logger.debug("Webhooks.worked.");
       try {
         if (ok)
           this.channel.ack(msg);
         else
           this.channel.reject(msg, true);
       } catch (e) {
-        winston.debug("gin2:", e)
+        logger.debug("gin2:", e)
         this.closeOnErr(e);
       }
     });
   }
 
   work(msg, callback) {
-    winston.debug("Webhooks.NEW TOPIC..." + msg.fields.routingKey) //, " message:", msg.content.toString());
+    logger.debug("Webhooks.NEW TOPIC..." + msg.fields.routingKey) //, " message:", msg.content.toString());
     const topic = msg.fields.routingKey //.replace(/[.]/g, '/');
     const message_string = msg.content.toString();
     if (topic.startsWith('observer.webhook.') && topic.endsWith('.message_deliver')) {
       // if (this.enabled === false) {
-      //    winston.debug("work observer.webhook....message_received notification. webhook_enabled is false.");
+      //    logger.debug("work observer.webhook....message_received notification. webhook_enabled is false.");
       //    callback(true);
       // } else {
         this.WHprocess_webhook_message_deliver(topic, message_string, callback);
@@ -660,7 +661,7 @@ class Webhooks {
     }
     else if (topic.startsWith('observer.webhook.') && topic.endsWith('.message_update')) {
       // if (this.enabled === false) {
-      //    winston.debug("work observer.webhook....message_update notification. webhook_enabled is false.");
+      //    logger.debug("work observer.webhook....message_update notification. webhook_enabled is false.");
       //    callback(true);
       // } else {
         this.WHprocess_webhook_message_update(topic, message_string, callback);
@@ -668,7 +669,7 @@ class Webhooks {
     }
     // else if (topic.startsWith('observer.webhook.') && topic.endsWith('.message_received')) {
     //   if (this.enabled === false) {
-    //      winston.debug("work observer.webhook....message_received notification. webhook_enabled is false.");
+    //      logger.debug("work observer.webhook....message_received notification. webhook_enabled is false.");
     //      callback(true);
     //   } else {
     //     this.WHprocess_webhook_message_received(topic, message_string, callback);
@@ -676,21 +677,21 @@ class Webhooks {
     // }
     else if (topic.startsWith('observer.webhook.') && topic.endsWith('.conversation_archived')) {
     //   if (this.enabled === false) {
-    //     winston.debug("work observer.webhook....conversation_archived notification. webhook_enabled is false.");
+    //     logger.debug("work observer.webhook....conversation_archived notification. webhook_enabled is false.");
     //     callback(true);
     //  } else {
       this.WHprocess_webhook_conversation_archived(topic, message_string, callback);
     //  }
     }
     else {
-      winston.error("Webooks.unhandled topic:", topic)
+      logger.error("Webooks.unhandled topic:", topic)
       callback(true)
     }
   }
 
   start() {
     const that = this;
-    winston.info("Webhook config: ", this);
+    logger.info("Webhook config: ", this);
     return new Promise(function (resolve, reject) {
       return that.startMQ(resolve, reject);
     });
@@ -699,26 +700,26 @@ class Webhooks {
   startMQ(resolve, reject) {
     const that = this;
     
-    winston.debug("Webooks. Connecting to RabbitMQ...")
+    logger.debug("Webooks. Connecting to RabbitMQ...")
     amqp.connect(that.RABBITMQ_URI, (err, conn) => {
         if (err) {
-            winston.error("[Webooks.AMQP]", err);                    
+            logger.error("[Webooks.AMQP]", err);                    
             return setTimeout(() => { that.startMQ(resolve, reject) }, 1000);
         }
         conn.on("error", (err) => {
             if (err.message !== "Connection closing") {
-              winston.error("[Webooks.AMQP] conn error", err);
+              logger.error("[Webooks.AMQP] conn error", err);
                 return reject(err);
             }
         });
         conn.on("close", () => {
-            console.error("[Webooks.AMQP] reconnecting");
+            logger.error("[Webooks.AMQP] reconnecting");
             return setTimeout(() => { that.startMQ(resolve, reject) }, 1000);
         });
-        winston.info("Webooks. AMQP connected.")
+        logger.info("Webooks. AMQP connected.")
         that.amqpConn = conn;
         that.whenConnected().then(function(ch) {
-          winston.debug("Webooks. whenConnected() returned")
+          logger.debug("Webooks. whenConnected() returned")
           resolve({conn: conn, ch: ch});
         });
     });
@@ -727,10 +728,10 @@ class Webhooks {
 
   publish(exchange, routingKey, content, callback) {
     try {
-      winston.debug("Webooks.TRYING TO PUB...")
+      logger.debug("Webooks.TRYING TO PUB...")
       this.pubChannel.publish(exchange, routingKey, content, { persistent: true }, (err, ok) => {
           if (err) {
-            console.error("[Webooks.AMQP] publish ERROR:", err);
+            logger.error("[Webooks.AMQP] publish ERROR:", err);
             this.offlinePubQueue.push([exchange, routingKey, content]);
             this.pubChannel.connection.close();
             callback(err)
@@ -740,7 +741,7 @@ class Webhooks {
           }
         });
     } catch (e) {
-      console.error("[Webooks.AMQP] publish CATCHED ERROR:", e);
+      logger.error("[Webooks.AMQP] publish CATCHED ERROR:", e);
       this.offlinePubQueue.push([exchange, routingKey, content]);
       callback(e)
     }

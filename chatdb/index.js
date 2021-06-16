@@ -3,7 +3,8 @@
     Andrea Sponziello - (c) Tiledesk.com
 */
 
-const winston = require("../winston");
+// const winston = require("../winston");
+const logger = require('../tiledesk-logger').logger;
 
 /**
  * This is the class that manages DB persistence
@@ -38,11 +39,11 @@ class ChatDB {
   }
 
   saveOrUpdateMessage(message, callback) {
-    winston.debug("saving message...", message)
+    logger.debug("saving message...", message)
     delete message['_id'] // if present (message is coming from a mongodb query?) it is illegal. It produces: MongoError: E11000 duplicate key error collection: tiledesk-dialogflow-proxy.messages index: _id_ dup key: { : "5ef72c2494e08ffec88a033a" }
     this.db.collection(this.messages_collection).updateOne({timelineOf: message.timelineOf, message_id: message.message_id}, { $set: message }, { upsert: true }, function(err, doc) {
       if (err) {
-        winston.error("db error...", err)
+        logger.error("db error...", err)
         if (callback) {
           callback(err, null)
         }
@@ -56,17 +57,17 @@ class ChatDB {
   }
 
   saveOrUpdateConversation(conversation, callback) {
-    // winston.debug("saving conversation...", conversation)
+    // logger.debug("saving conversation...", conversation)
     this.db.collection(this.conversations_collection).updateOne({timelineOf: conversation.timelineOf, conversWith: conversation.conversWith}, { $set: conversation}, { upsert: true }, function(err, doc) {
       if (err) {
-        console.error("error saveOrUpdateConversation", err)
+        logger.error("error saveOrUpdateConversation", err)
         if (callback) {
           callback(err, null)
         }
       }
       else {
         if (callback) {
-          console.debug("Conversation saved.")
+          logger.debug("Conversation saved.")
           callback(null, doc)
         }
       }
@@ -74,7 +75,7 @@ class ChatDB {
   }
 
   saveOrUpdateGroup(group, callback) {
-    winston.debug("saving group...", group)
+    logger.debug("saving group...", group)
     this.db.collection(this.groups_collection).updateOne( { uid: group.uid }, { $set: group }, { upsert: true }, function(err, doc) {
       if (callback) {
         callback(err, null)
@@ -103,7 +104,7 @@ class ChatDB {
   }
 
   lastConversations(appid, userid, archived, callback) {
-    winston.debug("DB. app:", appid, "user:", userid, "archived:", archived)
+    logger.debug("DB. app:", appid, "user:", userid, "archived:", archived)
     this.db.collection(this.conversations_collection).find( { timelineOf: userid, app_id: appid, archived: archived } ).limit(200).sort( { timestamp: -1 } ).toArray(function(err, docs) {
       if (err) {
         if (callback) {
@@ -134,7 +135,7 @@ class ChatDB {
   }
 
   lastMessages(appid, userid, convid, sort, limit, callback) {
-    winston.debug("DB. app:", appid, "user:", userid, "convid", convid)
+    logger.debug("DB. app:", appid, "user:", userid, "convid", convid)
     this.db.collection(this.messages_collection).find( { timelineOf: userid, app_id: appid, conversWith: convid } ).limit(limit).sort( { timestamp: sort } ).toArray(function(err, docs) {
       if (err) {
         if (callback) {
