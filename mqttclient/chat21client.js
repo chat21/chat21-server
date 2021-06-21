@@ -102,9 +102,9 @@ class Chat21Client {
 
     sendMessage(text, type, recipient_id, recipient_fullname, sender_fullname, attributes, metadata, channel_type, callback) {
         // callback - function (err) 
-        console.log("recipient_id:", recipient_id)
+        // console.log("recipient_id:", recipient_id)
         let dest_topic = `apps/${this.appid}/users/${this.user_id}/messages/${recipient_id}/outgoing`
-        console.log("dest_topic:", dest_topic)
+        // console.log("dest_topic:", dest_topic)
         let outgoing_message = {
             text: text,
             type: type,
@@ -114,8 +114,7 @@ class Chat21Client {
             metadata: metadata,
             channel_type: channel_type
         }
-        console.log("outgoing_message:", outgoing_message)
-        // outgoing_message = {...outgoing_message, ...attributes }
+        // console.log("outgoing_message:", outgoing_message)
         const payload = JSON.stringify(outgoing_message)
         this.client.publish(dest_topic, payload, null, (err) => {
             callback(err, outgoing_message)
@@ -434,7 +433,7 @@ class Chat21Client {
                     if (message_json.attributes && message_json.attributes.updateconversation == false) {
                         update_conversation = false
                     }
-                    console.log("update_conversation........", update_conversation);
+                    // console.log("update_conversation........", update_conversation);
                     if (update_conversation && this.onConversationAddedCallbacks) {
                         this.onConversationAddedCallbacks.forEach((callback, handler, map) => {
                             message_json.is_new = true;
@@ -587,7 +586,7 @@ class Chat21Client {
                     callback(null, json.result);
                 }
                 catch (err) {
-                    console.log("parsing json ERROR", err);
+                    console.error("parsing json ERROR", err);
                     callback(err, null);
                 }
             }
@@ -609,7 +608,7 @@ class Chat21Client {
                     callback(null, json.result)
                 }
                 catch (err) {
-                    console.log("parsing json ERROR", err)
+                    console.error("parsing json ERROR", err)
                     callback(err, null)
                 }
             }
@@ -636,7 +635,7 @@ class Chat21Client {
                     callback(null, json.result)
                 }
                 catch (err) {
-                    console.log("parsing json messages ERROR", err)
+                    console.error("parsing json messages ERROR", err)
                     callback(err, null)
                 }
             }
@@ -665,7 +664,7 @@ class Chat21Client {
                         callback(null, null, json)
                     }
                     catch (err) {
-                        console.log("parsing json ERROR", err)
+                        console.error("parsing json ERROR", err)
                         callback(err, null)
                     }
                 }
@@ -746,6 +745,7 @@ class Chat21Client {
                 qos: 1,
                 retain: true
             },
+            clientId: this.client_id,
             username: 'JWT',
             password: jwt,
             rejectUnauthorized: false
@@ -758,7 +758,7 @@ class Chat21Client {
             () => {
                 console.log("chat client connected...")
                 if (!this.connected) {
-                    console.log("chat client first connection.")
+                    console.log("Chat client first connection.")
                     this.connected = true
                     this.start()
                     callback()
@@ -767,22 +767,22 @@ class Chat21Client {
         );
         this.client.on('reconnect',
             () => {
-                console.log("chat client reconnect event");
+                console.log("Chat client reconnect event");
             }
         );
         this.client.on('close',
             () => {
-                console.log("chat client close event");
+                console.log("Chat client close event");
             }
         );
         this.client.on('offline',
             () => {
-                console.log("chat client offline event");
+                console.log("Chat client offline event");
             }
         );
         this.client.on('error',
             (error) => {
-                console.log("chat client error event", error);
+                console.error("Chat client error event", error);
             }
         );
     }
@@ -823,5 +823,4 @@ else {
 
 function isBrowser() {
     browser = this.window ? true : false;
-    console.log("browser:", browser);
 }

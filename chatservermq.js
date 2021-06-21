@@ -21,11 +21,11 @@ if (webhook_enabled == undefined || webhook_enabled === "true" || webhook_enable
 }else {
   webhook_enabled = false;
 }
-logger.info("webhook_enabled: " + webhook_enabled);
+logger.debug("webhook_enabled: " + webhook_enabled);
 
 
 var webhook_endpoint = process.env.WEBHOOK_ENDPOINT;
-logger.info("webhook_endpoint: " + webhook_endpoint);
+logger.debug("webhook_endpoint: " + webhook_endpoint);
 
 
 let webhook_events_array = null;
@@ -44,6 +44,7 @@ async function start() {
       observer.setWebHookEnabled(webhook_enabled);
       observer.setWebHookEndpoint(webhook_endpoint);
       observer.setWebHookEvents(webhook_events_array);
+      // observer.setPersistentMessages(true);
 
       await startServer({app_id: process.env.APP_ID, exchange: 'amq.topic', rabbitmq_uri:process.env.RABBITMQ_URI, mongo_uri: process.env.MONGODB_URI});
 }

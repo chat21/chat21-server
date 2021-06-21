@@ -508,7 +508,6 @@ class Webhooks {
 
   WHsendData(json, callback) {
     var q = url.parse(this.webhook_endpoint, true);
-    logger.debug("ENV WEBHOOK URL PARSED:", q)
     var protocol = (q.protocol == "http:") ? require('http') : require('https');
     let options = {
       path:  q.pathname,
@@ -532,7 +531,7 @@ class Webhooks {
           respdata += chunk;
         });
         response.on('end', () => {
-          logger.info("WEBHOOK RESPONSE: "+ respdata + " for webhook_endpoint: " + this.webhook_endpoint);
+          logger.debug("WEBHOOK RESPONSE: "+ respdata + " for webhook_endpoint: " + this.webhook_endpoint);
           return callback(null, respdata) //TODO SE IL WEBHOOK NN RITORNA SEMBRA CHE SI BLOCCI
         });
       });

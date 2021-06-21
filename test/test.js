@@ -26,15 +26,23 @@ const user3 = {
  	token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlMmI2Y2RhMi0yNjhmLTQxZDMtYjBjYy1kZWNjN2I0M2UwMjEiLCJzdWIiOiJVU0VSMyIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjMuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVIzLioiLCJyYWJiaXRtcS5jb25maWd1cmU6Ki8qLyoiXSwiY2xpZW50X2lkIjoiVVNFUjMiLCJjaWQiOiJVU0VSMyIsImF6cCI6IlVTRVIzIiwidXNlcl9pZCI6IlVTRVIzIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE2MjM3Njc1MjAsImV4cCI6MTkzNDgwNzUyMCwiYXVkIjpbInJhYmJpdG1xIiwiVVNFUjMiXSwia2lkIjoidGlsZWRlc2sta2V5IiwidGlsZWRlc2tfYXBpX3JvbGVzIjoidXNlciJ9.-Cio8ITPCQswv_4KnxJrRbm-5RCXMefuT91wWUNZJmU'
 };
 
+// LOCAL
+const MQTT_ENDPOINT = 'ws://localhost:15675/ws';
+const API_ENDPOINT = 'http://localhost:8004/api'
 
+// REMOTE
+// const MQTT_ENDPOINT = 'mqtt://99.80.197.164:15675/ws';
+// const API_ENDPOINT = 'http://99.80.197.164:8004/api';
+
+const APPID = 'tilechat';
 
 describe('TiledeskClient - test 1', function() {
   describe('User connects', function() {
       it('User connects to the RabbbitMQ server through MQTT client', function(done) {
         let chatClient = new Chat21Client(
 			{
-				appId: "tilechat",
-				MQTTendpoint: 'ws://localhost:15675/ws'
+				appId: APPID,
+				MQTTendpoint: MQTT_ENDPOINT
 			}
 		);
 		chatClient.connect(user1.userid, user1.token, () => {
@@ -43,7 +51,6 @@ describe('TiledeskClient - test 1', function() {
 				console.log("...and successfully disconnected.");
 				done();
 			})
-			
 		});
       });
   });
@@ -54,8 +61,8 @@ describe('TiledeskClient - test 2', function() {
 		it('User sends a direct message using client.sendMessage()', function(done) {
 		  let chatClient = new Chat21Client(
 			  {
-				  appId: "tilechat",
-				  MQTTendpoint: 'ws://localhost:15675/ws'
+				  appId: APPID,
+				  MQTTendpoint: MQTT_ENDPOINT
 			  }
 		  );
 		  chatClient.connect(user1.userid, user1.token, () => {
@@ -87,14 +94,14 @@ describe('TiledeskClient - test 3', function() {
 		it('User1 sends a direct message and User2 receives the message', function(done) {
 		  let chatClient1 = new Chat21Client(
 			  {
-				  appId: "tilechat",
-				  MQTTendpoint: 'ws://localhost:15675/ws'
+				  appId: APPID,
+				  MQTTendpoint: MQTT_ENDPOINT
 			  }
 		  );
 		  let chatClient2 = new Chat21Client(
 			{
-				appId: "tilechat",
-				MQTTendpoint: 'ws://localhost:15675/ws'
+				appId: APPID,
+				MQTTendpoint: MQTT_ENDPOINT
 			}
 		  );
 		  chatClient2.connect(user2.userid, user2.token, () => {
@@ -115,13 +122,13 @@ describe('TiledeskClient - test 3', function() {
 			  console.log("User1 connected...");
 			  chatClient1.sendMessage(
 				  'test',
-				  'direct',
+				  'text',
 				  user2.userid,
 				  user2.fullname,
 				  user1.fullname,
 				  null,
 				  null,
-				  'chat21',
+				  'direct',
 				  () => {
 					  console.log("Message sent.");
 					  chatClient1.close(() => {
@@ -143,9 +150,9 @@ describe('TiledeskClient - test 4', function() {
 			group_members[user2.userid] = 1;
 			let chatClient = new Chat21Client(
 				{
-					appId: "tilechat",
-					MQTTendpoint: 'ws://localhost:15675/ws',
-					APIendpoint: 'http://localhost:8004/api'
+					appId: APPID,
+					MQTTendpoint: MQTT_ENDPOINT,
+					APIendpoint: API_ENDPOINT
 				}
 			);
 			chatClient.connect(user1.userid, user1.token, () => {
@@ -175,22 +182,22 @@ describe('TiledeskClient - test 4', function() {
 
 describe('TiledeskClient - test 5', function() {
 	describe('Creates group with 2 members', function() {
-		it('Creates a group with 2 members, the added member receives the MEMBER_JOINED_GROUP message', function(done) {
+		it('Creates a group with 2 members, each added member receives the MEMBER_JOINED_GROUP message', function(done) {
 			const group_id = "group-" + uuid();
 			const group_name = "test group";
 			const group_members = {}
 			group_members[user2.userid] = 1;
 			let chatClient1 = new Chat21Client( // group creator
 				{
-					appId: "tilechat",
-					MQTTendpoint: 'ws://localhost:15675/ws',
-					APIendpoint: 'http://localhost:8004/api'
+					appId: APPID,
+					MQTTendpoint: MQTT_ENDPOINT,
+					APIendpoint: API_ENDPOINT
 				}
 			);
 			let chatClient2 = new Chat21Client( // group member, will receive added-to-group message
 				{
-					appId: "tilechat",
-					MQTTendpoint: 'ws://localhost:15675/ws'
+					appId: APPID,
+					MQTTendpoint: MQTT_ENDPOINT
 				}
 			  );
 			  chatClient2.connect(user2.userid, user2.token, () => {
@@ -279,9 +286,9 @@ describe('TiledeskClient - test 6', function() {
 			const SENT_MESSAGE = 'Hello guys';
 			let chatClient1 = new Chat21Client( // group creator
 				{
-					appId: "tilechat",
-					MQTTendpoint: 'ws://localhost:15675/ws',
-					APIendpoint: 'http://localhost:8004/api'
+					appId: APPID,
+					MQTTendpoint: MQTT_ENDPOINT,
+					APIendpoint: API_ENDPOINT
 				}
 			);
 			chatClient1.connect(user1.userid, user1.token, () => {
@@ -345,21 +352,21 @@ describe('TiledeskClient - test 6', function() {
 			const SENT_MESSAGE = "Welcome everybody 2";
 			let chatClient1 = new Chat21Client( // group creator
 				{
-					appId: "tilechat",
-					MQTTendpoint: 'ws://localhost:15675/ws',
-					APIendpoint: 'http://localhost:8004/api'
+					appId: APPID,
+					MQTTendpoint: MQTT_ENDPOINT,
+					APIendpoint: API_ENDPOINT
 				}
 			);
 			let chatClient2 = new Chat21Client( // group member, will receive sent message
 				{
-					appId: "tilechat",
-					MQTTendpoint: 'ws://localhost:15675/ws'
+					appId: APPID,
+					MQTTendpoint: MQTT_ENDPOINT
 				}
 			  );
 			  let chatClient3 = new Chat21Client( // group member, will receive sent message
 				{
-					appId: "tilechat",
-					MQTTendpoint: 'ws://localhost:15675/ws'
+					appId: APPID,
+					MQTTendpoint: MQTT_ENDPOINT
 				}
 			  );
 			  chatClient2.connect(user2.userid, user2.token, () => {

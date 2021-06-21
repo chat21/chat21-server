@@ -89,6 +89,7 @@ logger.info("webhook_enabled: " + webhook_enabled);
 
 let webhook_endpoint;
 let webhook_events_array;
+let persistent_messages;
 
 function getWebhooks() {
   return webhooks;
@@ -120,6 +121,10 @@ function setWebHookEndpoint(url) {
 
 function setWebHookEvents(events) {
   webhook_events_array = events;
+}
+
+function setPersistentMessages(persist) {
+  persistent_messages = persist;
 }
 
 
@@ -416,13 +421,13 @@ function process_outgoing(topic, message_string, callback) {
     // })
   }
   else {
-    logger.log("message group.");
+    logger.debug("Group message.");
     const group_id = recipient_id
     chatdb.getGroup(group_id, function(err, group) { // REDIS?
       // logger.debug("group found!", group)
       if (!group) { // created only to temporary store group-messages in group-timeline
-        // TODO: 1. create group (on-the-fly), 2. remove this code, 3. continue as ifthe group exists.
-        logger.debug("group doesn't exist! Sending anyway to group timeline...")
+        // TODO: 1. create group (on-the-fly), 2. remove this code, 3. continue as if the group exists.
+        logger.debug("group doesn't exist! Sending anyway to group timeline...");
         group = {
           uid: group_id,
           transient: true,
@@ -504,7 +509,6 @@ function isMessageGroup(message) {
 
 // Places te message in the inbox of the recipient
 function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
-  logger.log("DELIVERINGMESSAGE:",message)
   logger.debug("DELIVERING:", message, "inbox_of:", inbox_of, "convers_with:", convers_with_id)
   // internal flow
   const persist_topic = `apps.observer.${app_id}.users.${inbox_of}.messages.${convers_with_id}.persist`
@@ -524,7 +528,7 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
     }
     logger.debug("NOTIFY VIA WHnotifyMessageStatusDelivered, topic: " + added_topic);
     if (webhooks && webhook_enabled) {
-      logger.log("webhooks && webhook_enabled ON, processing webhooks, message:", message);
+      logger.debug("webhooks && webhook_enabled ON, processing webhooks, message:", message);
       webhooks.WHnotifyMessageStatusSentOrDelivered(message_payload, added_topic, (err) => {
         if (err) {
           logger.error("WHnotifyMessageStatusSentOrDelivered with err:"+ err);
@@ -664,7 +668,7 @@ function process_persist(topic, message_string, callback) {
         else {
           callback(true)
         }
-      })
+      });
     }
     else {
       logger.debug("Skip updating conversation. (update_conversation = false)")
