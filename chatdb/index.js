@@ -3,7 +3,6 @@
     Andrea Sponziello - (c) Tiledesk.com
 */
 
-// const winston = require("../winston");
 const logger = require('../tiledesk-logger').logger;
 
 /**
@@ -39,7 +38,7 @@ class ChatDB {
   }
 
   saveOrUpdateMessage(message, callback) {
-    logger.debug("saving message...", message)
+    // logger.debug("saving message...", message)
     delete message['_id'] // if present (message is coming from a mongodb query?) it is illegal. It produces: MongoError: E11000 duplicate key error collection: tiledesk-dialogflow-proxy.messages index: _id_ dup key: { : "5ef72c2494e08ffec88a033a" }
     this.db.collection(this.messages_collection).updateOne({timelineOf: message.timelineOf, message_id: message.message_id}, { $set: message }, { upsert: true }, function(err, doc) {
       if (err) {
@@ -67,7 +66,7 @@ class ChatDB {
       }
       else {
         if (callback) {
-          logger.debug("Conversation saved.")
+          // logger.debug("Conversation saved.")
           callback(null, doc)
         }
       }

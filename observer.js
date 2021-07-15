@@ -1,4 +1,3 @@
-// const winston = require("./winston");
 var amqp = require('amqplib/callback_api');
 const { ChatDB } = require('./chatdb/index.js');
 // const { Webhooks } = require('./webhooks/index.js');
@@ -79,6 +78,7 @@ var chatdb;
 let webhooks;
 
 let webhook_enabled;
+let autoRestart;
 
 if (webhook_enabled == undefined || webhook_enabled === "true" || webhook_enabled === true ) {
   webhook_enabled = true;
@@ -123,6 +123,11 @@ function setWebHookEvents(events) {
   webhook_events_array = events;
 }
 
+let autoRestartProperty;
+function setAutoRestart(_autoRestart) {
+  autoRestartProperty = _autoRestart;
+}
+
 function setPersistentMessages(persist) {
   persistent_messages = persist;
 }
@@ -135,44 +140,44 @@ function start() {
 }
 
 function startMQ(resolve, reject) {
-  var autoRestart = process.env.AUTO_RESTART;
+  var autoRestart = process.env.AUTO_RESTART || autoRestartProperty;
   if (autoRestart===undefined || autoRestart==="true" || autoRestart===true) {
       autoRestart=true;
   } else {
       autoRestart=false;
-  }  
-      logger.debug("Connecting to RabbitMQ...")
-      amqp.connect(rabbitmq_uri, (err, conn) => {
-          if (err) {
-              logger.error("[AMQP]", err);                    
-              if (autoRestart) {
-                logger.error("[AMQP] reconnecting");
-                return setTimeout(() => { startMQ(resolve, reject) }, 1000);
-              } else {
-                  process.exit(1);
-              }                     
+  }
+  logger.debug("Observer. Connecting to RabbitMQ...")
+  amqp.connect(rabbitmq_uri, (err, conn) => {
+      if (err) {
+          logger.error("[AMQP]", err);
+          if (autoRestart) {
+            logger.error("[AMQP] reconnecting");
+            return setTimeout(() => { startMQ(resolve, reject) }, 1000);
+          } else {
+              process.exit(1);
+          }                     
+      }
+      conn.on("error", (err) => {
+          if (err.message !== "Connection closing") {
+            logger.error("[AMQP] conn error", err);
+              return reject(err);
           }
-          conn.on("error", (err) => {
-              if (err.message !== "Connection closing") {
-                logger.error("[AMQP] conn error", err);
-                  return reject(err);
-              }
-          });
-          conn.on("close", () => {
-            logger.error("[AMQP] close");
-            if (autoRestart) {
-                logger.error("[AMQP] reconnecting");
-                return setTimeout(() => { startMQ(resolve, reject) }, 1000);
-            } else {
-                process.exit(1);
-            }                                 
-          });
-          amqpConn = conn;
-          whenConnected().then(function(ch) {
-            logger.debug("whenConnected() returned")
-            return resolve({conn: conn, ch: ch});
-          });
-      });  
+      });
+      conn.on("close", () => {
+        logger.error("[AMQP] close");
+        if (autoRestart) {
+            logger.error("[AMQP] reconnecting");
+            return setTimeout(() => { startMQ(resolve, reject) }, 1000);
+        } else {
+            process.exit(1);
+        }
+      });
+      amqpConn = conn;
+      whenConnected().then(function(ch) {
+        logger.debug("whenConnected() returned")
+        return resolve({conn: conn, ch: ch});
+      });
+  });  
 }
 
 async function whenConnected() {
@@ -278,7 +283,7 @@ function processMsg(msg) {
   work(msg, function (ok) {
     try {
       if (ok) {
-        logger.debug("channel.ack(msg)");
+        // logger.debug("channel.ack(msg)");
         channel.ack(msg);
       }
       else {
@@ -443,7 +448,7 @@ function process_outgoing(topic, message_string, callback) {
       // }
       // adding the group in the members so we easily get a copy of
       // all the group messages in timelineOf: group.uid
-        
+      
       group.members[group.uid] = 1
       // logger.debug("Writing to group:", group)
       let count = 0;
@@ -480,7 +485,7 @@ function process_outgoing(topic, message_string, callback) {
               callback(false)
             }
             else {
-              logger.log("ALL OK! MESSAGE SENT TO GRUP! ACK!");
+              logger.log("ALL OK! MESSAGE SENT TO GROUP! ACK!");
               callback(true);
             }
           }
@@ -528,7 +533,7 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
     }
     logger.debug("NOTIFY VIA WHnotifyMessageStatusDelivered, topic: " + added_topic);
     if (webhooks && webhook_enabled) {
-      logger.debug("webhooks && webhook_enabled ON, processing webhooks, message:", message);
+      // logger.debug("webhooks && webhook_enabled ON, processing webhooks, message:", message);
       webhooks.WHnotifyMessageStatusSentOrDelivered(message_payload, added_topic, (err) => {
         if (err) {
           logger.error("WHnotifyMessageStatusSentOrDelivered with err:"+ err);
@@ -646,10 +651,10 @@ function process_persist(topic, message_string, callback) {
   if (savedMessage.attributes && savedMessage.attributes.updateconversation == false) {
     update_conversation = false
   }
-  logger.debug("updateconversation = " + update_conversation)
+  // logger.debug("updateconversation = " + update_conversation)
   chatdb.saveOrUpdateMessage(savedMessage, function(err, msg) {
-    logger.debug("Message saved", savedMessage)
-    logger.debug("Updating conversation? updateconversation is: " + update_conversation)
+    // logger.debug("Message saved", savedMessage)
+    // logger.debug("Updating conversation? updateconversation is: " + update_conversation)
     if (update_conversation) {
       const my_conversation_topic = 'apps.tilechat.users.' + me + '.conversations.' + convers_with + ".clientadded"
       let conversation = persist_message
@@ -659,7 +664,7 @@ function process_persist(topic, message_string, callback) {
       conversation.archived = false
       conversation.last_message_text = conversation.text // retro comp
       const conversation_payload = JSON.stringify(conversation)
-      logger.debug("Updating conversation...")
+      // logger.debug("Updating conversation...")
       chatdb.saveOrUpdateConversation(conversation, (err, doc) => {
         if (err) {
           logger.error("(chatdb.saveOrUpdateConversation callback) ERROR: ", err)
@@ -967,12 +972,14 @@ function joinGroup(joined_member_id, group, callback) {
       let inbox_of = member_id
       let convers_with = group.uid
       deliverMessage(message, appid, inbox_of, convers_with, (ok) => {
+        console.log("delivering...")
         if (!ok) {
           logger.error("error delivering message to joined member", inbox_of)
           callback(ok)
           return
         }
         else {
+          
           logger.debug("DELIVERED MESSAGE TO: " + inbox_of + " CONVERS_WITH " + convers_with)
         }
       })
@@ -1018,11 +1025,11 @@ function process_update_group(topic, payload, callback) {
   logger.debug("app_id:" + app_id)
   logger.debug("payload:" + payload)
   const data = JSON.parse(payload)
-  logger.debug("process_update_group DATA ", data)
+  logger.debug("process_update_group DATA ", JSON.stringify(data))
   const group = data.group
-  logger.debug("process_update_group DATA.group ", data.group)
+  // logger.debug("process_update_group DATA.group ", JSON.stringify(data.group))
   const notify_to = data.notify_to
-  logger.debug("process_update_group DATA.notify_to ", data.notify_to);
+  // logger.debug("process_update_group DATA.notify_to ", data.notify_to);
   if (!group || !group.uid) {
     logger.error("Group not found!");
     callback(true)
@@ -1169,7 +1176,17 @@ async function startServer(config) {
 
   exchange = config.exchange || 'amq.topic';
 
-  rabbitmq_uri = config.rabbitmq_uri;
+  if (config && config.rabbitmq_uri) {
+    // console.log("rabbitmq_uri found in config", config)
+    rabbitmq_uri = config.rabbitmq_uri;
+  }
+  else if (process.env.RABBITMQ_URI) {
+    // console.log("rabbimq_uri found in env")
+    rabbitmq_uri = process.env.RABBITMQ_URI;
+  }
+  else {
+    throw new Error('please configure process.env.RABBITMQ_URI or use parameter config.rabbimq_uri option.');
+  }
 
   topic_outgoing = `apps.${app_id}.users.*.messages.*.outgoing`
   topic_update = `apps.${app_id}.users.#.update`
@@ -1180,24 +1197,24 @@ async function startServer(config) {
   topic_delivered = `apps.observer.${app_id}.users.*.messages.*.delivered`
   // topic_create_group = `apps.observer.${app_id}.groups.create`
   topic_update_group = `apps.observer.${app_id}.groups.update`
-
-
   mongo_uri = config.mongo_uri || "mongodb://localhost:27017/chatdb";
-
   var db;
   logger.debug("connecting to mongodb...");
   var client = await mongodb.MongoClient.connect(mongo_uri, { useNewUrlParser: true, useUnifiedTopology: true })
-  logger.debug("mongodb connected...", db);
   db = client.db();
+  logger.debug("mongodb connected...", db);
   chatdb = new ChatDB({database: db})
   logger.info("Starting webhooks...");
   webhooks = new Webhooks({appId: app_id, RABBITMQ_URI: rabbitmq_uri, exchange: exchange, webhook_endpoint: webhook_endpoint, webhook_events: webhook_events_array, queue_name: 'webhooks'});
   await webhooks.start();
   webhooks.enabled = webhook_enabled;
-  logger.debug('Starting observer.')
+  logger.debug('Starting observer.');
   var amqpConnection = await start();
   logger.debug("[Observer.AMQP] connected.");
-  
+}
+
+function stopServer() {
+  amqpConn.close();
 }
 
 // startServer()
@@ -1597,4 +1614,4 @@ async function startServer(config) {
 //   }
 // }
 
-module.exports = {startServer: startServer, getWebhooks:getWebhooks, setWebHookEndpoint: setWebHookEndpoint, setWebHookEvents:setWebHookEvents, setWebHookEnabled:setWebHookEnabled };
+module.exports = {startServer: startServer, stopServer: stopServer, setAutoRestart: setAutoRestart, getWebhooks:getWebhooks, setWebHookEndpoint: setWebHookEndpoint, setWebHookEvents:setWebHookEvents, setWebHookEnabled:setWebHookEnabled };

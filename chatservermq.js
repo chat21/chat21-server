@@ -6,7 +6,6 @@
  
 require('dotenv').config(); 
 
-// const winston = require("./winston");
 const logger = require('./tiledesk-logger').logger;
 
 var observer = require('./observer');

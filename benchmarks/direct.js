@@ -25,10 +25,16 @@ const user3 = {
  	token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlMmI2Y2RhMi0yNjhmLTQxZDMtYjBjYy1kZWNjN2I0M2UwMjEiLCJzdWIiOiJVU0VSMyIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjMuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVIzLioiLCJyYWJiaXRtcS5jb25maWd1cmU6Ki8qLyoiXSwiY2xpZW50X2lkIjoiVVNFUjMiLCJjaWQiOiJVU0VSMyIsImF6cCI6IlVTRVIzIiwidXNlcl9pZCI6IlVTRVIzIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE2MjM3Njc1MjAsImV4cCI6MTkzNDgwNzUyMCwiYXVkIjpbInJhYmJpdG1xIiwiVVNFUjMiXSwia2lkIjoidGlsZWRlc2sta2V5IiwidGlsZWRlc2tfYXBpX3JvbGVzIjoidXNlciJ9.-Cio8ITPCQswv_4KnxJrRbm-5RCXMefuT91wWUNZJmU'
 };
 
-const MQTT_ENDPOINT = 'ws://localhost:15675/ws';
+// LOCAL
+// const MQTT_ENDPOINT = 'ws://localhost:15675/ws';
+
+// REMOTE
+const MQTT_ENDPOINT = 'ws://99.80.197.164:15675/ws';
+
 const APPID = 'tilechat';
 
-let TOTAL_MESSAGES = 1;
+let TOTAL_MESSAGES = 500;
+let DELAY = 100; //ms
 let starttime;
 let endtime;
 
@@ -51,7 +57,7 @@ function startDirectBenchmark() {
     );
     chatClient2.connect(user2.userid, user2.token, () => {
           chatClient2.onMessageAdded((message, topic) => {
-            //   console.log("Received:", message.text + ' ID:' + message.message_id);
+              console.log("Received:", message.text + ' ID:' + message.message_id);
               assert(message != null);
               assert(message.text != null);
               messages_count += 1;
@@ -59,7 +65,7 @@ function startDirectBenchmark() {
                 endtime = Date.now();
                 console.log("End:" + endtime);
                 let totaltime = endtime - starttime;
-                console.log("TOTAL TIME:" + totaltime);
+                console.log("TOTAL TIME: " + totaltime + " ms");
                 chatClient2.close(() => {
                     console.log("...TEST TERMINATED. DISCONNECTING CLIENT2. TOTAL RECEIVED MESSAGES:" + messages_count);
                 });
@@ -68,27 +74,28 @@ function startDirectBenchmark() {
                 });
               }
           });
-    });
-
-    chatClient1.connect(user1.userid, user1.token, () => {
-        console.log("User1 connected...");
-        starttime = Date.now();
-        console.log("Start:" + starttime);
-        for (i = 0; i < TOTAL_MESSAGES; i++) {
-            let message_text = "Message" + i;
-            chatClient1.sendMessage(
-                message_text,
-                'text',
-                user2.userid,
-                user2.fullname,
-                user1.fullname,
-                null,
-                null,
-                'direct',
-                () => {
-                    // console.log("Message sent.");
-                }
-            );
-        }
+          
+          chatClient1.connect(user1.userid, user1.token, async () => {
+            console.log("User1 connected...");
+            starttime = Date.now();
+            console.log("Start:" + starttime);
+            for (i = 0; i < TOTAL_MESSAGES; i++) {
+                await new Promise(resolve => setTimeout(resolve, DELAY));
+                let message_text = "Message" + i;
+                chatClient1.sendMessage(
+                    message_text,
+                    'text',
+                    user2.userid,
+                    user2.fullname,
+                    user1.fullname,
+                    null,
+                    null,
+                    'direct',
+                    (err, msg) => {
+                        console.log("Sent:", msg.text);
+                    }
+                );
+            }
+        });
     });
 }

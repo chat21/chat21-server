@@ -21,10 +21,23 @@ class TiledeskLogger {
    * const logger = require('tiledesk-logger');
    */
   
-  constructor() {
+  constructor(log_level) {
     this.levels = {'DEBUG': LEVEL_DEBUG, 'ERROR': LEVEL_ERROR, 'INFO': LEVEL_INFO, 'LOG': LEVEL_LOG};
-    this.logLevel = this.levels[process.env.LOG_LEVEL] || LEVEL_DEBUG
-    // console.log("actual logLevel", this.logLevel)
+    if (log_level) {
+      this.logLevel = this.levels[log_level.toUpperCase()] || LEVEL_DEBUG
+    }
+    else if (process.env.LOG_LEVEL) {
+      this.logLevel = this.levels[process.env.LOG_LEVEL.toUpperCase()] || LEVEL_DEBUG
+    }
+    else {
+      this.logLevel = LEVEL_DEBUG
+    }
+  }
+
+  setLog(log_level) {
+    if (log_level) {
+      this.logLevel = this.levels[log_level.toUpperCase()];
+    }
   }
 
   debug(...args) {
@@ -53,6 +66,4 @@ class TiledeskLogger {
 
 }
 
-
-
-module.exports.logger = new TiledeskLogger();
+module.exports = {logger: new TiledeskLogger(), TiledeskLogger: TiledeskLogger};

@@ -15,14 +15,16 @@
     "mqtt": "^4.2.6",
     "rhea": "^1.0.20",
     "uuidv4": "^6.1.1",
-    "websocket-stream": "^5.5.2",
-    "winston": "^3.3.3"
+    "websocket-stream": "^5.5.2"
   },
   "devDependencies": {
-    "axios": "^0.21.1"
+    "@chat21/chat21-http-server": "^0.1.10",
+    "@chat21/chat21-server": "0.1.12",
+    "axios": "^0.21.1",
+    "mongodb-runner": "^4.8.3"
   },
   "scripts": {
-    "test": "mocha ./test/*.js --timeout 5000",
+    "test": "mocha ./test/*.js --timeout 3000",
     "benchmarks": "node ./benchmarks/index.js",
     "start": "node chatservermq.js"
   },

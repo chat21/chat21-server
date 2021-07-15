@@ -32,22 +32,6 @@ class Webhooks {
    * 
    */
   constructor(options) {
-    // if (!options.database) {
-    //   throw new Error('database option can NOT be empty.');
-    // }
-    // if (!options.exchange) {
-    //   throw new Error('exchange option can NOT be empty.');
-    // }
-    // if (!options.amqp) {
-    //     throw new Error('amqp option can NOT be empty.');
-    // }
-    // if (!options.pubChannel) {
-    //   throw new Error('pubChannel option can NOT be empty.');
-    // }
-    // if (!options.offlinePubQueue) {
-    //   throw new Error('offlinePubQueue option can NOT be empty.');
-    // }
-
     if (!options) {
       throw new Error('options can NOT be empty. appId and RABBITMQ_URI are mandatory');
     }
@@ -63,6 +47,7 @@ class Webhooks {
     if (!options.webhook_endpoint) {
       throw new Error('webhook_endpoint option can NOT be empty.');
     }
+    // throw new Error('webhook_endpoint option can NOT be empty.......');
     this.webhook_endpoint = options.webhook_endpoint;
     this.RABBITMQ_URI = options.RABBITMQ_URI;
     this.appId = options.appId;
@@ -271,7 +256,7 @@ class Webhooks {
   }
 
   WHnotifyMessageDeliver(message, callback) {
-    logger.debug("WH NOTIFY MESSAGE:", message);
+    // logger.debug("WH NOTIFY MESSAGE:", message);
     if (this.enabled===false) {
       logger.debug("webhooks disabled");
       callback(null)
@@ -389,7 +374,7 @@ class Webhooks {
       extras: {topic: message['temp_field_chat_topic']}
     };
     delete message['temp_field_chat_topic'];
-    logger.debug("WHprocess_webhook_message_received Sending JSON webhook:", json)
+    // logger.debug("WHprocess_webhook_message_received Sending JSON webhook:", json)
     this.WHsendData(json, function(err, data) {
       if (err)  {
         logger.error("Err WHsendData callback", err);
@@ -430,7 +415,7 @@ class Webhooks {
       data: message,
       extras: {topic: topic}
     };
-    logger.debug("WHprocess_webhook_message_received Sending JSON webhook:", json)
+    // logger.debug("WHprocess_webhook_message_received Sending JSON webhook:", json)
     this.WHsendData(json, function(err, data) {
       if (err)  {
         logger.error("Err WHsendData callback", err);

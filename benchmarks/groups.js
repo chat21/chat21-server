@@ -25,12 +25,20 @@ const user3 = {
  	lastname: '3',
  	token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlMmI2Y2RhMi0yNjhmLTQxZDMtYjBjYy1kZWNjN2I0M2UwMjEiLCJzdWIiOiJVU0VSMyIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjMuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVIzLioiLCJyYWJiaXRtcS5jb25maWd1cmU6Ki8qLyoiXSwiY2xpZW50X2lkIjoiVVNFUjMiLCJjaWQiOiJVU0VSMyIsImF6cCI6IlVTRVIzIiwidXNlcl9pZCI6IlVTRVIzIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE2MjM3Njc1MjAsImV4cCI6MTkzNDgwNzUyMCwiYXVkIjpbInJhYmJpdG1xIiwiVVNFUjMiXSwia2lkIjoidGlsZWRlc2sta2V5IiwidGlsZWRlc2tfYXBpX3JvbGVzIjoidXNlciJ9.-Cio8ITPCQswv_4KnxJrRbm-5RCXMefuT91wWUNZJmU'
 };
-const MQTT_ENDPOINT = 'ws://localhost:15675/ws';
-const API_ENDPOINT = 'http://localhost:8004/api'
+
+// LOCAL
+// const MQTT_ENDPOINT = 'ws://localhost:15675/ws';
+// const API_ENDPOINT = 'http://localhost:8004/api'
+
+// REMOTE
+const MQTT_ENDPOINT = 'ws://99.80.197.164:15675/ws';
+const API_ENDPOINT = 'http://99.80.197.164:8004/api';
+
 const APPID = 'tilechat';
 
-let TOTAL_SENT_MESSAGES = 100;
+let TOTAL_SENT_MESSAGES = 500;
 let TOTAL_DELIVERED_MESSAGES = TOTAL_SENT_MESSAGES * 3;
+let DELAY = 100; // ms
 let starttime;
 let endtime;
 
@@ -103,7 +111,7 @@ function startBenchmark() {
                     group_name,
                     group_id,
                     group_members,
-                    (err, result) => {
+                    async (err, result) => {
                         assert(err == null);
                         assert(result != null);
                         assert(result.success == true);
@@ -123,6 +131,7 @@ function startBenchmark() {
                         starttime = Date.now();
                         console.log("Start:" + starttime);
                         for (i = 0; i < TOTAL_SENT_MESSAGES; i++) {
+                            await new Promise(resolve => setTimeout(resolve, DELAY));
                             let message_text = "Message" + i;
                             chatClient1.sendMessage(
                                 message_text,
@@ -133,8 +142,8 @@ function startBenchmark() {
                                 null,
                                 null,
                                 'group',
-                                () => {
-                                    //console.log("Message sent to group", group_name);
+                                (err, msg) => {
+                                    console.log("Group sent", msg.text);
                                 }
                             );
                         }
