@@ -36,34 +36,9 @@ logger.info("webhook_enabled: " + webhook_enabled);
 
 */
 
-/*
-var app_id = process.env.APP_ID || "tilechat";
-logger.info("app_id: " + app_id);
-*/
-
-
 var amqpConn = null;
-
-/*
-var exchange = 'amq.topic';
-*/
 let exchange;
-
-/*
-const topic_outgoing = `apps.${app_id}.users.*.messages.*.outgoing`
-const topic_update = `apps.${app_id}.users.#.update`
-const topic_archive = `apps.${app_id}.users.#.archive`
-const topic_presence = `apps.${app_id}.users.*.presence.*`
-// FOR OBSERVER TOPICS
-const topic_persist = `apps.observer.${app_id}.users.*.messages.*.persist`
-const topic_delivered = `apps.observer.${app_id}.users.*.messages.*.delivered`
-const topic_create_group = `apps.observer.${app_id}.groups.create`
-const topic_update_group = `apps.observer.${app_id}.groups.update`
-*/
-
 let app_id;
-
-
 let topic_outgoing;
 let topic_update;
 let topic_archive;
@@ -73,10 +48,8 @@ let topic_persist;
 let topic_delivered;
 // let topic_create_group;
 let topic_update_group;
-
 var chatdb;
 let webhooks;
-
 let webhook_enabled;
 let autoRestart;
 
@@ -107,9 +80,6 @@ function getWebHookEndpoint() {
 function getWebHookEvents() {
   return webhook_events_array;
 }
-
-
-
 
 function setWebHookEnabled(enabled) {
   webhook_enabled = enabled;
@@ -391,39 +361,6 @@ function process_outgoing(topic, message_string, callback) {
         callback(false);
       }
     });
-
-    // logger.debug("!isGroup")
-    // let inbox_of = recipient_id
-    // let convers_with = sender_id
-    // deliverMessage(outgoing_message, app_id, inbox_of, convers_with, function(ok) {
-    //   // WEBHOOK DELIVERED STATUS // outgoing_message.status
-    //   logger.debug("outgoing_message1 OK?", ok)
-    //   if (ok) {
-    //     if (recipient_id !== sender_id) {
-          // inbox_of = sender_id
-          // convers_with = recipient_id
-          // outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT // =100. DELIVERED it's better, but the JS client actually wants 100 to show the sent-checkbox
-          // deliverMessage(outgoing_message, app_id, inbox_of, convers_with, function(ok) {
-          //   logger.debug("outgoing_message2 OK?", ok)
-          //   if (ok) {
-          //     callback(true)
-          //   }
-          //   else {
-          //     logger.debug("Error delivering: ", outgoing_message)
-          //     callback(false)
-          //   }
-          // })
-    //     }
-    //     else {
-    //       logger.debug("message sent to myself. not delivering")
-    //       callback(true)
-    //     }
-    //   }
-    //   else {
-    //     logger.debug("!ok")
-    //     callback(false)
-    //   }
-    // })
   }
   else {
     logger.debug("Group message.");
@@ -566,43 +503,6 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
         callback(true);
       })
     }
-    // if (webhook_enabled) {
-    //   logger.log("webhook_enabled!!!!!", webhook_enabled, message.status)
-    //   if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED) {
-    //     logger.debug("WHnotifyMessageStatusDelivered before message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED");
-    //     webhooks.WHnotifyMessageStatusDelivered(message, (err) => {
-    //       if (err) {
-    //         logger.error("WHnotifyMessageStatusDelivered with err:"+ err)
-    //       } else {
-    //         logger.debug("WHnotifyMessageStatusDelivered ok")
-    //       }
-    //     })
-    //   }
-    //   else if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT) {
-    //     logger.debug("WHnotifyMessageStatusDelivered before message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT");
-    //     webhooks.WHnotifyMessageStatusSent(message, (err) => {
-    //       if (err) {
-    //         logger.error("Webhook notified with err:"+ err)
-    //       } else {
-    //         logger.debug("Webhook notified WHnotifyMessageReceived ok")
-    //       }
-    //     })
-    //   }else {
-    //     logger.debug("WHnotifyMessageStatusDelivered before else other???");
-    //   }
-    // }
-    // saves on db and creates conversation
-    // logger.debug("ADDED. NOW PUBLISH TO 'persist' TOPIC: " + persist_topic)
-    // publish(exchange, persist_topic, Buffer.from(message_payload), function(err, msg) { // .persist
-    //   if (err) {
-    //     logger.error("Error PUBLISH TO 'persist' TOPIC:", err)
-    //     callback(false)
-    //     return
-    //   }
-    //   logger.debug("... ALL GOOD ON:", persist_topic)
-    //   callback(true)
-    //   // publish convs .clientadded
-    // })
   })
 }
 
@@ -891,43 +791,6 @@ function process_archive(topic, payload, callback) {
   }
 }
 
-// function process_create_group(topic, payload, callback) {
-//   var topic_parts = topic.split(".")
-//   logger.debug("process_create_group. TOPIC PARTS:" + topic_parts + " payload:" + payload)
-//   // `apps.observer.${app_id}.groups.create`
-//   const app_id = topic_parts[2]
-//   logger.debug("app_id:" + app_id)
-//   logger.debug("payload:"+ payload)
-//   const group = JSON.parse(payload)
-//   if (!group.uid || !group.name || !group.members || !group.owner) {
-//     logger.error("Group error during creation. Metadata missed.");
-//     callback(true); // dequeue
-//     return
-//   }
-//   group.appId = app_id
-//   deliverGroupAdded(group, function(ok) {
-//     if (!ok) {
-//       callback(false)
-//     }
-//     else {
-//       sendGroupWelcomeMessageToInitialMembers(app_id, group, function(ok) {
-//         if (!ok) {
-//           callback(false)
-//         }
-//         else {
-//           for (let [member_id, value] of Object.entries(group.members)) {
-//             logger.debug(">>>>> JOINING MEMBER: "+member_id)
-//             joinGroup(member_id, group, function(reply) {
-//               logger.debug("member: " + member_id + " invited on group " + group + " result " + reply)
-//             })
-//           }
-//           callback(true)
-//         }
-//       })
-//     }
-//   })
-// }
-
 /**
  * Adds a member to a group.
  * 1. Sends "{user} added to this group" message to every member of the group, including the joined one
@@ -1040,38 +903,6 @@ function process_update_group(topic, payload, callback) {
   })
 }
 
-// enqueues group saving on db DEPRECATED
-// function saveOrUpdateGroup(group, callback) {
-//   chatdb.saveOrUpdateGroup(group, function(err, doc) {
-//     if (err) {
-//       logger.error("Error saving group:", err)
-//       callback(false)
-//       return
-//     }
-//     else {
-//       callback(true)
-//     }
-//   })
-// }
-
-// function deliverGroupAdded(group, callback) {
-//   const app_id = group.appId
-//   for (let [key, value] of Object.entries(group.members)) {
-//     const member_id = key
-//     const added_group_topic = `apps.${app_id}.users.${member_id}.groups.${group.uid}.clientadded`
-//     logger.debug("added_group_topic:", added_group_topic)
-//     const payload = JSON.stringify(group)
-//     publish(exchange, added_group_topic, Buffer.from(payload), function(err, msg) {
-//       if (err) {
-//         logger.error("error publish deliverGroupAdded",err);
-//         // callback(false)
-//         // return
-//       }
-//     })
-//   }
-//   callback(true)
-// }
-
 function deliverGroupUpdated(group, notify_to, callback) {
   const app_id = group.appId
   for (let [key, value] of Object.entries(notify_to)) {
@@ -1090,81 +921,12 @@ function deliverGroupUpdated(group, notify_to, callback) {
   callback(true)
 }
 
-// function sendGroupWelcomeMessageToInitialMembers(app_id, group, callback) {
-//   for (let [key, value] of Object.entries(group.members)) {
-//     const member_id = key
-//     const now = Date.now()
-//     var group_created_message = {
-//       message_id: uuid(),
-//       type: "text",
-//       text: "Group created",
-//       timestamp: now,
-//       channel_type: "group",
-//       sender_fullname: "System",
-//       sender: "system",
-//       recipient_fullname: group.name,
-//       recipient: group.uid,
-//       status: MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT,
-//       attributes: {
-//         subtype: "info",
-//         updateconversation: true,
-//         messagelabel: {
-//           key: "GROUP_CREATED",
-//           parameters:
-//           {
-//             creator: group.owner
-//           }
-//         }
-//       }
-//     }
-//     const user_id = member_id
-//     const convers_with = group.uid
-//     logger.debug("group_created_message: ", group_created_message)
-//     logger.debug("user_id: " + user_id)
-//     logger.debug("convers_with: " + convers_with)
-//     deliverMessage(group_created_message, app_id, user_id, convers_with, function(ok) {
-//       logger.debug("MESSAGE DELIVERED?", ok)
-//       if (!ok) {
-//         logger.debug("Error sending group creation message.", group_created_message)
-//         callback(false)
-//         return
-//       }
-//     })
-//   }
-//   callback(true)
-// }
-
 function closeOnErr(err) {
   if (!err) return false;
   logger.error("[AMQP] error", err);
   amqpConn.close();
   return true;
 }
-
-// var mongouri = process.env.MONGODB_URI || "mongodb://localhost:27017/chatdb";
-// var mongodb = require("mongodb");
-// const { Console } = require('console');
-// // var ObjectID = mongodb.ObjectID;
-// // Create a database variable outside of the
-// // database connection callback to reuse the connection pool in the app.
-// var db;
-// logger.debug("connecting to mongodb...")
-// mongodb.MongoClient.connect(mongouri, { useNewUrlParser: true, useUnifiedTopology: true }, function (err, client) {
-//   if (err) {
-//     logger.debug(err);
-//     process.exit(1);
-//   } else {
-//     logger.debug("MongoDB successfully connected.")
-//   }
-//   db = client.db();
-//   // var port = process.env.PORT || 3000;
-//   // app.listen(port, () => {
-//   //   logger.debug('Web server started.');
-//   // })
-//   chatdb = new ChatDB({database: db})
-//   logger.debug('Starting observer.')
-//   startMQ();
-// });
 
 async function startServer(config) {
   
@@ -1216,402 +978,5 @@ async function startServer(config) {
 function stopServer() {
   amqpConn.close();
 }
-
-// startServer()
-
-// ************ WEBHOOKS *********** //
-
-// function WHnotifyMessageReceived(message, callback) {
-//   logger.debug("NOTIFY MESSAGE:", message);
-  
-//   if (webhook_enabled===false) {
-//     logger.debug("WHnotifyMessageReceived Discarding notification. webhook_enabled is false.");
-//     // callback({err: "WHnotifyMessageReceived Discarding notification. webhook_enabled is false."}); 
-//     callback(null)
-//     return
-//   }
-
-//   const notify_topic = `observer.webhook.apps.${app_id}.message_received`
-//   logger.debug("notifying webhook notifyMessageReceived topic:" + notify_topic)
-//   const message_payload = JSON.stringify(message)
-//   logger.debug("MESSAGE_PAYLOAD: " + message_payload)
-//   publish(exchange, notify_topic, Buffer.from(message_payload), (err) => {
-//     if (err) {
-//       logger.error("Err", err)
-//       callback(err)
-//     }
-//     else {
-//       callback(null)
-//     }
-//   })
-// }
-
-// function WHnotifyMessageSaved(message, callback) {
-//   logger.debug("NOTIFY MESSAGE:", message)
-
-//   if (webhook_enabled===false) {
-//     logger.debug("WHnotifyMessageSaved Discarding notification. webhook_enabled is false.");
-//     // callback({err: "WHnotifyMessageSaved Discarding notification. webhook_enabled is false."});
-//     callback(null)
-//     return
-//   }
-
-//   // callback(null)
-//   const notify_topic = `observer.webhook.apps.${app_id}.message_saved`
-//   logger.debug("notifying webhook notifyMessageSaved topic: " + notify_topic)
-//   const message_payload = JSON.stringify(message)
-//   logger.debug("MESSAGE_PAYLOAD: " + message_payload)
-//   publish(exchange, notify_topic, Buffer.from(message_payload), (err) => {
-//     if (err) {
-//       logger.error("Err", err)
-//       callback(err)
-//     }
-//     else {
-//       callback(null)
-//     }
-//   })
-// }
-
-// function WHnotifyConversationSaved(conversation, callback) {
-//   logger.debug("NOTIFY CONVERSATION:", conversation)
-
-//   if (webhook_enabled===false) {
-//     logger.debug("WHnotifyConversationSaved Discarding notification. webhook_enabled is false.");
-//     // callback({err: "WHnotifyConversationSaved Discarding notification. webhook_enabled is false."}); 
-//     callback(null)
-//     return
-//   }
-
-//   // callback(null)
-//   const notify_topic = `observer.webhook.apps.${app_id}.conversation_saved`
-//   logger.debug("notifying webhook notifyConversationSaved topic: "+ notify_topic)
-//   const conversation_payload = JSON.stringify(conversation)
-//   logger.debug("CONVERSATION_PAYLOAD:"+ conversation_payload)
-//   publish(exchange, notify_topic, Buffer.from(conversation_payload), (err) => {
-//     if (err) {
-//       logger.error("Err", err)
-//       callback(err)
-//       //ATTENTO
-//     }
-//     else {
-//       // logger.debug("ok",callback)
-//       callback(null)
-//       //ATTENTO
-//     }
-//   })
-// }
-
-// function WHnotifyConversationArchived(conversation, callback) {
-//   logger.debug("NOTIFY CONVERSATION ARCHIVED:", conversation)
-
-//   if (webhook_enabled===false) {
-//     logger.debug("WHnotifyConversationArchived Discarding notification. webhook_enabled is false.");
-//     // callback({err: "WHnotifyConversationArchived Discarding notification. webhook_enabled is false."}); 
-//     callback(null)
-//     return
-//   }
-
-//   const notify_topic = `observer.webhook.apps.${app_id}.conversation_archived`
-//   logger.debug("notifying webhook notifyConversationArchived topic: " + notify_topic)
-//   const payload = JSON.stringify(conversation)
-//   logger.debug("PAYLOAD:", payload)
-//   publish(exchange, notify_topic, Buffer.from(payload), (err) => {
-//     if (err) {
-//       logger.error("Err", err)
-//       callback(err)
-//     }
-//     else {
-//       callback(null)
-//     }
-//   })
-// }
-
-// function WHprocess_webhook_message_received(topic, message_string, callback) {
-//   logger.debug("process webhook_message_received: " + message_string + " on topic: " + topic)
-//   var message = JSON.parse(message_string)
-//   logger.debug("timelineOf...:" + message.timelineOf)
-//   if (callback) {
-//     callback(true)
-//   }
-//   if (webhook_enabled===false) {
-//     logger.debug("WHprocess_webhook_message_received Discarding notification. webhook_enabled is false.");
-//     // callback(true); 
-//     return
-//   }
-
-//   if (!WHisMessageOnGroupTimeline(message)) {
-//     logger.debug("WHprocess_webhook_message_received Discarding notification. Not to group.");
-//     // callback(true); 
-//     return
-//   } if (!webhook_endpoint) {
-//     logger.debug("WHprocess_webhook_message_received Discarding notification. webhook_endpoint is undefined.")
-//     // callback(true);
-//     return
-//   }
-//   if (webhook_methods_array.indexOf("new-message")==-1) {
-//     logger.debug("WHprocess_webhook_message_received Discarding notification. new-message not enabled.");
-//     // callback(true); 
-//     return
-//   }
-
-//   logger.debug("Sending notification to webhook (webhook_message_received) on webhook_endpoint:", webhook_endpoint)
-//   const message_id = message.message_id;
-//   const recipient_id = message.recipient;
-//   const app_id = message.app_id;
-//   var json = {
-//     event_type: "new-message",
-//     createdAt: new Date().getTime(),
-//     recipient_id: recipient_id,
-//     app_id: app_id,
-//     message_id: message_id,
-//     data: message
-//   };
-//   logger.debug("WHprocess_webhook_message_received Sending JSON webhook:", json)
-//   WHsendData(json, function(err, data) {
-//     if (err)  {
-//       logger.error("Err WHsendData callback", err);
-//     } else {
-//       logger.debug("WHsendData sendata end with data:" + data);
-//     }    
-//   })
-// }
-
-
-
-
-// function WHprocess_webhook_message_saved(topic, message_string, callback) {
-//   logger.debug("process webhook_message_saved: " + message_string + " on topic: " + topic)
-//   var message = JSON.parse(message_string)
-//   logger.debug("timelineOf...: " + message.timelineOf)
-//   if (callback) {
-//     callback(true)
-//   }
-
-//   if (webhook_enabled===false) {
-//     logger.debug("WHprocess_webhook_message_saved Discarding notification. webhook_enabled is false.");
-//     // callback(true); 
-//     return
-//   }
-
-//   if (!WHisMessageOnGroupTimeline(message)) {
-//     logger.debug("WHprocess_webhook_message_saved Discarding notification. Not to group.")
-//     return
-//   } else if (!webhook_endpoint) {
-//     logger.debug("WHprocess_webhook_message_saved Discarding notification. webhook_endpoint is undefined.")
-//     return
-//   }
-
-//   if (webhook_methods_array.indexOf("new-message-saved")==-1) {
-//     logger.debug("WHprocess_webhook_message_saved Discarding notification. new-message-saved not enabled.");
-//     // callback(true); 
-//     return
-//   }
-
-//   logger.debug("Sending notification to webhook (webhook_message_saved) on webhook_endpoint:", webhook_endpoint)
-//   const message_id = message.message_id;
-//   const recipient_id = message.recipient;
-//   const app_id = message.app_id;
-//   var json = {
-//     event_type: "new-message-saved",
-//     createdAt: new Date().getTime(),
-//     recipient_id: recipient_id,
-//     app_id: app_id,
-//     message_id: message_id,
-//     data: message
-//   };
-//   logger.debug("WHprocess_webhook_message_saved Sending JSON webhook:", json)
-//   WHsendData(json, function(err, data) {
-//     if (err)  {
-//       logger.error("Err WHsendData callback", err);
-//     } else {
-//       logger.debug("WHsendData sendata end with data:" + data);
-//     }
-//   })
-// }
-
-
-// function WHprocess_webhook_conversation_saved(topic, conversation_string, callback) {
-//   logger.debug("process webhook_conversation_saved:" + conversation_string + "on topic" + topic)
-//   var conversation = JSON.parse(conversation_string)
-
-//   if (callback) {
-//     callback(true)
-//   }
-  
-//   if (webhook_enabled===false) {
-//     logger.debug("Discarding notification. webhook_enabled is false.");
-//     // callback(true); 
-//     return
-//   }
-
-//   if (!webhook_endpoint) {
-//     logger.debug("Discarding notification. webhook_endpoint is undefined.")
-//     return
-//   }
-
-//   if (webhook_methods_array.indexOf("conversation-saved")==-1) {
-//     logger.debug("Discarding notification. conversation-saved not enabled.");
-//     // callback(true); 
-//     return
-//   }
-
-//   logger.debug("Sending notification to webhook (webhook_conversation_saved) on webhook_endpoint:"+ webhook_endpoint + " coonversation: " + conversation_string)
-//   // const message_id = message.message_id;
-//   // const recipient_id = message.recipient;
-//   const app_id = conversation.app_id;
-//   var json = {
-//     event_type: "conversation-saved",
-//     createdAt: new Date().getTime(),
-//     // recipient_id: recipient_id,
-//     app_id: app_id,
-//     // message_id: message_id,
-//     data: conversation
-//   };
-//   logger.debug("Sending JSON webhook:", json)
-//   WHsendData(json, function(err, data) {
-//     if (err)  {
-//       logger.error("Err WHsendData callback", err);
-//     } else {
-//       logger.debug("WHsendData sendata end with data:" + data);
-//     }    
-//   })
-// }
-
-// function WHprocess_webhook_conversation_archived(topic, message_string, callback) {
-//   logger.debug("process webhook_conversation_archived:", message_string, "on topic", topic)
-//   var conversation = JSON.parse(message_string)
-//   if (callback) {
-//     callback(true)
-//   }
-
-//   if (webhook_enabled===false) {
-//     logger.debug("Discarding notification. webhook_enabled is false.");
-//     // callback(true); 
-//     return
-//   }
-
-//   // if (!WHisMessageOnGroupTimeline(message)) {
-//   //   logger.debug("Discarding notification. Not to group.")
-//   //   return
-//   // }
-
-//   if (!webhook_endpoint) {
-//     logger.debug("WHprocess_webhook_conversation_archived: Discarding notification. webhook_endpoint is undefined.")
-//     return
-//   }
-
-//   if (webhook_methods_array.indexOf("deleted-conversation")==-1) {
-//     logger.debug("Discarding notification. deleted-conversation not enabled.");
-//     // callback(true); 
-//     return
-//   }
-
-//   logger.debug("Sending notification to webhook (webhook_conversation_archived):", webhook_endpoint)
-//   const conversWith = conversation.conversWith;
-//   const timelineOf = "system"; // conversation.timelineOf; temporary patch for Tiledesk
-
-//   chatdb.getConversation(timelineOf, conversWith, function(err, conversation) {
-//     var json = {
-//       event_type: "deleted-conversation",
-//       createdAt: new Date().getTime(),
-//       app_id: conversation.app_id,
-//       user_id: "system", // temporary patch for Tiledesk
-//       recipient_id: conversWith,
-//       data: conversation
-//     };
-//     logger.debug("Sending JSON webhook:", json)
-//     WHsendData(json, function(err, data) {
-//       if (err)  {
-//         logger.error("Err WHsendData callback", err);
-//       } else {
-//         logger.debug("WHsendData sendata end with data:" + data);
-//       }    
-//     })
-//     // var q = url.parse(webhook_endpoint, true);
-//     // logger.debug("ENV WEBHOOK URL PARSED:", q)
-//     // var protocol = (q.protocol == "http:") ? require('http') : require('https');
-//     // let options = {
-//     //   path:  q.pathname,
-//     //   host: q.hostname,
-//     //   port: q.port,
-//     //   method: 'POST',
-//     //   headers: {
-//     //     "Content-Type": "application/json"
-//     //   }
-//     // };
-//     // try {
-//     //   const req = protocol.request(options, (response) => {
-//     //     var respdata = ''
-//     //     response.on('data', function (chunk) {
-//     //       respdata += chunk;
-//     //     });
-//     //     response.on('end', function () {
-//     //       logger.debug("WEBHOOK RESPONSE:", respdata);
-//     //     });
-//     //   });
-//     //   req.write(JSON.stringify(json));
-//     //   req.end();
-//     // }
-//     // catch(err) {
-//     //   logger.debug("an error occurred:", err)
-//     // }
-//   })
-// }
-
-// function WHisMessageOnGroupTimeline(message) {
-//   if (message && message.timelineOf) {
-//     if (message.timelineOf.toLowerCase().indexOf("group") !== -1) {
-//       return true
-//     }
-//   }
-//   return false
-// }
-
-// function WHsendData2(json, callback) {
-//   return callback(null, {ok:"ok"})
-// }
-// function WHsendData(json, callback) {
-//   var q = url.parse(webhook_endpoint, true);
-//   logger.debug("ENV WEBHOOK URL PARSED:", q)
-//   var protocol = (q.protocol == "http:") ? require('http') : require('https');
-//   let options = {
-//     path:  q.pathname,
-//     host: q.hostname,
-//     port: q.port,
-//     method: 'POST',
-//     headers: {
-//       "Content-Type": "application/json"
-//     }
-//   };
-//   try {
-//     const req = protocol.request(options, (response) => {
-//       logger.debug("statusCode: "+  response.statusCode + " for webhook_endpoint: " + webhook_endpoint);
-//       if (response.statusCode < 200 || response.statusCode > 299) { // (I don"t know if the 3xx responses come here, if so you"ll want to handle them appropriately
-//         logger.debug("http statusCode error "+  response.statusCode + " for webhook_endpoint: " + webhook_endpoint);
-//         return callback({statusCode:response.statusCode}, null)
-//       }
-//       var respdata = ''
-//       response.on('data', function (chunk) {
-//         // logger.debug("chunk"+chunk)
-//         respdata += chunk;
-//       });
-//       response.on('end', function () {
-//         logger.info("WEBHOOK RESPONSE:"+ respdata + " for webhook_endpoint: " + webhook_endpoint);
-//         return callback(null, respdata) //TODO SE IL WEBHOOK NN RITORNA SEMBRA CHE SI BLOCCI
-//       });     
-//     });
-//     req.on('error', function(err) {
-//       logger.error("WEBHOOK RESPONSE Error:", err);
-//       return callback(err, null)
-//     });
-//     req.write(JSON.stringify(json));
-//     req.end();
-//     // logger.debug("end")
-//   }
-//   catch(err) {
-//     logger.error("an error occurred while posting this json " + JSON.stringify(json), err)
-//     return callback(err, null)
-//   }
-// }
 
 module.exports = {startServer: startServer, stopServer: stopServer, setAutoRestart: setAutoRestart, getWebhooks:getWebhooks, setWebHookEndpoint: setWebHookEndpoint, setWebHookEvents:setWebHookEvents, setWebHookEnabled:setWebHookEnabled };

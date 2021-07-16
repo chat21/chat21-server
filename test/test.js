@@ -37,16 +37,19 @@ const user3 = {
 // const MQTT_ENDPOINT = 'ws://localhost:15675/ws';
 // const API_ENDPOINT = 'http://localhost:8010/api'
 // const CLIENT_API_LOG = false;
+// const LOCAL_STACK = true;
 
-// LOCAL WITH EXTERAL STACK
-const MQTT_ENDPOINT = 'ws://localhost:15675/ws';
-const API_ENDPOINT = 'http://localhost:8004/api'
-const CLIENT_API_LOG = false;
-
-// REMOTE 2
-// const MQTT_ENDPOINT = 'ws://99.80.197.164:15675/ws';
-// const API_ENDPOINT = 'http://99.80.197.164:8004/api';
+// LOCAL MACHINE COMPONENTS
+// const MQTT_ENDPOINT = 'ws://localhost:15675/ws';
+// const API_ENDPOINT = 'http://localhost:8004/api'
 // const CLIENT_API_LOG = false;
+// LOCAL_STACK = false;
+
+// REMOTE ON AWS
+const MQTT_ENDPOINT = 'ws://99.80.197.164:15675/ws';
+const API_ENDPOINT = 'http://99.80.197.164:8004/api';
+const CLIENT_API_LOG = false;
+LOCAL_STACK = false
 
 const APPID = 'tilechat';
 const TYPE_TEXT = 'text';
@@ -100,30 +103,35 @@ describe('hooks', function() {
 					// 2. OBSERVER
 					// 3. WEBHOOK ENDPOINT APPLICATION
 					// **************************
-					// http_server = chat21HttpServer.app.listen(8010, async() => {
-					// 	logger.log('HTTP server started.');
-					// 	logger.log('Starting AMQP publisher...');
-					// 	await chat21HttpServer.startAMQP({rabbitmq_uri: process.env.RABBITMQ_URI});
-					// 	logger.log('HTTP server AMQP connection started.');
-					// 	observer.setWebHookEndpoint("http://localhost:8002/postdata");
-					// 	observer.setAutoRestart(false);
-					// 	await observer.startServer({rabbitmq_uri: process.env.RABBITMQ_URI});
-					// 	logger.log("observer started.");
-					// 	// THE SERVER CLIENT FOR WEBHOOKS
-					// 	var serverClient = express();
-					// 	// serverClient.use(bodyParser.json());
-					// 	serverClient.post('/postdata', function (req, res) {
-					// 		res.status(200).send({success: true})
-					// 	});
-					// 	webhook_app = serverClient.listen(8002, '0.0.0.0', async function() {
-					// 		logger.log('Node Client Express started.', webhook_app.address());
-					// 		logger.log("Local http Express server started.");
-					// 		logger.log("Everything is ok to start testing in 2 seconds...");
-					// 		await new Promise(resolve => setTimeout(resolve, 2000));
-					// 		logger.log("Ready!");
-							done();
-					// 	});
-					// });
+					if (LOCAL_STACK) {
+						http_server = chat21HttpServer.app.listen(8010, async() => {
+							logger.log('HTTP server started.');
+							logger.log('Starting AMQP publisher...');
+							await chat21HttpServer.startAMQP({rabbitmq_uri: process.env.RABBITMQ_URI});
+							logger.log('HTTP server AMQP connection started.');
+							observer.setWebHookEndpoint("http://localhost:8002/postdata");
+							observer.setAutoRestart(false);
+							await observer.startServer({rabbitmq_uri: process.env.RABBITMQ_URI});
+							logger.log("observer started.");
+							// THE SERVER CLIENT FOR WEBHOOKS
+							var serverClient = express();
+							// serverClient.use(bodyParser.json());
+							serverClient.post('/postdata', function (req, res) {
+								res.status(200).send({success: true})
+							});
+							webhook_app = serverClient.listen(8002, '0.0.0.0', async function() {
+								logger.log('Node Client Express started.', webhook_app.address());
+								logger.log("Local http Express server started.");
+								logger.log("Everything is ok to start testing in 2 seconds...");
+								await new Promise(resolve => setTimeout(resolve, 2000));
+								logger.log("Ready!");
+								done();
+							});
+						});
+					}
+					else {
+						done();
+					}
 				});
 			});
 		});
@@ -136,12 +144,14 @@ describe('hooks', function() {
 				logger.log("...chatClient2 successfully disconnected.");
 				chatClient3.close(async () => {
 					logger.log("...chatClient3 successfully disconnected.");
-					// http_server.close(); // REMOVE IF NOT ALL-IN-ONE
-					// logger.log("HTTP Server closed."); // REMOVE IF NOT ALL-IN-ONE
-					webhook_app.close();
-					logger.log("Webhooks endpoint closed.");
-					// observer.stopServer(); // REMOVE IF NOT ALL-IN-ONE
-					// await new Promise(resolve => setTimeout(resolve, 1000)); // REMOVE IF NOT ALL-IN-ONE
+					if (LOCAL_STACK) {
+						http_server.close(); // REMOVE IF NOT ALL-IN-ONE
+						logger.log("HTTP Server closed."); // REMOVE IF NOT ALL-IN-ONE
+						webhook_app.close();
+						logger.log("Webhooks endpoint closed.");
+						observer.stopServer(); // REMOVE IF NOT ALL-IN-ONE
+						await new Promise(resolve => setTimeout(resolve, 1000)); // REMOVE IF NOT ALL-IN-ONE
+					}
 					done();
 				});
 			});
