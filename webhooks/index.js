@@ -5,7 +5,8 @@
 
 const amqp = require('amqplib/callback_api');
 // const winston = require("../winston");
-const logger = require('../tiledesk-logger').logger;
+// const logger = require('../tiledesk-logger').logger;
+let logger;
 var url = require('url');
 const MessageConstants = require("../models/messageConstants");
 // const messageConstants = require('../models/messageConstants');
@@ -29,6 +30,7 @@ class Webhooks {
    * @param {Object} options.webhook_endpoint Mandatory. This weebhook endpoint.
    * @param {Object} options.queue_name Optional. The queue name. Defaults to 'weebhooks'.
    * @param {Object} options.webhook_events Optional. The active webhook events.
+   * @param {Object} options.logger Optional. The logger.
    * 
    */
   constructor(options) {
@@ -46,6 +48,12 @@ class Webhooks {
     }
     if (!options.webhook_endpoint) {
       throw new Error('webhook_endpoint option can NOT be empty.');
+    }
+    if (options.logger) {
+      logger = options.logger;
+    }
+    else {
+      logger = require('../tiledesk-logger').logger;
     }
     // throw new Error('webhook_endpoint option can NOT be empty.......');
     this.webhook_endpoint = options.webhook_endpoint;

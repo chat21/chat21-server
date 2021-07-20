@@ -5,7 +5,7 @@ var chat21HttpServer = require('@chat21/chat21-http-server');
 let observer = require('../index').observer;
 let express = require('express');
 const loggers = new require('../tiledesk-logger');
-let logger = new loggers.TiledeskLogger("DEBUG");
+let logger = new loggers.TiledeskLogger("ERROR");
 // logger.setLog('DEBUG');
 // let bodyParser = require('body-parser');
 
@@ -34,10 +34,12 @@ const user3 = {
 };
 
 // ALL-IN-ONE (EXCEPT RABBITMQ, RUN IT WITH DOCKER)
-// const MQTT_ENDPOINT = 'ws://localhost:15675/ws';
-// const API_ENDPOINT = 'http://localhost:8010/api'
-// const CLIENT_API_LOG = false;
-// const LOCAL_STACK = true;
+const MQTT_ENDPOINT = 'ws://localhost:15675/ws';
+const API_ENDPOINT = 'http://localhost:8010/api'
+const CLIENT_API_LOG = false;
+const HTTP_SERVER_LOG_LEVEL = 'ERROR';
+const OBSERVER_LOG_LEVEL = 'ERROR';
+const LOCAL_STACK = true;
 
 // LOCAL MACHINE COMPONENTS
 // const MQTT_ENDPOINT = 'ws://localhost:15675/ws';
@@ -46,10 +48,10 @@ const user3 = {
 // LOCAL_STACK = false;
 
 // REMOTE ON AWS
-const MQTT_ENDPOINT = 'ws://99.80.197.164:15675/ws';
-const API_ENDPOINT = 'http://99.80.197.164:8004/api';
-const CLIENT_API_LOG = false;
-LOCAL_STACK = false
+// const MQTT_ENDPOINT = 'ws://99.80.197.164:15675/ws';
+// const API_ENDPOINT = 'http://99.80.197.164:8004/api';
+// const CLIENT_API_LOG = false;
+// LOCAL_STACK = false
 
 const APPID = 'tilechat';
 const TYPE_TEXT = 'text';
@@ -61,8 +63,6 @@ let chatClient2;
 let chatClient3;
 let http_server;
 let webhook_app;
-
-
 
 describe('hooks', function() {
 	before(function(done) {
@@ -104,11 +104,13 @@ describe('hooks', function() {
 					// 3. WEBHOOK ENDPOINT APPLICATION
 					// **************************
 					if (LOCAL_STACK) {
+						chat21HttpServer.logger.setLog(HTTP_SERVER_LOG_LEVEL);
 						http_server = chat21HttpServer.app.listen(8010, async() => {
 							logger.log('HTTP server started.');
 							logger.log('Starting AMQP publisher...');
 							await chat21HttpServer.startAMQP({rabbitmq_uri: process.env.RABBITMQ_URI});
 							logger.log('HTTP server AMQP connection started.');
+							observer.logger.setLog(OBSERVER_LOG_LEVEL);
 							observer.setWebHookEndpoint("http://localhost:8002/postdata");
 							observer.setAutoRestart(false);
 							await observer.startServer({rabbitmq_uri: process.env.RABBITMQ_URI});
@@ -150,7 +152,7 @@ describe('hooks', function() {
 						webhook_app.close();
 						logger.log("Webhooks endpoint closed.");
 						observer.stopServer(); // REMOVE IF NOT ALL-IN-ONE
-						await new Promise(resolve => setTimeout(resolve, 1000)); // REMOVE IF NOT ALL-IN-ONE
+						await new Promise(resolve => setTimeout(resolve, 500)); // REMOVE IF NOT ALL-IN-ONE
 					}
 					done();
 				});
@@ -654,18 +656,15 @@ describe('hooks', function() {
 	});
 
 	describe('TiledeskClient - test 10', function() {
-		it('test 10 - Join group (get group messages history). User1 (owner) creates a group with 2 members (User1, User2). \
+		it('test 10 - Join group (get group messages history, 1 message). User1 (owner) creates a group with 2 members (User1, User2). \
 User1 sends 1 message. \
 User1 adds User3 to the group. \
 User3 receives the (only) message previously sent by User1 to the group', function(done) {
 			const group_id = "group-" + uuid();
 			const group_name = "group-update test 8";
 			const MESSAGE1_USER1 = "user1, first";
-			const MESSAGE2_USER1 = "user1, second";
-			const MESSAGE3_USER2 = "user2, first";
-			const MESSAGE4_USER2 = "user2, second";
 			let group_members = {};
-			group_members[user1.userid] = 1;
+			// group_members[user1.userid] = 1;
 			group_members[user2.userid] = 1;
 			chatClient3.onMessageAdded((message, topic) => {
 				logger.log("test 10 - Client3 - message added:", JSON.stringify(message));
@@ -703,7 +702,7 @@ User3 receives the (only) message previously sent by User1 to the group', functi
 								logger.log("Error sending message:", err);
 							}
 							logger.log("Message sent:", msg);
-							await new Promise(resolve => setTimeout(resolve, 500)); // it gives time to message to reach the "persistent" status
+							await new Promise(resolve => setTimeout(resolve, 1000)); // it gives time to message to reach the "persistent" status
 							chatClient1.joinGroup(group_id, user3.userid, (err, json) => {
 								if (err) {
 									logger.log("test 10 - member joinned error:", err);
@@ -742,17 +741,17 @@ previously sent by user1 & user2', function(done) {
 					message.text === MESSAGE1_USER1) {
 					logger.log("test 11 - MESSAGE1_USER1 message received:", message.text);
 					history_messages['MESSAGE1_USER1'] = 1;
-					logger.log("****** HISTORY: ", history_messages)
-					if (history_messages['MESSAGE1_USER1'] === 1 &&
-						history_messages['GROUP_CREATED'] === 1 &&
-						history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
-						history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
-						history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
-						logger.log("test 11 - ALL HISTORY RECEIVED");
-						done();
-					}
+					// logger.log("****** HISTORY: ", history_messages)
+					// if (history_messages['MESSAGE1_USER1'] === 1 &&
+					// 	history_messages['GROUP_CREATED'] === 1 &&
+					// 	history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
+					// 	history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
+					// 	history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
+					// 	logger.log("test 11 - ALL HISTORY RECEIVED");
+					// 	done();
+					// }
 				}
-				if (
+				else if (
 					message &&
 					message.recipient === group_id &&
 					message.attributes &&
@@ -764,16 +763,16 @@ previously sent by user1 & user2', function(done) {
 					message.attributes.messagelabel.parameters.creator === user1.userid) {
 					logger.log("test 11 - GROUP_CREATED message received:", message.text);
 					history_messages['GROUP_CREATED'] = 1;
-					if (history_messages['MESSAGE1_USER1'] === 1 &&
-						history_messages['GROUP_CREATED'] === 1 &&
-						history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
-						history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
-						history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
-						logger.log("test 11 - ALL HISTORY RECEIVED");
-						done();
-					}
+					// if (history_messages['MESSAGE1_USER1'] === 1 &&
+					// 	history_messages['GROUP_CREATED'] === 1 &&
+					// 	history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
+					// 	history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
+					// 	history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
+					// 	logger.log("test 11 - ALL HISTORY RECEIVED");
+					// 	done();
+					// }
 				}
-				if (
+				else if (
 					message &&
 					message.recipient === group_id &&
 					message.attributes &&
@@ -785,16 +784,16 @@ previously sent by user1 & user2', function(done) {
 					message.attributes.messagelabel.parameters.member_id === user1.userid) {
 					logger.log("test 11 - MEMBER_JOINED_GROUP_user1 message received:", message.text);
 					history_messages['MEMBER_JOINED_GROUP_user1'] = 1;
-					if (history_messages['MESSAGE1_USER1'] === 1 &&
-						history_messages['GROUP_CREATED'] === 1 &&
-						history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
-						history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
-						history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
-						logger.log("test 11 - ALL HISTORY RECEIVED");
-						done();
-					}
+					// if (history_messages['MESSAGE1_USER1'] === 1 &&
+					// 	history_messages['GROUP_CREATED'] === 1 &&
+					// 	history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
+					// 	history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
+					// 	history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
+					// 	logger.log("test 11 - ALL HISTORY RECEIVED");
+					// 	done();
+					// }
 				}
-				if (
+				else if (
 					message &&
 					message.recipient === group_id &&
 					message.attributes &&
@@ -806,16 +805,16 @@ previously sent by user1 & user2', function(done) {
 					message.attributes.messagelabel.parameters.member_id === user2.userid) {
 					logger.log("test 11 - MEMBER_JOINED_GROUP_user2 message received:", message.text);
 					history_messages['MEMBER_JOINED_GROUP_user2'] = 1;
-					if (history_messages['MESSAGE1_USER1'] === 1 &&
-						history_messages['GROUP_CREATED'] === 1 &&
-						history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
-						history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
-						history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
-						logger.log("test 11 - ALL HISTORY RECEIVED");
-						done();
-					}
+					// if (history_messages['MESSAGE1_USER1'] === 1 &&
+					// 	history_messages['GROUP_CREATED'] === 1 &&
+					// 	history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
+					// 	history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
+					// 	history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
+					// 	logger.log("test 11 - ALL HISTORY RECEIVED");
+					// 	done();
+					// }
 				}
-				if (
+				else if (
 					message &&
 					message.recipient === group_id &&
 					message.attributes &&
@@ -827,14 +826,22 @@ previously sent by user1 & user2', function(done) {
 					message.attributes.messagelabel.parameters.member_id === user3.userid) {
 					logger.log("test 11 - MEMBER_JOINED_GROUP_user3 message received:", message.text);
 					history_messages["MEMBER_JOINED_GROUP_user3"] = 1;
-					if (history_messages['MESSAGE1_USER1'] === 1 &&
-						history_messages['GROUP_CREATED'] === 1 &&
-						history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
-						history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
-						history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
-						logger.log("test 11 - ALL HISTORY RECEIVED");
-						done();
-					}
+					// if (history_messages['MESSAGE1_USER1'] === 1 &&
+					// 	history_messages['GROUP_CREATED'] === 1 &&
+					// 	history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
+					// 	history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
+					// 	history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
+					// 	logger.log("test 11 - ALL HISTORY RECEIVED");
+					// 	done();
+					// }
+				}
+				if (history_messages['MESSAGE1_USER1'] === 1 &&
+					history_messages['GROUP_CREATED'] === 1 &&
+					history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
+					history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
+					history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
+					logger.log("test 11 - ALL HISTORY RECEIVED");
+					done();
 				}
 			});
 			chatClient1.createGroup(
@@ -863,7 +870,7 @@ previously sent by user1 & user2', function(done) {
 								logger.log("Error sending message:", err);
 							}
 							logger.log("Message sent:", msg);
-							await new Promise(resolve => setTimeout(resolve, 500)); // it gives time to message to reach the "persistent" status
+							await new Promise(resolve => setTimeout(resolve, 1000)); // it gives time to message to reach the "persistent" status
 							chatClient1.joinGroup(group_id, user3.userid, (err, json) => {
 								if (err) {
 									logger.log("test 11 - member joinned error:", err);

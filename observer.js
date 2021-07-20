@@ -339,7 +339,7 @@ function process_outgoing(topic, message_string, callback) {
     logger.debug("Direct message.");
     inbox_of = sender_id;
     convers_with = recipient_id;
-    outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT // =100. DELIVERED (=150) it's better, but the JS client actually wants 100 to show the sent-checkbox
+    outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT
     deliverMessage(outgoing_message, app_id, inbox_of, convers_with, function(ok) {
       logger.debug("delivered to sender. OK?", ok);
       if (ok) {
@@ -383,13 +383,13 @@ function process_outgoing(topic, message_string, callback) {
       //   callback(true)
       //   return
       // }
-      // adding the group in the members so we easily get a copy of
+
+      // Adding the group as a "volatile" member, so we easily get a copy of
       // all the group messages in timelineOf: group.uid
-      
       group.members[group.uid] = 1
       // logger.debug("Writing to group:", group)
       let count = 0;
-      logger.log("group members", group.members);
+      logger.debug("group members", group.members);
       let max = Object.keys(group.members).length;
       let error_encoutered = false;
       for (let [member_id, value] of Object.entries(group.members)) {
@@ -397,21 +397,22 @@ function process_outgoing(topic, message_string, callback) {
         const convers_with = recipient_id;
         logger.debug("inbox_of: "+ inbox_of);
         logger.debug("convers_with: "  + convers_with);
-        logger.log("sending group outgoing message to member", member_id);
-        if (inbox_of === outgoing_message.sender) {
-          logger.log("inbox_of === outgoing_message.sender. status=SENT system YES?", inbox_of);
+        logger.debug("sending group outgoing message to member", member_id);
+        // if (inbox_of === outgoing_message.sender) {
+        if (inbox_of === group.uid) { // choosing one member, the group ("volatile" member), for the "status=SENT", used by the "message-sent" webhook
+          logger.debug("inbox_of === outgoing_message.sender. status=SENT system YES?", inbox_of);
           outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT;
         }
         else {
-          logger.log("inbox_of != outgoing_message.sender. status=DELIVERED no system, is:", inbox_of);
+          logger.debug("inbox_of != outgoing_message.sender. status=DELIVERED no system, is:", inbox_of);
           outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED;
         }
-        logger.log("delivering group message with status...", outgoing_message.status, " to:", inbox_of);
+        logger.debug("delivering group message with status...", outgoing_message.status, " to:", inbox_of);
         deliverMessage(outgoing_message, app_id, inbox_of, convers_with, function(ok) {
           logger.debug("GROUP MESSAGE DELIVERED?", ok)
           count++;
-          logger.log("Sent Counting:", count);
-          logger.log("Max:", max);
+          logger.debug("Sent Counting:", count);
+          logger.debug("Max:", max);
           if (!ok) {
             logger.debug("Error sending message to group " + group.uid);
             error_encoutered = true
@@ -451,7 +452,7 @@ function isMessageGroup(message) {
 
 // Places te message in the inbox of the recipient
 function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
-  logger.debug("DELIVERING:", message, "inbox_of:", inbox_of, "convers_with:", convers_with_id)
+  logger.debug(">DELIVERING:", message, "inbox_of:", inbox_of, "convers_with:", convers_with_id)
   // internal flow
   const persist_topic = `apps.observer.${app_id}.users.${inbox_of}.messages.${convers_with_id}.persist`
   // mqtt (client) flow
@@ -470,7 +471,7 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
     }
     logger.debug("NOTIFY VIA WHnotifyMessageStatusDelivered, topic: " + added_topic);
     if (webhooks && webhook_enabled) {
-      // logger.debug("webhooks && webhook_enabled ON, processing webhooks, message:", message);
+      logger.debug("webhooks && webhook_enabled ON, processing webhooks, message:", message);
       webhooks.WHnotifyMessageStatusSentOrDelivered(message_payload, added_topic, (err) => {
         if (err) {
           logger.error("WHnotifyMessageStatusSentOrDelivered with err:"+ err);
@@ -802,83 +803,83 @@ function process_archive(topic, payload, callback) {
  * @param {*} group 
  * @param {*} callback 
  */
-function joinGroup(joined_member_id, group, callback) {
-  logger.debug("SENDING 'ADDED TO GROUP' TO EACH MEMBER INCLUDING THE JOINED ONE...", group)
-  const appid = group.appId
-  for (let [member_id, value] of Object.entries(group.members)) {
-      logger.debug("to member:" + member_id)
-      const now = Date.now()
-      const message = {
-          message_id: uuid(),
-          type: "text",
-          text: joined_member_id + " added to group",
-          timestamp: now,
-          channel_type: "group",
-          sender_fullname: "System",
-          sender: "system",
-          recipient_fullname: group.name,
-          recipient: group.uid,
-          status: 100, // MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT,
-          attributes: {
-              subtype:"info",
-              updateconversation : true,
-              messagelabel: {
-                  key: "MEMBER_JOINED_GROUP",
-                  parameters: {
-                      member_id: joined_member_id
-                      // fullname: fullname // OPTIONAL
-                  }
-              }
-          }
-      }
-      logger.debug("Member joined group message:", message)
-      let inbox_of = member_id
-      let convers_with = group.uid
-      deliverMessage(message, appid, inbox_of, convers_with, (ok) => {
-        console.log("delivering...")
-        if (!ok) {
-          logger.error("error delivering message to joined member", inbox_of)
-          callback(ok)
-          return
-        }
-        else {
+// function joinGroup(joined_member_id, group, callback) {
+//   logger.debug("SENDING 'ADDED TO GROUP' TO EACH MEMBER INCLUDING THE JOINED ONE...", group)
+//   const appid = group.appId
+//   for (let [member_id, value] of Object.entries(group.members)) {
+//       logger.debug("to member:" + member_id)
+//       const now = Date.now()
+//       const message = {
+//           message_id: uuid(),
+//           type: "text",
+//           text: joined_member_id + " added to group",
+//           timestamp: now,
+//           channel_type: "group",
+//           sender_fullname: "System",
+//           sender: "system",
+//           recipient_fullname: group.name,
+//           recipient: group.uid,
+//           status: 100, // MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT,
+//           attributes: {
+//               subtype:"info",
+//               updateconversation : true,
+//               messagelabel: {
+//                   key: "MEMBER_JOINED_GROUP",
+//                   parameters: {
+//                       member_id: joined_member_id
+//                       // fullname: fullname // OPTIONAL
+//                   }
+//               }
+//           }
+//       }
+//       logger.debug("Member joined group message:", message)
+//       let inbox_of = member_id
+//       let convers_with = group.uid
+//       deliverMessage(message, appid, inbox_of, convers_with, (ok) => {
+//         console.log("delivering...")
+//         if (!ok) {
+//           logger.error("error delivering message to joined member", inbox_of)
+//           callback(ok)
+//           return
+//         }
+//         else {
           
-          logger.debug("DELIVERED MESSAGE TO: " + inbox_of + " CONVERS_WITH " + convers_with)
-        }
-      })
-  }
-  // 2. pubblish old group messages to the joined member (in the member/group-conversWith timeline)
-  const userid = group.uid
-  const convid = group.uid
-  chatdb.lastMessages(appid, userid, convid, 1, 200, (err, messages) => {
-      if (err) {
-          logger.error("Error", err)
-          callback(err)
-      }
-      else if (!messages) {
-          logger.debug("No messages in group: " + group.uid)
-          callback(null)
-      }
-      else {
-          logger.debug("delivering past group messages to:" + joined_member_id + " messages: ", messages)
-          const inbox_of = joined_member_id
-          const convers_with = group.uid
-          messages.forEach(message => {
-              // TODO: CHECK IN MESSAGE WAS ALREADY DELIVERED. (CLIENT? SERVER?)
-              logger.debug("Message:", message.text)
-              deliverMessage(message, appid, inbox_of, convers_with, (err) => {
-                  if (err) {
-                      logger.error("error delivering past message to joined member: " + inbox_of, err)
-                  }
-                  else {
-                      logger.debug("DELIVERED PAST MESSAGE TO: " + inbox_of + " CONVERS_WITH : " + convers_with)
-                  }
-              })
-          });
-          callback(null)
-      }
-  })
-}
+//           logger.debug("DELIVERED MESSAGE TO: " + inbox_of + " CONVERS_WITH " + convers_with)
+//         }
+//       })
+//   }
+//   // 2. pubblish old group messages to the joined member (in the member/group-conversWith timeline)
+//   const userid = group.uid
+//   const convid = group.uid
+//   chatdb.lastMessages(appid, userid, convid, 1, 200, (err, messages) => {
+//       if (err) {
+//           logger.error("Error", err)
+//           callback(err)
+//       }
+//       else if (!messages) {
+//           logger.debug("No messages in group: " + group.uid)
+//           callback(null)
+//       }
+//       else {
+//           logger.debug("delivering past group messages to:" + joined_member_id + " messages: ", messages)
+//           const inbox_of = joined_member_id
+//           const convers_with = group.uid
+//           messages.forEach(message => {
+//               // TODO: CHECK IN MESSAGE WAS ALREADY DELIVERED. (CLIENT? SERVER?)
+//               logger.debug("Message:", message.text)
+//               deliverMessage(message, appid, inbox_of, convers_with, (err) => {
+//                   if (err) {
+//                       logger.error("error delivering past message to joined member: " + inbox_of, err)
+//                   }
+//                   else {
+//                       logger.debug("DELIVERED PAST MESSAGE TO: " + inbox_of + " CONVERS_WITH : " + convers_with)
+//                   }
+//               })
+//           });
+//           callback(null)
+//       }
+//   })
+// }
 
 function process_update_group(topic, payload, callback) {
   var topic_parts = topic.split(".")
@@ -929,7 +930,7 @@ function closeOnErr(err) {
 }
 
 async function startServer(config) {
-  
+  console.log("Starting observer....");
   if (!config) {
     config = {}
   }
@@ -967,16 +968,17 @@ async function startServer(config) {
   logger.debug("mongodb connected...", db);
   chatdb = new ChatDB({database: db})
   logger.info("Starting webhooks...");
-  webhooks = new Webhooks({appId: app_id, RABBITMQ_URI: rabbitmq_uri, exchange: exchange, webhook_endpoint: webhook_endpoint, webhook_events: webhook_events_array, queue_name: 'webhooks'});
+  webhooks = new Webhooks({appId: app_id, RABBITMQ_URI: rabbitmq_uri, exchange: exchange, webhook_endpoint: webhook_endpoint, webhook_events: webhook_events_array, queue_name: 'webhooks', logger: logger});
   await webhooks.start();
   webhooks.enabled = webhook_enabled;
-  logger.debug('Starting observer.');
+  logger.debug('Starting AMQP connection....');
   var amqpConnection = await start();
   logger.debug("[Observer.AMQP] connected.");
+  console.log("Observer started.");
 }
 
 function stopServer() {
   amqpConn.close();
 }
 
-module.exports = {startServer: startServer, stopServer: stopServer, setAutoRestart: setAutoRestart, getWebhooks:getWebhooks, setWebHookEndpoint: setWebHookEndpoint, setWebHookEvents:setWebHookEvents, setWebHookEnabled:setWebHookEnabled };
+module.exports = {startServer: startServer, stopServer: stopServer, setAutoRestart: setAutoRestart, getWebhooks: getWebhooks, setWebHookEndpoint: setWebHookEndpoint, setWebHookEvents: setWebHookEvents, setWebHookEnabled: setWebHookEnabled, logger: logger };

@@ -1,6 +1,6 @@
 {
   "name": "@chat21/chat21-server",
-  "version": "0.1.12",
+  "version": "0.1.14",
   "description": "Chat21 AMQP messages dispatcher",
   "dependencies": {
     "aedes": "^0.40.1",
@@ -18,13 +18,12 @@
     "websocket-stream": "^5.5.2"
   },
   "devDependencies": {
-    "@chat21/chat21-http-server": "^0.1.10",
-    "@chat21/chat21-server": "0.1.12",
+    "@chat21/chat21-http-server": "^0.1.12",
     "axios": "^0.21.1",
     "mongodb-runner": "^4.8.3"
   },
   "scripts": {
-    "test": "mocha ./test/*.js --timeout 3000",
+    "test": "mocha ./test/*.js --timeout 4000",
     "benchmarks": "node ./benchmarks/index.js",
     "start": "node chatservermq.js",
     "pretest": "mongodb-runner start",
