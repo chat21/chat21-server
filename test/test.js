@@ -5,7 +5,7 @@ var chat21HttpServer = require('@chat21/chat21-http-server');
 let observer = require('../index').observer;
 let express = require('express');
 const loggers = new require('../tiledesk-logger');
-let logger = new loggers.TiledeskLogger("ERROR");
+let logger = new loggers.TiledeskLogger("DEBUG");
 // logger.setLog('DEBUG');
 // let bodyParser = require('body-parser');
 
@@ -37,8 +37,8 @@ const user3 = {
 const MQTT_ENDPOINT = 'ws://localhost:15675/ws';
 const API_ENDPOINT = 'http://localhost:8010/api'
 const CLIENT_API_LOG = false;
-const HTTP_SERVER_LOG_LEVEL = 'ERROR';
-const OBSERVER_LOG_LEVEL = 'ERROR';
+const HTTP_SERVER_LOG_LEVEL = 'DEBUG';
+const OBSERVER_LOG_LEVEL = 'DEBUG';
 const LOCAL_STACK = true;
 
 // LOCAL MACHINE COMPONENTS
@@ -66,6 +66,7 @@ let webhook_app;
 
 describe('hooks', function() {
 	before(function(done) {
+		console.log("Running Basic tests...");
 		chatClient1 = new Chat21Client(
 			{
 				appId: APPID,
@@ -716,172 +717,172 @@ User3 receives the (only) message previously sent by User1 to the group', functi
 		});
 	});
 
-	describe('TiledeskClient - test 11', function() {
-		it('\
-test 11 - Join group (get FULL group messages history). \
-User1 (owner) creates a group with 2 members (User1, User2). \
-User1 sends 1 message. \
-User1 adds User3 to the group. \
-User3 receives all the 4 group messages: \
-all info messages (GROUP_CREATED, USER1 MEMBER_JOINED_GROUP, USER2 MEMBER_JOINED_GROUP, USER3 MEMBER_JOINED_GROUP) \
-and the message sent by USER1 \
-previously sent by user1 & user2', function(done) {
-			const group_id = "group-" + uuid();
-			const group_name = "group-update test 8";
-			const MESSAGE1_USER1 = "user1, first";
-			let group_members = {};
-			group_members[user1.userid] = 1;
-			group_members[user2.userid] = 1;
-			let history_messages = {};
-			chatClient3.onMessageAdded((message, topic) => {
-				logger.log("test 11 - Client3 - message added:", JSON.stringify(message));
-				if (
-					message &&
-					message.recipient === group_id &&
-					message.text === MESSAGE1_USER1) {
-					logger.log("test 11 - MESSAGE1_USER1 message received:", message.text);
-					history_messages['MESSAGE1_USER1'] = 1;
-					// logger.log("****** HISTORY: ", history_messages)
-					// if (history_messages['MESSAGE1_USER1'] === 1 &&
-					// 	history_messages['GROUP_CREATED'] === 1 &&
-					// 	history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
-					// 	history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
-					// 	history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
-					// 	logger.log("test 11 - ALL HISTORY RECEIVED");
-					// 	done();
-					// }
-				}
-				else if (
-					message &&
-					message.recipient === group_id &&
-					message.attributes &&
-					message.attributes.messagelabel &&
-					message.attributes.messagelabel.key &&
-					message.attributes.messagelabel.parameters &&
-					message.attributes.messagelabel.parameters.creator &&
-					message.attributes.messagelabel.key === 'GROUP_CREATED' &&
-					message.attributes.messagelabel.parameters.creator === user1.userid) {
-					logger.log("test 11 - GROUP_CREATED message received:", message.text);
-					history_messages['GROUP_CREATED'] = 1;
-					// if (history_messages['MESSAGE1_USER1'] === 1 &&
-					// 	history_messages['GROUP_CREATED'] === 1 &&
-					// 	history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
-					// 	history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
-					// 	history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
-					// 	logger.log("test 11 - ALL HISTORY RECEIVED");
-					// 	done();
-					// }
-				}
-				else if (
-					message &&
-					message.recipient === group_id &&
-					message.attributes &&
-					message.attributes.messagelabel &&
-					message.attributes.messagelabel.key &&
-					message.attributes.messagelabel.parameters &&
-					message.attributes.messagelabel.parameters.member_id &&
-					message.attributes.messagelabel.key === 'MEMBER_JOINED_GROUP' &&
-					message.attributes.messagelabel.parameters.member_id === user1.userid) {
-					logger.log("test 11 - MEMBER_JOINED_GROUP_user1 message received:", message.text);
-					history_messages['MEMBER_JOINED_GROUP_user1'] = 1;
-					// if (history_messages['MESSAGE1_USER1'] === 1 &&
-					// 	history_messages['GROUP_CREATED'] === 1 &&
-					// 	history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
-					// 	history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
-					// 	history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
-					// 	logger.log("test 11 - ALL HISTORY RECEIVED");
-					// 	done();
-					// }
-				}
-				else if (
-					message &&
-					message.recipient === group_id &&
-					message.attributes &&
-					message.attributes.messagelabel &&
-					message.attributes.messagelabel.key &&
-					message.attributes.messagelabel.parameters &&
-					message.attributes.messagelabel.parameters.member_id &&
-					message.attributes.messagelabel.key === 'MEMBER_JOINED_GROUP' &&
-					message.attributes.messagelabel.parameters.member_id === user2.userid) {
-					logger.log("test 11 - MEMBER_JOINED_GROUP_user2 message received:", message.text);
-					history_messages['MEMBER_JOINED_GROUP_user2'] = 1;
-					// if (history_messages['MESSAGE1_USER1'] === 1 &&
-					// 	history_messages['GROUP_CREATED'] === 1 &&
-					// 	history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
-					// 	history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
-					// 	history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
-					// 	logger.log("test 11 - ALL HISTORY RECEIVED");
-					// 	done();
-					// }
-				}
-				else if (
-					message &&
-					message.recipient === group_id &&
-					message.attributes &&
-					message.attributes.messagelabel &&
-					message.attributes.messagelabel.key &&
-					message.attributes.messagelabel.parameters &&
-					message.attributes.messagelabel.parameters.member_id &&
-					message.attributes.messagelabel.key === 'MEMBER_JOINED_GROUP' &&
-					message.attributes.messagelabel.parameters.member_id === user3.userid) {
-					logger.log("test 11 - MEMBER_JOINED_GROUP_user3 message received:", message.text);
-					history_messages["MEMBER_JOINED_GROUP_user3"] = 1;
-					// if (history_messages['MESSAGE1_USER1'] === 1 &&
-					// 	history_messages['GROUP_CREATED'] === 1 &&
-					// 	history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
-					// 	history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
-					// 	history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
-					// 	logger.log("test 11 - ALL HISTORY RECEIVED");
-					// 	done();
-					// }
-				}
-				if (history_messages['MESSAGE1_USER1'] === 1 &&
-					history_messages['GROUP_CREATED'] === 1 &&
-					history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
-					history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
-					history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
-					logger.log("test 11 - ALL HISTORY RECEIVED");
-					done();
-				}
-			});
-			chatClient1.createGroup(
-				group_name,
-				group_id,
-				group_members,
-				async (err, result) => {
-					assert(err == null);
-					assert(result != null);
-					assert(result.success == true);
-					assert(result.group.name === group_name);
-					logger.log("test 11 - group:", group_id, "created");
-					chatClient1.sendMessageRaw(
-						{
-							text: MESSAGE1_USER1,
-							type: TYPE_TEXT,
-							recipient_fullname: group_name,
-							sender_fullname: user1.fullname,
-							attributes: null,
-							metadata: null,
-							channel_type: CHANNEL_TYPE_GROUP
-						},
-						group_id, // recipient
-						async (err, msg) => {
-							if (err) {
-								logger.log("Error sending message:", err);
-							}
-							logger.log("Message sent:", msg);
-							await new Promise(resolve => setTimeout(resolve, 1000)); // it gives time to message to reach the "persistent" status
-							chatClient1.joinGroup(group_id, user3.userid, (err, json) => {
-								if (err) {
-									logger.log("test 11 - member joinned error:", err);
-								}
-								logger.log("test 11 - member joined json:", json);
-							});
-						}
-					);
-				}
-			);
-		});
-	});
+// 	describe('TiledeskClient - test 11', function() {
+// 		it('\
+// test 11 - Join group (get FULL group messages history). \
+// User1 (owner) creates a group with 2 members (User1, User2). \
+// User1 sends 1 message. \
+// User1 adds User3 to the group. \
+// User3 receives all the 4 group messages: \
+// all info messages (GROUP_CREATED, USER1 MEMBER_JOINED_GROUP, USER2 MEMBER_JOINED_GROUP, USER3 MEMBER_JOINED_GROUP) \
+// and the message sent by USER1 \
+// previously sent by user1 & user2', function(done) {
+// 			const group_id = "group-" + uuid();
+// 			const group_name = "group-update test 8";
+// 			const MESSAGE1_USER1 = "user1, first";
+// 			let group_members = {};
+// 			group_members[user1.userid] = 1;
+// 			group_members[user2.userid] = 1;
+// 			let history_messages = {};
+// 			chatClient3.onMessageAdded((message, topic) => {
+// 				logger.log("test 11 - Client3 - message added:", JSON.stringify(message));
+// 				if (
+// 					message &&
+// 					message.recipient === group_id &&
+// 					message.text === MESSAGE1_USER1) {
+// 					logger.log("test 11 - MESSAGE1_USER1 message received:", message.text);
+// 					history_messages['MESSAGE1_USER1'] = 1;
+// 					// logger.log("****** HISTORY: ", history_messages)
+// 					// if (history_messages['MESSAGE1_USER1'] === 1 &&
+// 					// 	history_messages['GROUP_CREATED'] === 1 &&
+// 					// 	history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
+// 					// 	history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
+// 					// 	history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
+// 					// 	logger.log("test 11 - ALL HISTORY RECEIVED");
+// 					// 	done();
+// 					// }
+// 				}
+// 				else if (
+// 					message &&
+// 					message.recipient === group_id &&
+// 					message.attributes &&
+// 					message.attributes.messagelabel &&
+// 					message.attributes.messagelabel.key &&
+// 					message.attributes.messagelabel.parameters &&
+// 					message.attributes.messagelabel.parameters.creator &&
+// 					message.attributes.messagelabel.key === 'GROUP_CREATED' &&
+// 					message.attributes.messagelabel.parameters.creator === user1.userid) {
+// 					logger.log("test 11 - GROUP_CREATED message received:", message.text);
+// 					history_messages['GROUP_CREATED'] = 1;
+// 					// if (history_messages['MESSAGE1_USER1'] === 1 &&
+// 					// 	history_messages['GROUP_CREATED'] === 1 &&
+// 					// 	history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
+// 					// 	history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
+// 					// 	history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
+// 					// 	logger.log("test 11 - ALL HISTORY RECEIVED");
+// 					// 	done();
+// 					// }
+// 				}
+// 				else if (
+// 					message &&
+// 					message.recipient === group_id &&
+// 					message.attributes &&
+// 					message.attributes.messagelabel &&
+// 					message.attributes.messagelabel.key &&
+// 					message.attributes.messagelabel.parameters &&
+// 					message.attributes.messagelabel.parameters.member_id &&
+// 					message.attributes.messagelabel.key === 'MEMBER_JOINED_GROUP' &&
+// 					message.attributes.messagelabel.parameters.member_id === user1.userid) {
+// 					logger.log("test 11 - MEMBER_JOINED_GROUP_user1 message received:", message.text);
+// 					history_messages['MEMBER_JOINED_GROUP_user1'] = 1;
+// 					// if (history_messages['MESSAGE1_USER1'] === 1 &&
+// 					// 	history_messages['GROUP_CREATED'] === 1 &&
+// 					// 	history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
+// 					// 	history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
+// 					// 	history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
+// 					// 	logger.log("test 11 - ALL HISTORY RECEIVED");
+// 					// 	done();
+// 					// }
+// 				}
+// 				else if (
+// 					message &&
+// 					message.recipient === group_id &&
+// 					message.attributes &&
+// 					message.attributes.messagelabel &&
+// 					message.attributes.messagelabel.key &&
+// 					message.attributes.messagelabel.parameters &&
+// 					message.attributes.messagelabel.parameters.member_id &&
+// 					message.attributes.messagelabel.key === 'MEMBER_JOINED_GROUP' &&
+// 					message.attributes.messagelabel.parameters.member_id === user2.userid) {
+// 					logger.log("test 11 - MEMBER_JOINED_GROUP_user2 message received:", message.text);
+// 					history_messages['MEMBER_JOINED_GROUP_user2'] = 1;
+// 					// if (history_messages['MESSAGE1_USER1'] === 1 &&
+// 					// 	history_messages['GROUP_CREATED'] === 1 &&
+// 					// 	history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
+// 					// 	history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
+// 					// 	history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
+// 					// 	logger.log("test 11 - ALL HISTORY RECEIVED");
+// 					// 	done();
+// 					// }
+// 				}
+// 				else if (
+// 					message &&
+// 					message.recipient === group_id &&
+// 					message.attributes &&
+// 					message.attributes.messagelabel &&
+// 					message.attributes.messagelabel.key &&
+// 					message.attributes.messagelabel.parameters &&
+// 					message.attributes.messagelabel.parameters.member_id &&
+// 					message.attributes.messagelabel.key === 'MEMBER_JOINED_GROUP' &&
+// 					message.attributes.messagelabel.parameters.member_id === user3.userid) {
+// 					logger.log("test 11 - MEMBER_JOINED_GROUP_user3 message received:", message.text);
+// 					history_messages["MEMBER_JOINED_GROUP_user3"] = 1;
+// 					// if (history_messages['MESSAGE1_USER1'] === 1 &&
+// 					// 	history_messages['GROUP_CREATED'] === 1 &&
+// 					// 	history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
+// 					// 	history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
+// 					// 	history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
+// 					// 	logger.log("test 11 - ALL HISTORY RECEIVED");
+// 					// 	done();
+// 					// }
+// 				}
+// 				if (history_messages['MESSAGE1_USER1'] === 1 &&
+// 					history_messages['GROUP_CREATED'] === 1 &&
+// 					history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
+// 					history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
+// 					history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
+// 					logger.log("test 11 - ALL HISTORY RECEIVED");
+// 					done();
+// 				}
+// 			});
+// 			chatClient1.createGroup(
+// 				group_name,
+// 				group_id,
+// 				group_members,
+// 				async (err, result) => {
+// 					assert(err == null);
+// 					assert(result != null);
+// 					assert(result.success == true);
+// 					assert(result.group.name === group_name);
+// 					logger.log("test 11 - group:", group_id, "created");
+// 					chatClient1.sendMessageRaw(
+// 						{
+// 							text: MESSAGE1_USER1,
+// 							type: TYPE_TEXT,
+// 							recipient_fullname: group_name,
+// 							sender_fullname: user1.fullname,
+// 							attributes: null,
+// 							metadata: null,
+// 							channel_type: CHANNEL_TYPE_GROUP
+// 						},
+// 						group_id, // recipient
+// 						async (err, msg) => {
+// 							if (err) {
+// 								logger.log("Error sending message:", err);
+// 							}
+// 							logger.log("Message sent:", msg);
+// 							await new Promise(resolve => setTimeout(resolve, 1000)); // it gives time to message to reach the "persistent" status
+// 							chatClient1.joinGroup(group_id, user3.userid, (err, json) => {
+// 								if (err) {
+// 									logger.log("test 11 - member joinned error:", err);
+// 								}
+// 								logger.log("test 11 - member joined json:", json);
+// 							});
+// 						}
+// 					);
+// 				}
+// 			);
+// 		});
+// 	});
 
 });

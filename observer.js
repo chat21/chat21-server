@@ -365,7 +365,8 @@ function process_outgoing(topic, message_string, callback) {
   else {
     logger.debug("Group message.");
     const group_id = recipient_id
-    chatdb.getGroup(group_id, function(err, group) { // REDIS?
+    // chatdb.getGroup(group_id, function(err, group) { // REDIS?
+    getGroup(group_id, function(err, group) {
       // logger.debug("group found!", group)
       if (!group) { // created only to temporary store group-messages in group-timeline
         // TODO: 1. create group (on-the-fly), 2. remove this code, 3. continue as if the group exists.
@@ -430,6 +431,23 @@ function process_outgoing(topic, message_string, callback) {
         })
       } // end for
     }) // end getGroup
+  }
+}
+
+let groups = {};
+function getGroup(group_id, callback) {
+  if (groups[group_id]) { // REDIS?
+    logger.log("--GROUP", group_id, "FOUND!");
+    callback(null, groups[group_id]);
+  }
+  else {
+    logger.log("--GROUP", group_id, "NOT FOUND! QUERYING DB...");
+    chatdb.getGroup(group_id, function(err, group) {
+      if (!err) {
+        groups[group_id] = group;
+      }
+      callback(err, group);
+    });
   }
 }
 
