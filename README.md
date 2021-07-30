@@ -42,3 +42,9 @@ to his own SMTP server inbox (the _/outgoing_ path), as an _outgoing_ message. T
 gets the message and sends it to the recipient's SMTP server (the recipient inbox path) with a */clientadded* action
 where the recipient itself will receive the message as soon as he connects to RabbitMQ through MQTT.
 
+## Build
+
+docker build -t chat21/chat21-server:dev .
+
+docker run  chat21/chat21-server:dev
+
