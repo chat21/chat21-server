@@ -770,7 +770,7 @@ User1 (owner) creates a group with 2 members (User1, User2). \
 User1 sends 1 message. \
 User1 adds User3 to the group. \
 User3 receives all the 4 group messages: \
-all info messages (GROUP_CREATED, USER1 MEMBER_JOINED_GROUP, USER2 MEMBER_JOINED_GROUP, USER3 MEMBER_JOINED_GROUP) \
+all info messages (FIRST_MESSAGE, GROUP_CREATED, USER1 MEMBER_JOINED_GROUP, USER2 MEMBER_JOINED_GROUP, USER3 MEMBER_JOINED_GROUP) \
 and the message sent by USER1 \
 previously sent by user1 & user2', function(done) {
 			const group_id = "group-" + uuid();
@@ -882,7 +882,9 @@ previously sent by user1 & user2', function(done) {
 					// 	done();
 					// }
 				}
-				if (history_messages['MESSAGE1_USER1'] === 1 &&
+				if (message &&
+					message.recipient === group_id &&
+					history_messages['MESSAGE1_USER1'] === 1 &&
 					history_messages['GROUP_CREATED'] === 1 &&
 					history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
 					history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
@@ -936,13 +938,10 @@ previously sent by user1 & user2', function(done) {
 test 12 - Set Members (do not test messages history). \
 User1 (owner) creates a group with 2 members: User1, User2 \
 User1 re-sets the whole members to: User1, User3, User4. \
-User1, stays, will receive group-update notification \
-User2, removed, will receive group-update notification \
-User3, added, will receive group-update notification \
-User4, added, will receive group-update notification', function(done) {
+User1, stays, will receive group-update notification (original member)\
+User2, removed, will receive group-update notification (original member)', function(done) {
 			const group_id = "group-" + uuid();
 			const group_name = "group-set-members test";
-			const MESSAGE1_USER1 = "user1, first";
 			let original_group_members = {};
 			original_group_members[user1.userid] = 1;
 			original_group_members[user2.userid] = 1;
