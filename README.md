@@ -47,4 +47,3 @@ where the recipient itself will receive the message as soon as he connects to Ra
 docker build -t chat21/chat21-server:dev .
 
 docker run  chat21/chat21-server:dev
-

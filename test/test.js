@@ -33,19 +33,39 @@ const user3 = {
  	token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlMmI2Y2RhMi0yNjhmLTQxZDMtYjBjYy1kZWNjN2I0M2UwMjEiLCJzdWIiOiJVU0VSMyIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjMuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVIzLioiLCJyYWJiaXRtcS5jb25maWd1cmU6Ki8qLyoiXSwiY2xpZW50X2lkIjoiVVNFUjMiLCJjaWQiOiJVU0VSMyIsImF6cCI6IlVTRVIzIiwidXNlcl9pZCI6IlVTRVIzIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE2MjM3Njc1MjAsImV4cCI6MTkzNDgwNzUyMCwiYXVkIjpbInJhYmJpdG1xIiwiVVNFUjMiXSwia2lkIjoidGlsZWRlc2sta2V5IiwidGlsZWRlc2tfYXBpX3JvbGVzIjoidXNlciJ9.-Cio8ITPCQswv_4KnxJrRbm-5RCXMefuT91wWUNZJmU'
 };
 
+const user4 = {
+	userid: 'USER4',
+	fullname: 'User 4',
+	firstname: 'User',
+	lastname: '4',
+	token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI0NjUzYTVkYy02YWFjLTQ2Y2ItYTFlYi03OTE1NWQ2Y2Q3OWUiLCJzdWIiOiJVU0VSNCIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjQuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVI0LioiLCJyYWJiaXRtcS5jb25maWd1cmU6Ki8qLyoiXSwiY2xpZW50X2lkIjoiVVNFUjQiLCJjaWQiOiJVU0VSNCIsImF6cCI6IlVTRVI0IiwidXNlcl9pZCI6IlVTRVI0IiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE2Mjc3NDg2MTEsImV4cCI6MTkzODc4ODYxMSwiYXVkIjpbInJhYmJpdG1xIiwiVVNFUjQiXSwia2lkIjoidGlsZWRlc2sta2V5IiwidGlsZWRlc2tfYXBpX3JvbGVzIjoidXNlciJ9.ZeC2JYQpjfZsczvd2Fjpf7WIJ1bRIoxIYp8BTyWDmHE'
+};
+
+const user5 = {
+	userid: 'USER5',
+	fullname: 'User 5',
+	firstname: 'User',
+	lastname: '5',
+	token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxYjMyOTIyMC1kMmFlLTQ4N2ItYmNlMy05N2I5NjYzNGRhZTMiLCJzdWIiOiJVU0VSNSIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjUuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVI1LioiLCJyYWJiaXRtcS5jb25maWd1cmU6Ki8qLyoiXSwiY2xpZW50X2lkIjoiVVNFUjUiLCJjaWQiOiJVU0VSNSIsImF6cCI6IlVTRVI1IiwidXNlcl9pZCI6IlVTRVI1IiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE2Mjc3NDg2MTEsImV4cCI6MTkzODc4ODYxMSwiYXVkIjpbInJhYmJpdG1xIiwiVVNFUjUiXSwia2lkIjoidGlsZWRlc2sta2V5IiwidGlsZWRlc2tfYXBpX3JvbGVzIjoidXNlciJ9.7xzZhSAXzceHQwyObbLxQrOWs0xUVDyJ1J4rbh4fd-g'
+};
+
 // ALL-IN-ONE (EXCEPT RABBITMQ, RUN IT WITH DOCKER)
-const MQTT_ENDPOINT = 'ws://localhost:15675/ws';
-const API_ENDPOINT = 'http://localhost:8010/api'
-const CLIENT_API_LOG = false;
-const HTTP_SERVER_LOG_LEVEL = 'DEBUG';
-const OBSERVER_LOG_LEVEL = 'DEBUG';
-const LOCAL_STACK = true;
+// const MQTT_ENDPOINT = 'ws://localhost:15675/ws';
+// const API_ENDPOINT = 'http://localhost:8010/api'
+// const CLIENT_API_LOG = false;
+// const HTTP_SERVER_LOG_LEVEL = 'DEBUG';
+// const OBSERVER_LOG_LEVEL = 'DEBUG';
+// const LOCAL_STACK = true;
 
 // LOCAL MACHINE COMPONENTS
-// const MQTT_ENDPOINT = 'ws://localhost:15675/ws';
-// const API_ENDPOINT = 'http://localhost:8004/api'
-// const CLIENT_API_LOG = false;
-// LOCAL_STACK = false;
+// RABBITMQ, RUN IT WITH DOCKER
+// RUN LOCAL MONGODB, EX: mongod --dbpath /usr/local/var/mongodb
+// RUN LOCAL CHAT-HTTP-SERVER ON "API_ENDPOINT"
+// RUN LOCAL CHAT-OBSERVER
+const MQTT_ENDPOINT = 'ws://localhost:15675/ws';
+const API_ENDPOINT = 'http://localhost:8004/api'
+const CLIENT_API_LOG = true;
+LOCAL_STACK = false;
 
 // REMOTE ON AWS
 // const MQTT_ENDPOINT = 'ws://99.80.197.164:15675/ws';
@@ -64,7 +84,7 @@ let chatClient3;
 let http_server;
 let webhook_app;
 
-describe('hooks', function() {
+describe('Main', function() {
 	before(function(done) {
 		console.log("Running Basic tests...");
 		chatClient1 = new Chat21Client(
@@ -91,50 +111,61 @@ describe('hooks', function() {
 				log: CLIENT_API_LOG
 			}
 		);
+		chatClient4 = new Chat21Client(
+			{
+				appId: APPID,
+				MQTTendpoint: MQTT_ENDPOINT,
+				APIendpoint: API_ENDPOINT,
+				log: CLIENT_API_LOG
+			}
+		);
 		chatClient1.connect(user1.userid, user1.token, () => {
 			logger.log("chatClient1 Connected...");
 			chatClient2.connect(user2.userid, user2.token, () => {
 				logger.log("chatClient2 Connected...");
 				chatClient3.connect(user3.userid, user3.token, async () => {
 					logger.log("chatClient3 Connected...");
-					// **************************
-					// STARTS ALL STACK:
-					// 0. RABBITMQ (start separately with docker)
-					// 1. HTTP-API-SERVER
-					// 2. OBSERVER
-					// 3. WEBHOOK ENDPOINT APPLICATION
-					// **************************
-					if (LOCAL_STACK) {
-						chat21HttpServer.logger.setLog(HTTP_SERVER_LOG_LEVEL);
-						http_server = chat21HttpServer.app.listen(8010, async() => {
-							logger.log('HTTP server started.');
-							logger.log('Starting AMQP publisher...');
-							await chat21HttpServer.startAMQP({rabbitmq_uri: process.env.RABBITMQ_URI});
-							logger.log('HTTP server AMQP connection started.');
-							observer.logger.setLog(OBSERVER_LOG_LEVEL);
-							observer.setWebHookEndpoint("http://localhost:8002/postdata");
-							observer.setAutoRestart(false);
-							await observer.startServer({rabbitmq_uri: process.env.RABBITMQ_URI});
-							logger.log("observer started.");
-							// THE SERVER CLIENT FOR WEBHOOKS
-							var serverClient = express();
-							// serverClient.use(bodyParser.json());
-							serverClient.post('/postdata', function (req, res) {
-								res.status(200).send({success: true})
+					chatClient4.connect(user4.userid, user4.token, async () => {
+						logger.log("chatClient4 Connected...");
+						// **************************
+						// STARTS ALL STACK:
+						// 0. RABBITMQ (start separately with docker)
+						// 1. HTTP-API-SERVER
+						// 2. OBSERVER
+						// 3. WEBHOOK ENDPOINT APPLICATION
+						// **************************
+						if (LOCAL_STACK) {
+							chat21HttpServer.logger.setLog(HTTP_SERVER_LOG_LEVEL);
+							http_server = chat21HttpServer.app.listen(8010, async() => {
+								logger.log('HTTP server started.');
+								logger.log('Starting AMQP publisher...');
+								await chat21HttpServer.startAMQP({rabbitmq_uri: process.env.RABBITMQ_URI});
+								logger.log('HTTP server AMQP connection started.');
+								observer.logger.setLog(OBSERVER_LOG_LEVEL);
+								observer.setWebHookEndpoint("http://localhost:8002/postdata");
+								observer.setAutoRestart(false);
+								await observer.startServer({rabbitmq_uri: process.env.RABBITMQ_URI});
+								logger.log("observer started.");
+								// THE SERVER CLIENT FOR WEBHOOKS
+								var serverClient = express();
+								// serverClient.use(bodyParser.json());
+								serverClient.post('/postdata', function (req, res) {
+									res.status(200).send({success: true})
+								});
+								webhook_app = serverClient.listen(8002, '0.0.0.0', async function() {
+									logger.log('Node Client Express started.', webhook_app.address());
+									logger.log("Local http Express server started.");
+									logger.log("Everything is ok to start testing in 2 seconds...");
+									await new Promise(resolve => setTimeout(resolve, 2000));
+									logger.log("Ready!");
+									done();
+								});
 							});
-							webhook_app = serverClient.listen(8002, '0.0.0.0', async function() {
-								logger.log('Node Client Express started.', webhook_app.address());
-								logger.log("Local http Express server started.");
-								logger.log("Everything is ok to start testing in 2 seconds...");
-								await new Promise(resolve => setTimeout(resolve, 2000));
-								logger.log("Ready!");
-								done();
-							});
-						});
-					}
-					else {
-						done();
-					}
+						}
+						else {
+							done();
+						}
+					});
 				});
 			});
 		});
@@ -147,15 +178,18 @@ describe('hooks', function() {
 				logger.log("...chatClient2 successfully disconnected.");
 				chatClient3.close(async () => {
 					logger.log("...chatClient3 successfully disconnected.");
-					if (LOCAL_STACK) {
-						http_server.close(); // REMOVE IF NOT ALL-IN-ONE
-						logger.log("HTTP Server closed."); // REMOVE IF NOT ALL-IN-ONE
-						webhook_app.close();
-						logger.log("Webhooks endpoint closed.");
-						observer.stopServer(); // REMOVE IF NOT ALL-IN-ONE
-						await new Promise(resolve => setTimeout(resolve, 500)); // REMOVE IF NOT ALL-IN-ONE
-					}
-					done();
+					chatClient4.close(async () => {
+						logger.log("...chatClient4 successfully disconnected.");
+						if (LOCAL_STACK) {
+							http_server.close();
+							logger.log("HTTP Server closed.");
+							webhook_app.close();
+							logger.log("Webhooks endpoint closed.");
+							observer.stopServer();
+							await new Promise(resolve => setTimeout(resolve, 500));
+						}
+						done();
+					});
 				});
 			});
 		});
@@ -235,7 +269,7 @@ describe('hooks', function() {
 			const group_name = "test group " + group_id;
 			const group_members = {}
 			group_members[user2.userid] = 1;
-			chatClient1.createGroup(
+			chatClient1.groupCreate(
 				group_name,
 				group_id,
 				group_members,
@@ -247,7 +281,19 @@ describe('hooks', function() {
 					assert(result.group.members != null);
 					assert(result.group.members[user2.userid] == 1);
 					logger.log("Group created:", result);
-					done();
+					chatClient1.groupData(group_id, (err, json) => {
+						logger.log("test 3 - Verified group updated:", group_id, "data:", json);
+						assert(err == null);
+						assert(json != null);
+						assert(json.success == true);
+						assert(json.result != null);
+						assert(json.result.uid === group_id);
+						assert(json.result.owner === user1.userid);
+						assert(json.result.members != null);
+						assert(json.result.members[user1.userid] != null);
+						assert(json.result.members[user2.userid] != null);
+						done();
+					});
 				}
 			);
 		});
@@ -314,7 +360,7 @@ describe('hooks', function() {
 					}
 				}
 			});
-			chatClient1.createGroup(
+			chatClient1.groupCreate(
 				group_name,
 				group_id,
 				group_members,
@@ -350,7 +396,7 @@ describe('hooks', function() {
 					done();
 				}
 			});
-			chatClient1.createGroup(
+			chatClient1.groupCreate(
 				group_name,
 				group_id,
 				group_members,
@@ -416,7 +462,7 @@ describe('hooks', function() {
 					}
 				}
 			});
-			chatClient1.createGroup(
+			chatClient1.groupCreate(
 				group_name,
 				group_id,
 				group_members,
@@ -425,7 +471,7 @@ describe('hooks', function() {
 					assert(result != null);
 					assert(result.success == true);
 					assert(result.group.name === group_name);
-					chatClient1.leaveGroup(group_id, user3.userid, (err, json) => {
+					chatClient1.groupLeave(group_id, user3.userid, (err, json) => {
 						if (err) {
 							logger.log("test 6 - member removed error:", err);
 						}
@@ -468,7 +514,7 @@ describe('hooks', function() {
 					}
 				}
 			});
-			chatClient1.createGroup(
+			chatClient1.groupCreate(
 				group_name,
 				group_id,
 				group_members,
@@ -477,7 +523,7 @@ describe('hooks', function() {
 					assert(result != null);
 					assert(result.success == true);
 					assert(result.group.name === group_name);
-					chatClient1.joinGroup(group_id, user3.userid, (err, json) => {
+					chatClient1.groupJoin(group_id, user3.userid, (err, json) => {
 						if (err) {
 							logger.log("test 7 - member removed error:", err);
 						}
@@ -534,7 +580,7 @@ describe('hooks', function() {
 					}
 				}
 			});
-			chatClient1.createGroup(
+			chatClient1.groupCreate(
 				group_name,
 				group_id,
 				group_members,
@@ -544,7 +590,7 @@ describe('hooks', function() {
 					assert(result.success == true);
 					assert(result.group.name === group_name);
 					logger.log("test 8 - group:", group_id, "created");
-					chatClient1.joinGroup(group_id, user3.userid, (err, json) => {
+					chatClient1.groupJoin(group_id, user3.userid, (err, json) => {
 						logger.log("test 8 - member removed error:", err);
 						logger.log("test 8 - member removed json:", json);
 					});
@@ -635,7 +681,7 @@ describe('hooks', function() {
 					}
 				}
 			});
-			chatClient1.createGroup(
+			chatClient1.groupCreate(
 				group_name,
 				group_id,
 				group_members,
@@ -645,7 +691,7 @@ describe('hooks', function() {
 					assert(result.success == true);
 					assert(result.group.name === group_name);
 					logger.log("test 9 - group", group_id, "created");
-					chatClient1.joinGroup(group_id, user3.userid, (err, json) => {
+					chatClient1.groupJoin(group_id, user3.userid, (err, json) => {
 						if (err) {
 							logger.log("test 9 - member removed error:", err);
 						}
@@ -677,7 +723,7 @@ User3 receives the (only) message previously sent by User1 to the group', functi
 					done();
 				}
 			});
-			chatClient1.createGroup(
+			chatClient1.groupCreate(
 				group_name,
 				group_id,
 				group_members,
@@ -704,7 +750,7 @@ User3 receives the (only) message previously sent by User1 to the group', functi
 							}
 							logger.log("Message sent:", msg);
 							await new Promise(resolve => setTimeout(resolve, 1000)); // it gives time to message to reach the "persistent" status
-							chatClient1.joinGroup(group_id, user3.userid, (err, json) => {
+							chatClient1.groupJoin(group_id, user3.userid, (err, json) => {
 								if (err) {
 									logger.log("test 10 - member joinned error:", err);
 								}
@@ -717,172 +763,251 @@ User3 receives the (only) message previously sent by User1 to the group', functi
 		});
 	});
 
-// 	describe('TiledeskClient - test 11', function() {
-// 		it('\
-// test 11 - Join group (get FULL group messages history). \
-// User1 (owner) creates a group with 2 members (User1, User2). \
-// User1 sends 1 message. \
-// User1 adds User3 to the group. \
-// User3 receives all the 4 group messages: \
-// all info messages (GROUP_CREATED, USER1 MEMBER_JOINED_GROUP, USER2 MEMBER_JOINED_GROUP, USER3 MEMBER_JOINED_GROUP) \
-// and the message sent by USER1 \
-// previously sent by user1 & user2', function(done) {
-// 			const group_id = "group-" + uuid();
-// 			const group_name = "group-update test 8";
-// 			const MESSAGE1_USER1 = "user1, first";
-// 			let group_members = {};
-// 			group_members[user1.userid] = 1;
-// 			group_members[user2.userid] = 1;
-// 			let history_messages = {};
-// 			chatClient3.onMessageAdded((message, topic) => {
-// 				logger.log("test 11 - Client3 - message added:", JSON.stringify(message));
-// 				if (
-// 					message &&
-// 					message.recipient === group_id &&
-// 					message.text === MESSAGE1_USER1) {
-// 					logger.log("test 11 - MESSAGE1_USER1 message received:", message.text);
-// 					history_messages['MESSAGE1_USER1'] = 1;
-// 					// logger.log("****** HISTORY: ", history_messages)
-// 					// if (history_messages['MESSAGE1_USER1'] === 1 &&
-// 					// 	history_messages['GROUP_CREATED'] === 1 &&
-// 					// 	history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
-// 					// 	history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
-// 					// 	history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
-// 					// 	logger.log("test 11 - ALL HISTORY RECEIVED");
-// 					// 	done();
-// 					// }
-// 				}
-// 				else if (
-// 					message &&
-// 					message.recipient === group_id &&
-// 					message.attributes &&
-// 					message.attributes.messagelabel &&
-// 					message.attributes.messagelabel.key &&
-// 					message.attributes.messagelabel.parameters &&
-// 					message.attributes.messagelabel.parameters.creator &&
-// 					message.attributes.messagelabel.key === 'GROUP_CREATED' &&
-// 					message.attributes.messagelabel.parameters.creator === user1.userid) {
-// 					logger.log("test 11 - GROUP_CREATED message received:", message.text);
-// 					history_messages['GROUP_CREATED'] = 1;
-// 					// if (history_messages['MESSAGE1_USER1'] === 1 &&
-// 					// 	history_messages['GROUP_CREATED'] === 1 &&
-// 					// 	history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
-// 					// 	history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
-// 					// 	history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
-// 					// 	logger.log("test 11 - ALL HISTORY RECEIVED");
-// 					// 	done();
-// 					// }
-// 				}
-// 				else if (
-// 					message &&
-// 					message.recipient === group_id &&
-// 					message.attributes &&
-// 					message.attributes.messagelabel &&
-// 					message.attributes.messagelabel.key &&
-// 					message.attributes.messagelabel.parameters &&
-// 					message.attributes.messagelabel.parameters.member_id &&
-// 					message.attributes.messagelabel.key === 'MEMBER_JOINED_GROUP' &&
-// 					message.attributes.messagelabel.parameters.member_id === user1.userid) {
-// 					logger.log("test 11 - MEMBER_JOINED_GROUP_user1 message received:", message.text);
-// 					history_messages['MEMBER_JOINED_GROUP_user1'] = 1;
-// 					// if (history_messages['MESSAGE1_USER1'] === 1 &&
-// 					// 	history_messages['GROUP_CREATED'] === 1 &&
-// 					// 	history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
-// 					// 	history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
-// 					// 	history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
-// 					// 	logger.log("test 11 - ALL HISTORY RECEIVED");
-// 					// 	done();
-// 					// }
-// 				}
-// 				else if (
-// 					message &&
-// 					message.recipient === group_id &&
-// 					message.attributes &&
-// 					message.attributes.messagelabel &&
-// 					message.attributes.messagelabel.key &&
-// 					message.attributes.messagelabel.parameters &&
-// 					message.attributes.messagelabel.parameters.member_id &&
-// 					message.attributes.messagelabel.key === 'MEMBER_JOINED_GROUP' &&
-// 					message.attributes.messagelabel.parameters.member_id === user2.userid) {
-// 					logger.log("test 11 - MEMBER_JOINED_GROUP_user2 message received:", message.text);
-// 					history_messages['MEMBER_JOINED_GROUP_user2'] = 1;
-// 					// if (history_messages['MESSAGE1_USER1'] === 1 &&
-// 					// 	history_messages['GROUP_CREATED'] === 1 &&
-// 					// 	history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
-// 					// 	history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
-// 					// 	history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
-// 					// 	logger.log("test 11 - ALL HISTORY RECEIVED");
-// 					// 	done();
-// 					// }
-// 				}
-// 				else if (
-// 					message &&
-// 					message.recipient === group_id &&
-// 					message.attributes &&
-// 					message.attributes.messagelabel &&
-// 					message.attributes.messagelabel.key &&
-// 					message.attributes.messagelabel.parameters &&
-// 					message.attributes.messagelabel.parameters.member_id &&
-// 					message.attributes.messagelabel.key === 'MEMBER_JOINED_GROUP' &&
-// 					message.attributes.messagelabel.parameters.member_id === user3.userid) {
-// 					logger.log("test 11 - MEMBER_JOINED_GROUP_user3 message received:", message.text);
-// 					history_messages["MEMBER_JOINED_GROUP_user3"] = 1;
-// 					// if (history_messages['MESSAGE1_USER1'] === 1 &&
-// 					// 	history_messages['GROUP_CREATED'] === 1 &&
-// 					// 	history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
-// 					// 	history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
-// 					// 	history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
-// 					// 	logger.log("test 11 - ALL HISTORY RECEIVED");
-// 					// 	done();
-// 					// }
-// 				}
-// 				if (history_messages['MESSAGE1_USER1'] === 1 &&
-// 					history_messages['GROUP_CREATED'] === 1 &&
-// 					history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
-// 					history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
-// 					history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
-// 					logger.log("test 11 - ALL HISTORY RECEIVED");
-// 					done();
-// 				}
-// 			});
-// 			chatClient1.createGroup(
-// 				group_name,
-// 				group_id,
-// 				group_members,
-// 				async (err, result) => {
-// 					assert(err == null);
-// 					assert(result != null);
-// 					assert(result.success == true);
-// 					assert(result.group.name === group_name);
-// 					logger.log("test 11 - group:", group_id, "created");
-// 					chatClient1.sendMessageRaw(
-// 						{
-// 							text: MESSAGE1_USER1,
-// 							type: TYPE_TEXT,
-// 							recipient_fullname: group_name,
-// 							sender_fullname: user1.fullname,
-// 							attributes: null,
-// 							metadata: null,
-// 							channel_type: CHANNEL_TYPE_GROUP
-// 						},
-// 						group_id, // recipient
-// 						async (err, msg) => {
-// 							if (err) {
-// 								logger.log("Error sending message:", err);
-// 							}
-// 							logger.log("Message sent:", msg);
-// 							await new Promise(resolve => setTimeout(resolve, 1000)); // it gives time to message to reach the "persistent" status
-// 							chatClient1.joinGroup(group_id, user3.userid, (err, json) => {
-// 								if (err) {
-// 									logger.log("test 11 - member joinned error:", err);
-// 								}
-// 								logger.log("test 11 - member joined json:", json);
-// 							});
-// 						}
-// 					);
-// 				}
-// 			);
-// 		});
-// 	});
+	describe('TiledeskClient - test 11', function() {
+		it('\
+test 11 - Join group (get FULL group messages history). \
+User1 (owner) creates a group with 2 members (User1, User2). \
+User1 sends 1 message. \
+User1 adds User3 to the group. \
+User3 receives all the 4 group messages: \
+all info messages (GROUP_CREATED, USER1 MEMBER_JOINED_GROUP, USER2 MEMBER_JOINED_GROUP, USER3 MEMBER_JOINED_GROUP) \
+and the message sent by USER1 \
+previously sent by user1 & user2', function(done) {
+			const group_id = "group-" + uuid();
+			const group_name = "group-update test";
+			const MESSAGE1_USER1 = "user1, first";
+			let group_members = {};
+			group_members[user1.userid] = 1;
+			group_members[user2.userid] = 1;
+			let history_messages = {};
+			chatClient3.onMessageAdded((message, topic) => {
+				logger.log("test 11 - Client3 - message added:", JSON.stringify(message));
+				if (
+					message &&
+					message.recipient === group_id &&
+					message.text === MESSAGE1_USER1) {
+					logger.log("test 11 - MESSAGE1_USER1 message received:", message.text);
+					history_messages['MESSAGE1_USER1'] = 1;
+					// logger.log("****** HISTORY: ", history_messages)
+					// if (history_messages['MESSAGE1_USER1'] === 1 &&
+					// 	history_messages['GROUP_CREATED'] === 1 &&
+					// 	history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
+					// 	history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
+					// 	history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
+					// 	logger.log("test 11 - ALL HISTORY RECEIVED");
+					// 	done();
+					// }
+				}
+				else if (
+					message &&
+					message.recipient === group_id &&
+					message.attributes &&
+					message.attributes.messagelabel &&
+					message.attributes.messagelabel.key &&
+					message.attributes.messagelabel.parameters &&
+					message.attributes.messagelabel.parameters.creator &&
+					message.attributes.messagelabel.key === 'GROUP_CREATED' &&
+					message.attributes.messagelabel.parameters.creator === user1.userid) {
+					logger.log("test 11 - GROUP_CREATED message received:", message.text);
+					history_messages['GROUP_CREATED'] = 1;
+					// if (history_messages['MESSAGE1_USER1'] === 1 &&
+					// 	history_messages['GROUP_CREATED'] === 1 &&
+					// 	history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
+					// 	history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
+					// 	history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
+					// 	logger.log("test 11 - ALL HISTORY RECEIVED");
+					// 	done();
+					// }
+				}
+				else if (
+					message &&
+					message.recipient === group_id &&
+					message.attributes &&
+					message.attributes.messagelabel &&
+					message.attributes.messagelabel.key &&
+					message.attributes.messagelabel.parameters &&
+					message.attributes.messagelabel.parameters.member_id &&
+					message.attributes.messagelabel.key === 'MEMBER_JOINED_GROUP' &&
+					message.attributes.messagelabel.parameters.member_id === user1.userid) {
+					logger.log("test 11 - MEMBER_JOINED_GROUP_user1 message received:", message.text);
+					history_messages['MEMBER_JOINED_GROUP_user1'] = 1;
+					// if (history_messages['MESSAGE1_USER1'] === 1 &&
+					// 	history_messages['GROUP_CREATED'] === 1 &&
+					// 	history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
+					// 	history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
+					// 	history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
+					// 	logger.log("test 11 - ALL HISTORY RECEIVED");
+					// 	done();
+					// }
+				}
+				else if (
+					message &&
+					message.recipient === group_id &&
+					message.attributes &&
+					message.attributes.messagelabel &&
+					message.attributes.messagelabel.key &&
+					message.attributes.messagelabel.parameters &&
+					message.attributes.messagelabel.parameters.member_id &&
+					message.attributes.messagelabel.key === 'MEMBER_JOINED_GROUP' &&
+					message.attributes.messagelabel.parameters.member_id === user2.userid) {
+					logger.log("test 11 - MEMBER_JOINED_GROUP_user2 message received:", message.text);
+					history_messages['MEMBER_JOINED_GROUP_user2'] = 1;
+					// if (history_messages['MESSAGE1_USER1'] === 1 &&
+					// 	history_messages['GROUP_CREATED'] === 1 &&
+					// 	history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
+					// 	history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
+					// 	history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
+					// 	logger.log("test 11 - ALL HISTORY RECEIVED");
+					// 	done();
+					// }
+				}
+				else if (
+					message &&
+					message.recipient === group_id &&
+					message.attributes &&
+					message.attributes.messagelabel &&
+					message.attributes.messagelabel.key &&
+					message.attributes.messagelabel.parameters &&
+					message.attributes.messagelabel.parameters.member_id &&
+					message.attributes.messagelabel.key === 'MEMBER_JOINED_GROUP' &&
+					message.attributes.messagelabel.parameters.member_id === user3.userid) {
+					logger.log("test 11 - MEMBER_JOINED_GROUP_user3 message received:", message.text);
+					history_messages["MEMBER_JOINED_GROUP_user3"] = 1;
+					// if (history_messages['MESSAGE1_USER1'] === 1 &&
+					// 	history_messages['GROUP_CREATED'] === 1 &&
+					// 	history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
+					// 	history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
+					// 	history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
+					// 	logger.log("test 11 - ALL HISTORY RECEIVED");
+					// 	done();
+					// }
+				}
+				if (history_messages['MESSAGE1_USER1'] === 1 &&
+					history_messages['GROUP_CREATED'] === 1 &&
+					history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
+					history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
+					history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
+					logger.log("test 11 - ALL HISTORY RECEIVED");
+					done();
+				}
+			});
+			chatClient1.groupCreate(
+				group_name,
+				group_id,
+				group_members,
+				async (err, result) => {
+					assert(err == null);
+					assert(result != null);
+					assert(result.success == true);
+					assert(result.group.name === group_name);
+					logger.log("test 11 - group:", group_id, "created");
+					chatClient1.sendMessageRaw(
+						{
+							text: MESSAGE1_USER1,
+							type: TYPE_TEXT,
+							recipient_fullname: group_name,
+							sender_fullname: user1.fullname,
+							attributes: null,
+							metadata: null,
+							channel_type: CHANNEL_TYPE_GROUP
+						},
+						group_id, // recipient
+						async (err, msg) => {
+							if (err) {
+								logger.log("Error sending message:", err);
+							}
+							logger.log("Message sent:", msg);
+							await new Promise(resolve => setTimeout(resolve, 1000)); // it gives time to message to reach the "persistent" status
+							chatClient1.groupJoin(group_id, user3.userid, (err, json) => {
+								if (err) {
+									logger.log("test 11 - member joinned error:", err);
+								}
+								logger.log("test 11 - member joined json:", json);
+							});
+						}
+					);
+				}
+			);
+		});
+	});
+
+	describe('TiledeskClient - test 12', function() {
+		it('\
+test 12 - Set Members (do not test messages history). \
+User1 (owner) creates a group with 2 members: User1, User2 \
+User1 re-sets the whole members to: User1, User3, User4. \
+User1, stays, will receive group-update notification \
+User2, removed, will receive group-update notification \
+User3, added, will receive group-update notification \
+User4, added, will receive group-update notification', function(done) {
+			const group_id = "group-" + uuid();
+			const group_name = "group-set-members test";
+			const MESSAGE1_USER1 = "user1, first";
+			let original_group_members = {};
+			original_group_members[user1.userid] = 1;
+			original_group_members[user2.userid] = 1;
+			let new_group_members = {};
+			new_group_members[user1.userid] = 1;
+			new_group_members[user3.userid] = 1;
+			new_group_members[user4.userid] = 1;
+			let update_notifications = {};
+			// NOTE: Only original members will receive the group-update notification
+			chatClient1.onGroupUpdated((group, topic) => {
+				logger.log("test 12 - group updated - chatClient1:", JSON.stringify(group));
+				if (group.uid === group_id) {
+					update_notifications[user1.userid] = 1;
+					if (update_notifications[user1.userid] === 1 && update_notifications[user2.userid] === 1) {
+						logger.log("test 12 - ALL NOTIFICATIONS RECEIVED");
+						done();
+					}
+				}
+			});
+			chatClient2.onGroupUpdated((group, topic) => {
+				logger.log("test 12 - group updated - chatClient2:", JSON.stringify(group));
+				if (group.uid === group_id) {
+					update_notifications[user2.userid] = 1;
+					if (update_notifications[user1.userid] === 1 && update_notifications[user2.userid] === 1) {
+						logger.log("test 12 - ALL NOTIFICATIONS RECEIVED");
+						done();
+					}
+				}
+			});
+			chatClient1.groupCreate(
+				group_name,
+				group_id,
+				original_group_members,
+				async (err, result) => {
+					assert(err == null);
+					assert(result != null);
+					assert(result.success == true);
+					assert(result.group.name === group_name);
+					logger.log("test 12 - group:", group_id, "created");
+					chatClient1.groupSetMembers(
+						group_id,
+						new_group_members,
+						async (err, result) => {
+							assert(err == null);
+							assert(result != null);
+							assert(result.success == true);
+							logger.log("test 12 - group:", group_id, "members successfully set to:", new_group_members);
+							chatClient1.groupData(group_id, (err, json) => {
+								logger.log("test 12 - group updated:", group_id, "data:", json);
+								assert(err == null);
+								assert(json != null);
+								assert(json.success == true);
+								assert(json.result != null);
+								assert(json.result.uid === group_id);
+								assert(json.result.owner === user1.userid);
+								assert(json.result.members != null);
+								assert(json.result.members[user1.userid] != null);
+								assert(json.result.members[user3.userid] != null);
+								assert(json.result.members[user4.userid] != null);
+							});
+						}
+					);
+				}
+			);
+		});
+	});
 
 });
