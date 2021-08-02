@@ -33,7 +33,6 @@ const user3 = {
 // REMOTE
 const MQTT_ENDPOINT = 'ws://99.80.197.164:15675/ws';
 const API_ENDPOINT = 'http://99.80.197.164:8004/api';
-
 const APPID = 'tilechat';
 
 let TOTAL_SENT_MESSAGES = 500;

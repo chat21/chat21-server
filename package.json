@@ -20,18 +20,18 @@
   "devDependencies": {
     "@chat21/chat21-http-server": "^0.1.13",
     "axios": "^0.21.1",
-    "mongodb-runner": "^4.8.3",
     "should": "^9.0.2",
     "loadtest": "^1.4.3"
   },
   "scripts": {
     "test": "mocha ./test/*.js --timeout 4000",
     "benchmarks": "node ./benchmarks/index.js",
-    "start": "node chatservermq.js",
-    "pretest": "mongodb-runner start",
-    "posttest": "mongodb-runner stop"
-
+    "start": "node chatservermq.js"
   },
-  "author": "",
+  "engines": {
+    "node": "12.21.0",
+    "npm": "7.20.3"
+  },
+  "author": "Andrea Sponziello",
   "license": "MIT"
 }

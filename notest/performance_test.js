@@ -5,7 +5,7 @@ var http = require('http');
 
 let webapp;
 // var noRequestPerHour = 100000;
-let noRequestPerSecond = 100;
+let noRequestPerSecond = 40;
 let avgRequestTime = 160;
 // var host = 'https://loadtest.andreasponziell.repl.co'
 let host = 'http://localhost:3000' // 3002 embedded
@@ -68,8 +68,8 @@ describe("Performance Test", function() {
 
         var options = {
             // "url": host + '/ping',
-            // "url": host + "/sendGroupMessage/" + group_id,
-            "url": host + "/sendDirectMessage",
+            "url": host + "/sendGroupMessage/" + group_id,
+            // "url": host + "/sendDirectMessage",
             "requestsPerSecond": noRequestPerSecond,
             "maxSeconds": 10,
             "concurrency": 1,
