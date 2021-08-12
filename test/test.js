@@ -61,7 +61,7 @@ const user5 = {
 // RABBITMQ, RUN IT WITH DOCKER
 // RUN LOCAL MONGODB, EX: mongod --dbpath /usr/local/var/mongodb
 // RUN LOCAL CHAT-HTTP-SERVER ON "API_ENDPOINT"
-// RUN LOCAL CHAT-OBSERVER
+// RUN LOCAL CHAT-OBSERVER (ENSURE: ONLY ONE INSTANCE!)
 const MQTT_ENDPOINT = 'ws://localhost:15675/ws';
 const API_ENDPOINT = 'http://localhost:8004/api'
 const CLIENT_API_LOG = true;
