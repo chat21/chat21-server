@@ -221,13 +221,13 @@ function startWorker() {
     ch.assertQueue("messages", { durable: true }, function (err, _ok) {
       if (closeOnErr(err)) return;
       subscribeTo(topic_outgoing, ch, _ok.queue)
-      subscribeTo(topic_persist, ch, _ok.queue)
       subscribeTo(topic_update, ch, _ok.queue)
-      subscribeTo(topic_archive, ch, _ok.queue)
-      subscribeTo(topic_presence, ch, _ok.queue)
-      // subscribeTo(topic_create_group, ch, _ok.queue)....
-      subscribeTo(topic_update_group, ch, _ok.queue)
+      // subscribeTo(topic_persist, ch, _ok.queue)
+      // subscribeTo(topic_archive, ch, _ok.queue)
+      // subscribeTo(topic_presence, ch, _ok.queue)
+      // subscribeTo(topic_update_group, ch, _ok.queue)
       subscribeTo(topic_delivered, ch, _ok.queue)
+      // subscribeTo(topic_create_group, ch, _ok.queue)....
       ch.consume("messages", processMsg, { noAck: false });
     });
   });
