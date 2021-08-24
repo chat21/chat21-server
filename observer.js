@@ -62,7 +62,8 @@ logger.info("webhook_enabled: " + webhook_enabled);
 
 let webhook_endpoint;
 let webhook_events_array;
-let persistent_messages;
+let subscription_topics;
+// let persistent_messages;
 
 function getWebhooks() {
   return webhooks;
@@ -92,15 +93,19 @@ function setWebHookEndpoint(url) {
 function setWebHookEvents(events) {
   webhook_events_array = events;
 }
+function setSubscriptionTopics(topics) {
+  subscription_topics = topics;
+}
+
 
 let autoRestartProperty;
 function setAutoRestart(_autoRestart) {
   autoRestartProperty = _autoRestart;
 }
 
-function setPersistentMessages(persist) {
-  persistent_messages = persist;
-}
+// function setPersistentMessages(persist) {
+//   persistent_messages = persist;
+// }
 
 
 function start() {
@@ -218,28 +223,56 @@ function startWorker() {
     ch.assertExchange(exchange, 'topic', {
       durable: true
     });
-    ch.assertQueue("messages", { durable: true }, function (err, _ok) {
-      if (closeOnErr(err)) return;
-      subscribeTo(topic_outgoing, ch, _ok.queue)
-      subscribeTo(topic_update, ch, _ok.queue)
-      // subscribeTo(topic_persist, ch, _ok.queue)
-      // subscribeTo(topic_archive, ch, _ok.queue)
-      // subscribeTo(topic_presence, ch, _ok.queue)
-      // subscribeTo(topic_update_group, ch, _ok.queue)
-      subscribeTo(topic_delivered, ch, _ok.queue)
-      // subscribeTo(topic_create_group, ch, _ok.queue)....
-      ch.consume("messages", processMsg, { noAck: false });
-    });
+    if (subscription_topics['messages']) { // TODO subscription_topics => binded_queues
+      ch.assertQueue("messages", { durable: true }, function (err, _ok) {
+        if (closeOnErr(err)) return;
+        let queue = _ok.queue;
+        logger.log("asserted queue:", queue);
+        // if (subscription_topics['outgoing']) {
+          subscribeTo(topic_outgoing, ch, queue, exchange)
+        // }
+        // if (subscription_topics['update']) {
+          subscribeTo(topic_update, ch, queue, exchange)
+        // }
+        // if (subscription_topics['persist']) {
+        //   subscribeTo(topic_persist, ch, queue, exchange)
+        // }
+        // if (subscription_topics['archive']) {
+          subscribeTo(topic_archive, ch, queue, exchange)
+        // }
+        // if (subscription_topics['presence']) {
+          subscribeTo(topic_presence, ch, queue, exchange)
+        // }
+        // if (subscription_topics['update_group']) {
+          subscribeTo(topic_update_group, ch, queue, exchange)
+        // }
+        // if (subscription_topics['delivered']) {
+          subscribeTo(topic_delivered, ch, queue, exchange)
+        // }
+        ch.consume(queue, processMsg, { noAck: false });
+      });
+    }
+    if (subscription_topics['persist']) {
+      ch.assertQueue("persist", { durable: true }, function (err, _ok) {
+        if (closeOnErr(err)) return;
+        let queue = _ok.queue;
+        logger.log("asserted queue:", queue);
+        // if (subscription_topics['persist']) {
+          subscribeTo(topic_persist, ch, queue, exchange)
+        // }
+        ch.consume(queue, processMsg, { noAck: false });
+      });
+    }
   });
 }
 
-function subscribeTo(topic, channel, queue) {
+function subscribeTo(topic, channel, queue, exchange) {
   channel.bindQueue(queue, exchange, topic, {}, function (err, oka) {
     if (err) {
       logger.error("Error:", err, " binding on queue:", queue, "topic:", topic)
     }
     else {
-      logger.info("bind: '" + queue + "' on topic: " + topic);
+      logger.info("binded queue: '" + queue + "' on topic: " + topic);
     }
   });
 }
@@ -314,7 +347,7 @@ function process_presence(topic, message_string, callback) {
 }
 
 function process_outgoing(topic, message_string, callback) {
-  logger.debug("process outgoing topic:" + topic)
+  logger.debug("***** TOPIC outgoing: " + topic +  " MESSAGE PAYLOAD: " + message_string)
   var topic_parts = topic.split(".")
   // /apps/tilechat/users/(ME)SENDER_ID/messages/RECIPIENT_ID/outgoing
   const app_id = topic_parts[1]
@@ -475,8 +508,8 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
   const persist_topic = `apps.observer.${app_id}.users.${inbox_of}.messages.${convers_with_id}.persist`
   // mqtt (client) flow
   const added_topic = `apps.${app_id}.users.${inbox_of}.messages.${convers_with_id}.clientadded`
-  logger.debug("persist_topic: " + persist_topic)
-  logger.debug("added_topic: " + added_topic)
+  logger.debug("will pubblish on added_topic: " + added_topic)
+  logger.debug("will pubblish on persist_topic: " + persist_topic)
   const mstatus = message.status;
   logger.log("mstatus:", mstatus)
   const message_payload = JSON.stringify(message)
@@ -504,7 +537,7 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
               callback(false);
               return;
             }
-            logger.debug("... ALL GOOD ON:", persist_topic);
+            logger.debug("(WEBHOOK ENABLED) SUCCESSFULLY PUBLISHED ON:", persist_topic);
             callback(true);
           })
         }
@@ -518,7 +551,7 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
           callback(false);
           return;
         }
-        logger.debug("... ALL GOOD ON:", persist_topic);
+        logger.debug("(NO WEBHOOK) SUCCESSFULLY PUBLISHED ON::", persist_topic);
         callback(true);
       })
     }
@@ -553,7 +586,7 @@ function process_delivered(topic, message_string, callback) {
 // This handler only persists messages and persists/updates conversations.
 // Original messages were already delivered with *.messages.*.clientadded
 function process_persist(topic, message_string, callback) {
-  logger.debug(">>>>> TOPIC persist: " + topic +  " MESSAGE PAYLOAD: " +message_string)
+  logger.debug(">>>>> TOPIC persist: " + topic +  " MESSAGE PAYLOAD: " + message_string)
   var topic_parts = topic.split(".")
   // /apps/observer/tilechat/users/ME/messages/CONVERS_WITH/persist -> WITH "SERVER" THIS MESSAGES WILL NOT BE DELIVERED TO CLIENTS
   const app_id = topic_parts[2]
@@ -590,6 +623,7 @@ function process_persist(topic, message_string, callback) {
           callback(false)
         }
         else {
+          logger.log("Conversation saved.");
           callback(true)
         }
       });
@@ -999,4 +1033,4 @@ function stopServer() {
   amqpConn.close();
 }
 
-module.exports = {startServer: startServer, stopServer: stopServer, setAutoRestart: setAutoRestart, getWebhooks: getWebhooks, setWebHookEndpoint: setWebHookEndpoint, setWebHookEvents: setWebHookEvents, setWebHookEnabled: setWebHookEnabled, logger: logger };
+module.exports = {startServer: startServer, stopServer: stopServer, setAutoRestart: setAutoRestart, getWebhooks: getWebhooks, setWebHookEndpoint: setWebHookEndpoint, setWebHookEvents: setWebHookEvents, setWebHookEnabled: setWebHookEnabled, setSubscriptionTopics: setSubscriptionTopics, logger: logger };

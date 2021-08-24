@@ -5,59 +5,63 @@ var http = require('http');
 
 let webapp;
 // var noRequestPerHour = 100000;
-let noRequestPerSecond = 100;
+let noRequestPerSecond = 1;
 let avgRequestTime = 160;
+let MAX_SECONDS = 1;
 // var host = 'https://loadtest.andreasponziell.repl.co'
 let host = 'http://localhost:3000' // 3002 embedded
 let group_id; // got in before()
 
 describe("Performance Test", function() {
-    before(function(done) {
-        //The url we want is: 'www.random.org/integers/?num=1&min=1&max=10&col=1&base=10&format=plain&rnd=new'
-        var options = {
-            host: 'localhost',
-            port: 3000,
-            path: '/createGroup'
-        };
+    // before(function(done) {
+    //     var options = {
+    //         host: 'localhost',
+    //         port: 3000,
+    //         path: '/createGroup'
+    //     };
+    //     http.request(options, (response) => {
+    //         var data = '';
+    //         response.on('data', function (chunk) {
+    //             data += chunk;
+    //         });
+    //         response.on('end', function () {
+    //             console.log(data);
+    //             response = JSON.parse(data);
+    //             group_id = response.group.uid;
+    //             console.log("group_id:", group_id);
+    //             done();
+    //         });
+    //     }).end();
 
-        http.request(options, (response) => {
-            var data = '';
-            response.on('data', function (chunk) {
-                data += chunk;
-            });
-            response.on('end', function () {
-                console.log(data);
-                response = JSON.parse(data);
-                group_id = response.group.uid;
-                console.log("group_id:", group_id);
-                done();
-            });
-        }).end();
-        // var app = express();
-        // app.get('/', (req, res) => {
-        //     res.send('Hello');
-        // });
-        // // var count = 0;
-        // // first api which just responds to the request without any processing
-        // app.get('/ping', (req, res) => {
-        //     // console.log("/ping: " + count);
-        //     // count++;
-        //     res.send('pong');
-        // });
-        // // var hcount = 0;
-        // // second api which waits for 50 millis before responding
-        // app.get('/heavy-ping', (req, res) => {
-        //     // console.log("/heavy-ping: " + hcount);
-        //     // hcount++;
-        //     setTimeout(() => {
-        //         res.send('heavy pong');
-        //     }, 50)
-        // });
-        // webapp = app.listen(3002, () => {
-        //     console.log('server started');
-        //     done();
-        // });
-	});
+
+
+
+    //     // DEPRECATED CODE
+    //     // var app = express();
+    //     // app.get('/', (req, res) => {
+    //     //     res.send('Hello');
+    //     // });
+    //     // // var count = 0;
+    //     // // first api which just responds to the request without any processing
+    //     // app.get('/ping', (req, res) => {
+    //     //     // console.log("/ping: " + count);
+    //     //     // count++;
+    //     //     res.send('pong');
+    //     // });
+    //     // // var hcount = 0;
+    //     // // second api which waits for 50 millis before responding
+    //     // app.get('/heavy-ping', (req, res) => {
+    //     //     // console.log("/heavy-ping: " + hcount);
+    //     //     // hcount++;
+    //     //     setTimeout(() => {
+    //     //         res.send('heavy pong');
+    //     //     }, 50)
+    //     // });
+    //     // webapp = app.listen(3002, () => {
+    //     //     console.log('server started');
+    //     //     done();
+    //     // });
+	// });
 	
 	// after(function() {
 	// 	webapp.close();
@@ -71,7 +75,7 @@ describe("Performance Test", function() {
             // "url": host + "/sendGroupMessage/" + group_id,
             "url": host + "/sendDirectMessage",
             "requestsPerSecond": noRequestPerSecond,
-            "maxSeconds": 10,
+            "maxSeconds": MAX_SECONDS,
             "concurrency": 1,
             "statusCallback": statusCallback
         };

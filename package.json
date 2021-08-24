@@ -27,10 +27,7 @@
   "scripts": {
     "test": "mocha ./test/*.js --timeout 4000",
     "benchmarks": "node ./benchmarks/index.js",
-    "start": "node chatservermq.js",
-    "pretest": "mongodb-runner start",
-    "posttest": "mongodb-runner stop"
-
+    "start": "node chatservermq.js"
   },
   "author": "",
   "license": "MIT"
