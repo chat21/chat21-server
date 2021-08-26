@@ -50,22 +50,22 @@ const user5 = {
 };
 
 // ALL-IN-ONE (EXCEPT RABBITMQ, RUN IT WITH DOCKER)
-// const MQTT_ENDPOINT = 'ws://localhost:15675/ws';
-// const API_ENDPOINT = 'http://localhost:8010/api'
-// const CLIENT_API_LOG = false;
-// const HTTP_SERVER_LOG_LEVEL = 'DEBUG';
-// const OBSERVER_LOG_LEVEL = 'DEBUG';
-// const LOCAL_STACK = true;
+const MQTT_ENDPOINT = 'ws://localhost:15675/ws';
+const API_ENDPOINT = 'http://localhost:8010/api'
+const CLIENT_API_LOG = false;
+const HTTP_SERVER_LOG_LEVEL = 'DEBUG';
+const OBSERVER_LOG_LEVEL = 'DEBUG';
+const LOCAL_STACK = true;
 
 // LOCAL MACHINE COMPONENTS
 // RABBITMQ, RUN IT WITH DOCKER
 // RUN LOCAL MONGODB, EX: mongod --dbpath /usr/local/var/mongodb
 // RUN LOCAL CHAT-HTTP-SERVER ON "API_ENDPOINT"
 // RUN LOCAL CHAT-OBSERVER (ENSURE: ONLY ONE INSTANCE!)
-const MQTT_ENDPOINT = 'ws://localhost:15675/ws';
-const API_ENDPOINT = 'http://localhost:8004/api'
-const CLIENT_API_LOG = true;
-LOCAL_STACK = false;
+// const MQTT_ENDPOINT = 'ws://localhost:15675/ws';
+// const API_ENDPOINT = 'http://localhost:8004/api'
+// const CLIENT_API_LOG = true;
+// LOCAL_STACK = false;
 
 // REMOTE ON AWS
 // const MQTT_ENDPOINT = 'ws://99.80.197.164:15675/ws';
