@@ -5,9 +5,14 @@ var http = require('http');
 
 let webapp;
 // var noRequestPerHour = 100000;
-let noRequestPerSecond = 1;
 let avgRequestTime = 160;
-let MAX_SECONDS = 1;
+// noRequestPerSecond:
+// >=95, direct ('messages'+'persist' queues, LOGLEVEL=error), not-passing
+// <=105, direct, mean-latency=160 ('messages' queue only, LOGLEVEL=error,prefetch=10)
+// <=300, direct, mean-latency=30 ('messages' queue only, LOGLEVEL=error, no-logs in load-http-app, prefetch=50)
+// <=350, direct, mean-latency=110 ('messages' queue only, LOGLEVEL=error, no-logs in load-http-app, prefetch=50)
+let noRequestPerSecond = 350;
+let MAX_SECONDS = 60;
 // var host = 'https://loadtest.andreasponziell.repl.co'
 let host = 'http://localhost:3000' // 3002 embedded
 let group_id; // got in before()
@@ -93,17 +98,17 @@ describe("Performance Test", function() {
             } else if (operation.running == false) {
                 console.info("\n=========================================================================================================\n")
                 //console.info("\tThreshold : No of request per hour = " + noRequestPerHour  + ", Avg request time in millis = " + avgRequestTime)
-                console.info("\tThreshold : No of request per second = " + noRequestPerSecond  + ", Avg request time in millis = " + avgRequestTime)
-                console.info("\n=========================================================================================================\n")
-                console.info("Total Requests :", gLatency.totalRequests);
-                console.info("Total Failures :", gLatency.totalErrors);
-                console.info("Requests Per Second :", gLatency.rps);
-                console.info("Requests Per Minute :", (gLatency.rps * 60));
-                console.info("Average Request Time(Mills) :", gLatency.meanLatencyMs);
-                console.info("Minimum Request Time(Mills) :", gLatency.minLatencyMs);
-                console.info("Maximum Request Time(Mills) :", gLatency.maxLatencyMs);
-                console.info("Percentiles :", gLatency.percentiles)
-                console.info("\n=========================================================================================================\n")
+                console.log("\tThreshold : No of request per second = " + noRequestPerSecond  + ", Avg request time in millis = " + avgRequestTime)
+                console.log("\n=========================================================================================================\n")
+                console.log("Total Requests :", gLatency.totalRequests);
+                console.log("Total Failures :", gLatency.totalErrors);
+                console.log("Requests Per Second :", gLatency.rps);
+                console.log("Requests Per Minute :", (gLatency.rps * 60));
+                console.log("Average Request Time(Mills) :", gLatency.meanLatencyMs);
+                console.log("Minimum Request Time(Mills) :", gLatency.minLatencyMs);
+                console.log("Maximum Request Time(Mills) :", gLatency.maxLatencyMs);
+                console.log("Percentiles :", gLatency.percentiles)
+                console.log("\n=========================================================================================================\n")
 
                 gLatency.totalErrors.should.equal(0);
                 // (gLatency.rps * 3600).should.be.greaterThan(noRequestPerHour);

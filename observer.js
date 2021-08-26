@@ -93,10 +93,15 @@ function setWebHookEndpoint(url) {
 function setWebHookEvents(events) {
   webhook_events_array = events;
 }
+
 function setSubscriptionTopics(topics) {
   subscription_topics = topics;
 }
 
+let prefetch_messages = 10;
+function setPrefetchMessages(prefetch) {
+  prefetch_messages = prefetch;
+}
 
 let autoRestartProperty;
 function setAutoRestart(_autoRestart) {
@@ -219,7 +224,8 @@ function startWorker() {
     ch.on("close", function () {
       logger.debug("[AMQP] channel closed");
     });
-    ch.prefetch(10);
+    logger.info("Prefetch messages:", prefetch_messages);
+    ch.prefetch(prefetch_messages);
     ch.assertExchange(exchange, 'topic', {
       durable: true
     });
@@ -1017,7 +1023,7 @@ async function startServer(config) {
   logger.debug("connecting to mongodb...");
   var client = await mongodb.MongoClient.connect(mongo_uri, { useNewUrlParser: true, useUnifiedTopology: true })
   db = client.db();
-  logger.debug("mongodb connected...", db);
+  logger.debug("Mongodb connected.");
   chatdb = new ChatDB({database: db})
   logger.info("Starting webhooks...");
   webhooks = new Webhooks({appId: app_id, RABBITMQ_URI: rabbitmq_uri, exchange: exchange, webhook_endpoint: webhook_endpoint, webhook_events: webhook_events_array, queue_name: 'webhooks', logger: logger});
@@ -1033,4 +1039,4 @@ function stopServer() {
   amqpConn.close();
 }
 
-module.exports = {startServer: startServer, stopServer: stopServer, setAutoRestart: setAutoRestart, getWebhooks: getWebhooks, setWebHookEndpoint: setWebHookEndpoint, setWebHookEvents: setWebHookEvents, setWebHookEnabled: setWebHookEnabled, setSubscriptionTopics: setSubscriptionTopics, logger: logger };
+module.exports = {startServer: startServer, stopServer: stopServer, setAutoRestart: setAutoRestart, getWebhooks: getWebhooks, setWebHookEndpoint: setWebHookEndpoint, setWebHookEvents: setWebHookEvents, setWebHookEnabled: setWebHookEnabled, setSubscriptionTopics: setSubscriptionTopics, setPrefetchMessages: setPrefetchMessages, logger: logger };

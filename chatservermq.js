@@ -72,10 +72,8 @@ if (webhook_enabled == undefined || webhook_enabled === "true" || webhook_enable
 }
 logger.debug("webhook_enabled: " + webhook_enabled);
 
-
 var webhook_endpoint = process.env.WEBHOOK_ENDPOINT;
 logger.debug("webhook_endpoint: " + webhook_endpoint);
-
 
 let webhook_events_array = null;
 if (process.env.WEBHOOK_EVENTS) {
@@ -85,8 +83,6 @@ if (process.env.WEBHOOK_EVENTS) {
 }
 logger.info("webhook_events_array: " , webhook_events_array);
 
-
-
 logger.info("Starting observer")
 async function start() {
 
@@ -94,6 +90,16 @@ async function start() {
       observer.setWebHookEndpoint(webhook_endpoint);
       observer.setWebHookEvents(webhook_events_array);
       observer.setSubscriptionTopics(subscription_topics);
+      if (process.env.PREFETCH_MESSAGES) {// && process.env.PREFETCH_MESSAGES > 0) {
+        prefetch = parseInt(process.env.PREFETCH_MESSAGES);
+        if (prefetch > 0) {
+          logger.log("Set prefetch messages number:", prefetch);
+          observer.setPrefetchMessages(prefetch);
+        }
+      }
+      else {
+        logger.log("Using default prefetch messages number.");
+      }
       // observer.setPersistentMessages(true);
 
       await startServer({app_id: process.env.APP_ID, exchange: 'amq.topic', rabbitmq_uri:process.env.RABBITMQ_URI, mongo_uri: process.env.MONGODB_URI});
