@@ -12,7 +12,7 @@ var observer = require('./observer');
 var startServer = observer.startServer;
 
 
-let subscription_topics_env_string = process.env.SUBSCRIPTION_TOPICS;
+let active_queues_env_string = process.env.ACTIVE_QUEUES;
 // let ALL_SUBSCRIPTIONS_TOPICS = [
 //   'outgoing',
 //   'update',
@@ -22,7 +22,7 @@ let subscription_topics_env_string = process.env.SUBSCRIPTION_TOPICS;
 //   'update_group',
 //   'delivered'
 // ];
-let subscription_topics = {};
+let active_queues = {};
 // let ALL_SUBSCRIPTIONS_TOPICS = {
 //   'outgoing': true,
 //   'update': true,
@@ -38,33 +38,33 @@ let ALL_SUBSCRIPTIONS_TOPICS = {
 };
 // let ALL_SUBSCRIPTIONS_TOPICS_AS_KEYS;
 // ALL_SUBSCRIPTIONS_TOPICS.forEach(e => {ALL_SUBSCRIPTIONS_TOPICS_AS_KEYS[e] = true});
-if (!subscription_topics_env_string) {
-  subscription_topics = ALL_SUBSCRIPTIONS_TOPICS;
-  logger.log("SUBSCRIPTION_TOPICS unset. Using default:", subscription_topics);
+if (!active_queues_env_string) {
+  active_queues = ALL_SUBSCRIPTIONS_TOPICS;
+  logger.log("active_queues unset. Using default:", active_queues);
 }
 else {
-  subscription_topics_env_array = subscription_topics_env_string.split(",");
-  logger.log("SUBSCRIPTION_TOPICS found:", subscription_topics_env_array)
-  if (subscription_topics_env_array.length == 0) {
-    logger.error("SUBSCRIPTION_TOPICS length cant be ZERO.");
-    logger.error("Use syntax: SUBSCRIPTION_TOPICS=outgoing,persist (valid topics: outgoing,update,persist,archive,presence,update_group,delivered)");
+  active_queues_env_array = active_queues_env_string.split(",");
+  logger.log("active_queues found:", active_queues_env_array)
+  if (active_queues_env_array.length == 0) {
+    logger.error("active_queues length cant be ZERO.");
+    logger.error("Use syntax: active_queues=outgoing,persist (valid topics: outgoing,update,persist,archive,presence,update_group,delivered)");
     process.exit(1);
   }
-  subscription_topics_env_array.forEach((e,i) => {
+  active_queues_env_array.forEach((e,i) => {
     topic = e.trim();
     if (!ALL_SUBSCRIPTIONS_TOPICS[topic]) {
       logger.error("Invalid subscription topic:", topic);
-      logger.error("Use syntax: SUBSCRIPTION_TOPICS=outgoing,persist (valid topics: outgoing,update,persist,archive,presence,update_group,delivered)");
+      logger.error("Use syntax: active_queues=outgoing,persist (valid topics: outgoing,update,persist,archive,presence,update_group,delivered)");
       process.exit(1);
     }
     else {
-      subscription_topics[topic] = true;
+      active_queues[topic] = true;
     }
   });
 }
-logger.debug("webhook_enabled: " + webhook_enabled);
 
 var webhook_enabled = process.env.WEBHOOK_ENABLED;
+logger.debug("process.env.WEBHOOK_ENABLED: " + process.env.WEBHOOK_ENABLED);
 if (webhook_enabled == undefined || webhook_enabled === "true" || webhook_enabled === true ) {
   webhook_enabled = true;
 }else {
@@ -89,7 +89,7 @@ async function start() {
       observer.setWebHookEnabled(webhook_enabled);
       observer.setWebHookEndpoint(webhook_endpoint);
       observer.setWebHookEvents(webhook_events_array);
-      observer.setSubscriptionTopics(subscription_topics);
+      observer.setActiveQueues(active_queues);
       if (process.env.PREFETCH_MESSAGES) {// && process.env.PREFETCH_MESSAGES > 0) {
         prefetch = parseInt(process.env.PREFETCH_MESSAGES);
         if (prefetch > 0) {

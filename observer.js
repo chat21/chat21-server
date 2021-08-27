@@ -55,14 +55,19 @@ let autoRestart;
 
 if (webhook_enabled == undefined || webhook_enabled === "true" || webhook_enabled === true ) {
   webhook_enabled = true;
-}else {
+}
+else {
   webhook_enabled = false;
 }
-logger.info("webhook_enabled: " + webhook_enabled);
+logger.info("(Observer) webhook_enabled: " + webhook_enabled);
+
+let active_queues = {
+  'messages': true,
+  'persist': true
+};
 
 let webhook_endpoint;
 let webhook_events_array;
-let subscription_topics;
 // let persistent_messages;
 
 function getWebhooks() {
@@ -94,8 +99,9 @@ function setWebHookEvents(events) {
   webhook_events_array = events;
 }
 
-function setSubscriptionTopics(topics) {
-  subscription_topics = topics;
+function setActiveQueues(queues) {
+  logger.log("active queues setting", queues)
+  active_queues = queues;
 }
 
 let prefetch_messages = 10;
@@ -229,7 +235,8 @@ function startWorker() {
     ch.assertExchange(exchange, 'topic', {
       durable: true
     });
-    if (subscription_topics['messages']) { // TODO subscription_topics => binded_queues
+    logger.info("enabling queues", active_queues);
+    if (active_queues['messages']) {
       ch.assertQueue("messages", { durable: true }, function (err, _ok) {
         if (closeOnErr(err)) return;
         let queue = _ok.queue;
@@ -258,7 +265,7 @@ function startWorker() {
         ch.consume(queue, processMsg, { noAck: false });
       });
     }
-    if (subscription_topics['persist']) {
+    if (active_queues['persist']) {
       ch.assertQueue("persist", { durable: true }, function (err, _ok) {
         if (closeOnErr(err)) return;
         let queue = _ok.queue;
@@ -1039,4 +1046,4 @@ function stopServer() {
   amqpConn.close();
 }
 
-module.exports = {startServer: startServer, stopServer: stopServer, setAutoRestart: setAutoRestart, getWebhooks: getWebhooks, setWebHookEndpoint: setWebHookEndpoint, setWebHookEvents: setWebHookEvents, setWebHookEnabled: setWebHookEnabled, setSubscriptionTopics: setSubscriptionTopics, setPrefetchMessages: setPrefetchMessages, logger: logger };
+module.exports = {startServer: startServer, stopServer: stopServer, setAutoRestart: setAutoRestart, getWebhooks: getWebhooks, setWebHookEndpoint: setWebHookEndpoint, setWebHookEvents: setWebHookEvents, setWebHookEnabled: setWebHookEnabled, setActiveQueues: setActiveQueues, setPrefetchMessages: setPrefetchMessages, logger: logger };

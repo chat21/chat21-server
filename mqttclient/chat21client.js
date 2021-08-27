@@ -1,5 +1,18 @@
 /*
     Chat21Client
+
+    v0.1.6
+    - added removeOnMessageAddedHandler()
+    - added removeOnGroupUpdatedHandler()
+
+    v. 0.1.5
+    - added groupSetMembers()
+    - renamed createGroup() in groupCreate()
+    - renamed leaveGroup() in groupLeave()
+    - renamed joinGroup() in groupJoin()
+    - renamed getGroup() in groupData()
+
+
     v. 0.1.4
     - added basicMessageBuilder()
     - added sendMessageRaw()
@@ -186,7 +199,7 @@ class Chat21Client {
         })
     }
 
-    createGroup(name, group_id, members, callback) {
+    groupCreate(name, group_id, members, callback) {
         // example:
         // {
         //     "group_id":"group-tiledeskteam",
@@ -258,7 +271,46 @@ class Chat21Client {
         // xmlhttp.send(JSON.stringify(data));
     }
 
-    leaveGroup(group_id, member_id, callback) {
+    groupData(group_id, callback) {
+        const URL = `${this.APIendpoint}/${this.appid}/groups/${group_id}`
+        // console.log("creating group...", URL)
+        let options = {
+            url: URL,
+            headers: {
+                "Authorization": this.jwt,
+                "Content-Type": "application/json;charset=UTF-8"
+            },
+            method: 'GET'
+        }
+        Chat21Client.myrequest(options, (err, response, json) => {
+            if (err) {
+                callback(err, null);
+            }
+            else if (json && callback) {
+                callback(null, json);
+            }
+        }, this.log);
+        // const URL = `${this.APIendpoint}/${this.appid}/groups/${group_id}`
+        // console.log("getting group...", URL)
+        // var xmlhttp = new XMLHttpRequest();
+        // xmlhttp.open("GET", URL, true);
+        // xmlhttp.setRequestHeader("authorization", this.jwt);
+        // xmlhttp.onreadystatechange = function() {
+        //     if (callback && xmlhttp.readyState == 4 && xmlhttp.status == 200 && xmlhttp.responseText) {
+        //         try {
+        //             const json = JSON.parse(xmlhttp.responseText)
+        //             callback(null, json.result)
+        //         }
+        //         catch (err) {
+        //             console.error("parsing json ERROR", err)
+        //             callback(err, null)
+        //         }
+        //     }
+        // };
+        // xmlhttp.send(null);
+    }
+
+    groupLeave(group_id, member_id, callback) {
         console.log("leaving group:", group_id);
         const URL = `${this.APIendpoint}/${this.appid}/groups/${group_id}/members/${member_id}`
         console.log("leaving group:", URL)
@@ -280,7 +332,7 @@ class Chat21Client {
         }, this.log);
     }
 
-    joinGroup(group_id, member_id, callback) {
+    groupJoin(group_id, member_id, callback) {
         console.log("leaving group:", group_id);
         const URL = `${this.APIendpoint}/${this.appid}/groups/${group_id}/members`
         console.log("joining group:", URL)
@@ -300,6 +352,39 @@ class Chat21Client {
                 callback(err, null);
             }
             else if (callback) {
+                callback(null, json);
+            }
+        }, this.log);
+    }
+
+    groupSetMembers(group_id, members, callback) {
+        // example:
+        // {
+        //     "members":{
+        //         "608bc83b3d0b3e494f4d0578":1,
+        //         "608bc81f3d0b3e494f4d0575":1,
+        //         "6067513cb64a9b1ba259839c":1
+        //     }
+        // }
+        console.log("setting group members of", group_id, "members", members)
+        const URL = `${this.APIendpoint}/${this.appid}/groups/${group_id}/members`
+        console.log("setting group members...", URL)
+        let options = {
+            url: URL,
+            headers: {
+                "Authorization": this.jwt,
+                "Content-Type": "application/json;charset=UTF-8"
+            },
+            data: {
+                members: members
+            },
+            method: 'PUT'
+        }
+        Chat21Client.myrequest(options, (err, response, json) => {
+            if (err) {
+                callback(err, null);
+            }
+            else if (json && callback) {
                 callback(null, json);
             }
         }, this.log);
@@ -360,7 +445,6 @@ class Chat21Client {
     }
 
     onMessageAdded(callback) {
-        console.log("onMessageAdded(callback)")
         this.last_handler++
         this.onMessageAddedCallbacks.set(this.last_handler, callback)
         return this.last_handler;
@@ -405,20 +489,24 @@ class Chat21Client {
     }
 
     onMessageUpdated(callback) {
-        this.last_handler++
+        this.last_handler += 1
         this.onMessageUpdatedCallbacks.set(this.last_handler, callback)
         return this.last_handler;
     }
 
     onGroupUpdated(callback) {
-        this.last_handler++
+        this.last_handler += 1
         this.onGroupUpdatedCallbacks.set(this.last_handler, callback)
         return this.last_handler;
     }
 
-    // removeMessageHandler(handler) {
-    //     this.onMessageCallbacks.delete(handler)
-    // }
+    removeOnMessageAddedHandler(handler) {
+        this.onMessageAddedCallbacks.delete(handler);
+    }
+
+    removeOnGroupUpdatedHandler(handler) {
+        this.onGroupUpdatedCallbacks.delete(handler);
+    }
 
     start() {
         if (this.on_message_handler) {
@@ -670,28 +758,6 @@ class Chat21Client {
         xmlhttp.send(null);
     }
 
-    getGroup(group_id, callback) {
-        // ex.: http://localhost:8004/tilechat/04-ANDREASPONZIELLO/conversations
-        const URL = `${this.APIendpoint}/${this.appid}/groups/${group_id}`
-        console.log("getting group...", URL)
-        var xmlhttp = new XMLHttpRequest();
-        xmlhttp.open("GET", URL, true);
-        xmlhttp.setRequestHeader("authorization", this.jwt);
-        xmlhttp.onreadystatechange = function() {
-            if (callback && xmlhttp.readyState == 4 && xmlhttp.status == 200 && xmlhttp.responseText) {
-                try {
-                    const json = JSON.parse(xmlhttp.responseText)
-                    callback(null, json.result)
-                }
-                catch (err) {
-                    console.error("parsing json ERROR", err)
-                    callback(err, null)
-                }
-            }
-        };
-        xmlhttp.send(null);
-    }
-
     lastMessages(convers_with, callback) {
         // console.log("START: ", this.user_id)
         // ex.: http://localhost:8004/tilechat/04-ANDREASPONZIELLO/conversations
@@ -761,12 +827,14 @@ class Chat21Client {
                   headers: options.headers
                 })
               .then(function (response) {
-                console.log("response.status:", response.status);
+                if (log) {console.log("response.status:", response.status);}
                 if (callback) {
+                    if (log) { console.log("callback1()"); }
                     callback(null, response.headers, response.data);
                 }
               })
               .catch(function (error) {
+                if (log) { console.log("Axios call error:", error); }
                 if (callback) {
                     callback(error, null, null);
                 }

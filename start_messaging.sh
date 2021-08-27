@@ -1,1 +1,1 @@
-SUBSCRIPTION_TOPICS=messages node chatservermq.js MSG
+ACTIVE_QUEUES=messages node chatservermq.js MSG
