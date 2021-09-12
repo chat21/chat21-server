@@ -15,7 +15,6 @@
     - renamed joinGroup() in groupJoin()
     - renamed getGroup() in groupData()
 
-
     v. 0.1.4
     - added basicMessageBuilder()
     - added sendMessageRaw()
@@ -939,13 +938,13 @@ class Chat21Client {
             clientId: this.client_id,
             username: 'JWT',
             password: jwt,
-            rejectUnauthorized: false
+            rejectUnauthorized: true
         }
         if (this.log) {console.log("starting mqtt connection with LWT on:", presence_topic, this.endpoint)}
         // client = mqtt.connect('mqtt://127.0.0.1:15675/ws',options)
         this.client = mqtt.connect(this.endpoint,options)
         
-        this.client.on('connect',
+        this.client.on('connect', // TODO if token is wrong it must reply with an error!
             () => {
                 if (this.log) {console.log("chat client connected...")}
                 if (!this.connected) {

@@ -14,18 +14,19 @@
     "mongoose": "^5.9.10",
     "mqtt": "^4.2.6",
     "rhea": "^1.0.20",
+    "uuid": "^8.3.2",
     "uuidv4": "^6.1.1",
     "websocket-stream": "^5.5.2"
   },
   "devDependencies": {
     "@chat21/chat21-http-server": "^0.1.15",
     "axios": "^0.21.1",
+    "loadtest": "^1.4.3",
     "mongodb-runner": "^4.8.3",
-    "should": "^9.0.2",
-    "loadtest": "^1.4.3"
+    "should": "^9.0.2"
   },
   "scripts": {
-    "test": "mocha ./test/*.js --timeout 8000",
+    "test": "mocha ./test/*.js --timeout 60000",
     "benchmarks": "node ./benchmarks/index.js",
     "start": "node chatservermq.js"
   },

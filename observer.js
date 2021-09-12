@@ -482,19 +482,19 @@ function process_outgoing(topic, message_string, callback) {
 
 let groups = {};
 function getGroup(group_id, callback) {
-  if (groups[group_id]) { // REDIS?
-    logger.log("--GROUP", group_id, "FOUND!");
-    callback(null, groups[group_id]);
-  }
-  else {
-    logger.log("--GROUP", group_id, "NOT FOUND! QUERYING DB...");
+  // if (groups[group_id]) { // REDIS?
+  //   logger.log("--GROUP", group_id, "FOUND!");
+  //   callback(null, groups[group_id]);
+  // }
+  // else {
+  //   logger.log("--GROUP", group_id, "NOT FOUND! QUERYING DB...");
     chatdb.getGroup(group_id, function(err, group) {
-      if (!err) {
-        groups[group_id] = group;
-      }
+      // if (!err) {
+      //   groups[group_id] = group;
+      // }
       callback(err, group);
     });
-  }
+  // }
 }
 
 function isMessageGroup(message) {
