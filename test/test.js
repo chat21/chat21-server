@@ -4,6 +4,7 @@ const { Chat21Client } = require('../mqttclient/chat21client.js');
 var chat21HttpServer = require('@chat21/chat21-http-server');
 let observer = require('../index').observer;
 let express = require('express');
+const { Logger } = require('mongodb');
 const loggers = new require('../tiledesk-logger');
 let logger = new loggers.TiledeskLogger("debug");
 // logger.setLog('DEBUG');
@@ -52,30 +53,54 @@ const user5 = {
 // ** ALL-IN-ONE
 // ** RABBITMQ, RUN IT WITH DOCKER
 // ** RUN LOCAL MONGODB, EX: mongod --dbpath /usr/local/var/mongodb
+const config = {
+ 	APPID: 'tilechat',
+	MQTT_ENDPOINT: 'ws://localhost:15675/ws',
+	API_ENDPOINT: 'http://localhost:8010/api',
+	CLIENT_API_LOG: false,
+	HTTP_SERVER_LOG_LEVEL: 'ERROR',
+	OBSERVER_LOG_LEVEL: 'ERROR',
+	LOCAL_STACK: true
+}
+
+// DEPRECATED
 // const MQTT_ENDPOINT = 'ws://localhost:15675/ws';
 // const API_ENDPOINT = 'http://localhost:8010/api'
 // const CLIENT_API_LOG = false;
-// const HTTP_SERVER_LOG_LEVEL = 'DEBUG';
-// const OBSERVER_LOG_LEVEL = 'DEBUG';
+// const HTTP_SERVER_LOG_LEVEL = 'ERROR';
+// const OBSERVER_LOG_LEVEL = 'ERROR';
 // const LOCAL_STACK = true;
 
-// ** LOCAL MACHINE COMPONENTS
+// ** **LOCAL MACHINE COMPONENTS ****
 // ** RABBITMQ, RUN IT WITH DOCKER
 // ** RUN LOCAL MONGODB, EX: mongod --dbpath /usr/local/var/mongodb
 // ** RUN LOCAL CHAT-HTTP-SERVER ON "API_ENDPOINT"
 // ** RUN LOCAL CHAT-OBSERVER (ENSURE: ONLY ONE INSTANCE!)
-const MQTT_ENDPOINT = 'ws://localhost:15675/ws';
-const API_ENDPOINT = 'http://localhost:8004/api'
-const CLIENT_API_LOG = false;
-LOCAL_STACK = false;
+// const config = {
+// 	APPID: 'tilechat',
+// 	MQTT_ENDPOINT: 'ws://localhost:15675/ws',
+// 	API_ENDPOINT: 'http://localhost:8004/api',
+// 	CLIENT_API_LOG: false,
+// 	HTTP_SERVER_LOG_LEVEL: 'ERROR',
+// 	OBSERVER_LOG_LEVEL: 'ERROR',
+// 	LOCAL_STACK: false
+// }
 
-// REMOTE ON AWS
+// DEPRECATED
+// const MQTT_ENDPOINT = 'ws://localhost:15675/ws';
+// const API_ENDPOINT = 'http://localhost:8004/api'
+// const CLIENT_API_LOG = false;
+// const HTTP_SERVER_LOG_LEVEL = 'ERROR';
+// const OBSERVER_LOG_LEVEL = 'ERROR';
+// LOCAL_STACK = false;
+
+// **** REMOTE ON AWS ****
 // const MQTT_ENDPOINT = 'ws://99.80.197.164:15675/ws';
 // const API_ENDPOINT = 'http://99.80.197.164:8004/api';
 // const CLIENT_API_LOG = false;
 // LOCAL_STACK = false
 
-const APPID = 'tilechat';
+// const APPID = 'tilechat';
 const TYPE_TEXT = 'text';
 const CHANNEL_TYPE_GROUP = 'group';
 const CHANNEL_TYPE_DIRECT = 'direct';
@@ -90,34 +115,34 @@ describe('Main', function() {
 	before(function(done) {
 		chatClient1 = new Chat21Client(
 			{
-				appId: APPID,
-				MQTTendpoint: MQTT_ENDPOINT,
-				APIendpoint: API_ENDPOINT,
-				log: CLIENT_API_LOG
+				appId: config.APPID,
+				MQTTendpoint: config.MQTT_ENDPOINT,
+				APIendpoint: config.API_ENDPOINT,
+				log: config.CLIENT_API_LOG
 			}
 		);
 		chatClient2 = new Chat21Client(
 			{
-				appId: APPID,
-				MQTTendpoint: MQTT_ENDPOINT,
-				APIendpoint: API_ENDPOINT,
-				log: CLIENT_API_LOG
+				appId: config.APPID,
+				MQTTendpoint: config.MQTT_ENDPOINT,
+				APIendpoint: config.API_ENDPOINT,
+				log: config.CLIENT_API_LOG
 			}
 		);
 		chatClient3 = new Chat21Client(
 			{
-				appId: APPID,
-				MQTTendpoint: MQTT_ENDPOINT,
-				APIendpoint: API_ENDPOINT,
-				log: CLIENT_API_LOG
+				appId: config.APPID,
+				MQTTendpoint: config.MQTT_ENDPOINT,
+				APIendpoint: config.API_ENDPOINT,
+				log: config.CLIENT_API_LOG
 			}
 		);
 		chatClient4 = new Chat21Client(
 			{
-				appId: APPID,
-				MQTTendpoint: MQTT_ENDPOINT,
-				APIendpoint: API_ENDPOINT,
-				log: CLIENT_API_LOG
+				appId: config.APPID,
+				MQTTendpoint: config.MQTT_ENDPOINT,
+				APIendpoint: config.API_ENDPOINT,
+				log: config.CLIENT_API_LOG
 			}
 		);
 		chatClient1.connect(user1.userid, user1.token, () => {
@@ -135,15 +160,16 @@ describe('Main', function() {
 						// 2. OBSERVER
 						// 3. WEBHOOK ENDPOINT APPLICATION
 						// **************************
-						if (LOCAL_STACK) {
-							chat21HttpServer.logger.setLog(HTTP_SERVER_LOG_LEVEL);
+						if (config.LOCAL_STACK) {
+							chat21HttpServer.logger.setLog(config.HTTP_SERVER_LOG_LEVEL);
 							http_server = chat21HttpServer.app.listen(8010, async() => {
 								logger.log('HTTP server started.');
 								logger.log('Starting AMQP publisher...');
 								await chat21HttpServer.startAMQP({rabbitmq_uri: process.env.RABBITMQ_URI});
 								logger.log('HTTP server AMQP connection started.');
-								observer.logger.setLog(OBSERVER_LOG_LEVEL);
+								observer.logger.setLog(config.OBSERVER_LOG_LEVEL);
 								observer.setWebHookEndpoint("http://localhost:8002/postdata");
+								logger.log('setWebHookEndpoint ok.');
 								observer.setAutoRestart(false);
 								await observer.startServer({rabbitmq_uri: process.env.RABBITMQ_URI});
 								logger.log("observer started.");
@@ -153,7 +179,7 @@ describe('Main', function() {
 								webhooksServer.post('/postdata', function (req, res) {
 									res.status(200).send({success: true})
 								});
-								webhook_app = webhooksServer.listen(8002, '0.0.0.0', async function() {
+								webhook_app = webhooksServer.listen(8002, async function() {
 									logger.log('Node Client Express started.', webhook_app.address());
 									logger.log("Local http Express server started.");
 									logger.log("Everything is ok to start testing in 2 seconds...");
@@ -182,19 +208,26 @@ describe('Main', function() {
 					logger.log("after - ...chatClient3 successfully disconnected.");
 					chatClient4.close(async () => {
 						logger.log("after - ...chatClient4 successfully disconnected.");
-						if (LOCAL_STACK) {
+						if (config.LOCAL_STACK) {
 							http_server.close();
 							logger.log("after - HTTP Server closed.");
 							webhook_app.close();
 							logger.log("after - Webhooks endpoint closed.");
 							logger.log("after - Waiting some seconds before stopping observer (it allows completing pending publish->ack).");
-							await new Promise(resolve => setTimeout(resolve, 5000));
-							observer.stopServer();
-							logger.log("after - Waiting 1 second after observer stop.");
 							await new Promise(resolve => setTimeout(resolve, 1000));
+							observer.stopServer();
+							logger.log("after - Waiting 1 second after observer stops.");
+							// setTimeout(function() {
+							// 	logger.log("************************************");
+							// }, 5000)
+							// await new Promise(resolve => setTimeout(resolve, 1000));
+							logger.log("after() - end (ALL-IN-ONE STACK).");
+							done();
 						}
-						logger.log("after() - end.");
-						done();
+						else {
+							logger.log("after() - end.");
+							done();
+						}
 					});
 				});
 			});
@@ -402,10 +435,10 @@ NEW CHAT CLIENTS', function(done) {
 			const SENT_MESSAGE = 'test 5, Hello guys';
 			let _chatClient1 = new Chat21Client(
 				{
-					appId: APPID,
-					MQTTendpoint: MQTT_ENDPOINT,
-					APIendpoint: API_ENDPOINT,
-					log: CLIENT_API_LOG
+					appId: config.APPID,
+					MQTTendpoint: config.MQTT_ENDPOINT,
+					APIendpoint: config.API_ENDPOINT,
+					log: config.CLIENT_API_LOG
 				}
 			);
 			_chatClient1.connect(user1.userid, user1.token, () => {
@@ -895,18 +928,18 @@ NEW CHAT CLIENTS', function(done) {
 			let history_messages = {};
 			let _chatClient1 = new Chat21Client(
 				{
-					appId: APPID,
-					MQTTendpoint: MQTT_ENDPOINT,
-					APIendpoint: API_ENDPOINT,
-					log: CLIENT_API_LOG
+					appId: config.APPID,
+					MQTTendpoint: config.MQTT_ENDPOINT,
+					APIendpoint: config.API_ENDPOINT,
+					log: config.CLIENT_API_LOG
 				}
 			);
 			let _chatClient3 = new Chat21Client(
 				{
-					appId: APPID,
-					MQTTendpoint: MQTT_ENDPOINT,
-					APIendpoint: API_ENDPOINT,
-					log: CLIENT_API_LOG
+					appId: config.APPID,
+					MQTTendpoint: config.MQTT_ENDPOINT,
+					APIendpoint: config.API_ENDPOINT,
+					log: config.CLIENT_API_LOG
 				}
 			);
 			_chatClient1.connect(user1.userid, user1.token, () => {

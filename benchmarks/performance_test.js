@@ -25,8 +25,8 @@ let config = {
     EXPECTED_AVG_DIRECT_MESSAGE_DELAY: 160,
     EXPECTED_AVG_GROUP_MESSAGE_DELAY: 160,
     REQS_PER_SECOND: 300,
-    MAX_SECONDS: 1,
-    CONCURRENCY: 2, // 2
+    MAX_SECONDS: 10,
+    CONCURRENCY: 1, // 2
     API_SERVER_HOST: 'localhost',
     API_SERVER_PORT: 8004,
     MQTT_ENDPOINT: 'ws://localhost:15675/ws',
@@ -112,7 +112,7 @@ describe("Performance Test", function() {
                         assert(result.group.name === group_name);
                         assert(result.group.members != null);
                         assert(result.group.members[user2.userid] == 1);
-                        console.log("before() - Group created:", result.group.name);
+                        // console.log("before() - Group created:", result.group.name);
                         chatClient1.groupData(group_id, (err, json) => {
                             // console.log("before() - Verified group updated:", group_id, "data:", json);
                             assert(err == null);
@@ -137,7 +137,6 @@ describe("Performance Test", function() {
 	after(function(done) {
         chatClient1.close(() => {
             chatClient2.close(() => {
-                console.log("Client connections closed.");
                 done();
             });
         });
@@ -163,6 +162,7 @@ describe("Performance Test", function() {
             console.log("Direct - CONCURRENCY (#VUs) =", config.CONCURRENCY);
             console.log("Direct - DELAY BETWEEN MESSAGES (ms) =", delay);
             console.log("Direct - TOTAL ITERATIONS =", total_iterations);
+            console.log("Direct - Running benchmark...");
             
             for (let i = 0; i < total_iterations; i++) {
                 for (let c = 0; c < config.CONCURRENCY; c++) {
@@ -191,6 +191,9 @@ describe("Performance Test", function() {
                 if (latency.meanLatencyMs > config.EXPECTED_AVG_DIRECT_MESSAGE_DELAY) {
                     console.error("Warning: final mean latency " + latency.meanLatencyMs + " is greater then expected (" + config.EXPECTED_AVG_DIRECT_MESSAGE_DELAY + ")")
                 }
+                else {
+                    console.log("Direct messages benchmark performed good! 😎");
+                }
                 // (latency.meanLatencyMs).should.be.below(config.EXPECTED_AVG_DIRECT_MESSAGE_DELAY);
             }
         }
@@ -217,6 +220,7 @@ describe("Performance Test", function() {
             console.log("Group - TEST DURATION (s) =", config.MAX_SECONDS);
             console.log("Group - DELAY BETWEEN MESSAGES (ms) =", delay);
             console.log("Group - TOTAL ITERATIONS =", total_iterations);
+            console.log("Group - Running benchmark...");
             for (let i = 0; i < total_iterations; i++) {
                 // console.log("GROUP i:", i)
                 for (let c = 0; c < config.CONCURRENCY; c++) {
@@ -235,7 +239,6 @@ describe("Performance Test", function() {
                 await new Promise(resolve => setTimeout(resolve, delay));
                 current = Date.now() - test_start_time;
             }
-            console.log("End 'Group' benchmark iterations.");
 
             function endCallback(latency) {
                 console.log("Group - Final latency:", latency.meanLatencyMs);
@@ -246,6 +249,9 @@ describe("Performance Test", function() {
                 console.log("Group - MESSAGES/SEC:", mesg_sec);
                 if (latency.meanLatencyMs > config.EXPECTED_AVG_GROUP_MESSAGE_DELAY) {
                     console.error("Warning: final mean latency " + latency.meanLatencyMs + " is greater then expected (" + config.EXPECTED_AVG_GROUP_MESSAGE_DELAY + ")")
+                }
+                else {
+                    console.log("Group messages benchmark performed good! 😎");
                 }
                 // assert(latency.meanLatencyMs < config.EXPECTED_AVG_GROUP_MESSAGE_DELAY);
                 

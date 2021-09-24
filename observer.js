@@ -135,9 +135,9 @@ function startMQ(resolve, reject) {
   logger.debug("Observer. Connecting to RabbitMQ...")
   amqp.connect(rabbitmq_uri, (err, conn) => {
       if (err) {
-          logger.error("[AMQP]", err);
+          logger.error("[Observer AMQP]", err);
           if (autoRestart) {
-            logger.error("[AMQP] reconnecting");
+            logger.error("[Observer AMQP] reconnecting");
             return setTimeout(() => { startMQ(resolve, reject) }, 1000);
           } else {
               process.exit(1);
@@ -145,14 +145,14 @@ function startMQ(resolve, reject) {
       }
       conn.on("error", (err) => {
           if (err.message !== "Connection closing") {
-            logger.error("[AMQP] conn error", err);
+            logger.error("[Observer AMQP] conn error", err);
               return reject(err);
           }
       });
       conn.on("close", () => {
-        logger.error("[AMQP] close");
+        logger.error("[Observer AMQP] close");
         if (autoRestart) {
-            logger.error("[AMQP] reconnecting");
+            logger.error("[Observer AMQP] reconnecting");
             return setTimeout(() => { startMQ(resolve, reject) }, 1000);
         } else {
             process.exit(1);

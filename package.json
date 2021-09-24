@@ -19,7 +19,7 @@
     "websocket-stream": "^5.5.2"
   },
   "devDependencies": {
-    "@chat21/chat21-http-server": "^0.1.15",
+    "@chat21/chat21-http-server": "^0.1.18",
     "axios": "^0.21.1",
     "loadtest": "^1.4.3",
     "mongodb-runner": "^4.8.3",
