@@ -1,6 +1,6 @@
 {
   "name": "@chat21/chat21-server",
-  "version": "0.1.14",
+  "version": "0.2.1",
   "description": "Chat21 AMQP messages dispatcher",
   "dependencies": {
     "aedes": "^0.40.1",
@@ -19,10 +19,9 @@
     "websocket-stream": "^5.5.2"
   },
   "devDependencies": {
-    "@chat21/chat21-http-server": "^0.1.18",
+    "@chat21/chat21-http-server": "^0.2.2",
     "axios": "^0.21.1",
     "loadtest": "^1.4.3",
-    "mongodb-runner": "^4.8.3",
     "should": "^9.0.2"
   },
   "scripts": {

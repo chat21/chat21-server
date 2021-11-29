@@ -14,28 +14,6 @@ const app = express();
 app.use(bodyParser.json());
 const logger = require('./tiledesk-logger').logger;
 
-/*
-var webhook_endpoint = process.env.WEBHOOK_ENDPOINT || "http://localhost:3000/chat21/requests";
-logger.info("webhook_endpoint: " + webhook_endpoint);
-
-let webhook_events_array = null;
-if (process.env.WEBHOOK_EVENTS) {
-  logger.log(typeof process.env.WEBHOOK_EVENTS);
-  const webhook_events = process.env.WEBHOOK_EVENTS;
-  webhook_events_array = webhook_events.split(",");
-}
-logger.info("webhook_events_array: " , webhook_events_array);
-
-var webhook_enabled = process.env.WEBHOOK_ENABLED;
-if (webhook_enabled == undefined || webhook_enabled === "true" || webhook_enabled === true ) {
-  webhook_enabled = true;
-}else {
-  webhook_enabled = false;
-}
-logger.info("webhook_enabled: " + webhook_enabled);
-
-*/
-
 var amqpConn = null;
 let exchange;
 let app_id;
@@ -66,7 +44,7 @@ let active_queues = {
   'persist': true
 };
 
-let webhook_endpoint;
+let webhook_endpoints_array;
 let webhook_events_array;
 // let persistent_messages;
 
@@ -79,8 +57,8 @@ function getWebHookEnabled() {
   return webhook_enabled;
 }
 
-function getWebHookEndpoint() {
-  return webhook_endpoint;
+function getWebHookEndpoints() {
+  return webhook_endpoints_array;
 }
 
 function getWebHookEvents() {
@@ -91,8 +69,8 @@ function setWebHookEnabled(enabled) {
   webhook_enabled = enabled;
 }
 
-function setWebHookEndpoint(url) {
-  webhook_endpoint = url;
+function setWebHookEndpoints(endpoints) {
+  webhook_endpoints_array = endpoints;
 }
 
 function setWebHookEvents(events) {
@@ -1033,7 +1011,7 @@ async function startServer(config) {
   logger.debug("Mongodb connected.");
   chatdb = new ChatDB({database: db})
   logger.info("Starting webhooks...");
-  webhooks = new Webhooks({appId: app_id, RABBITMQ_URI: rabbitmq_uri, exchange: exchange, webhook_endpoint: webhook_endpoint, webhook_events: webhook_events_array, queue_name: 'webhooks', logger: logger});
+  webhooks = new Webhooks({appId: app_id, RABBITMQ_URI: rabbitmq_uri, exchange: exchange, webhook_endpoints: webhook_endpoints_array, webhook_events: webhook_events_array, queue_name: 'webhooks', logger: logger});
   await webhooks.start();
   webhooks.enabled = webhook_enabled;
   logger.debug('Starting AMQP connection....');
@@ -1046,4 +1024,4 @@ function stopServer() {
   amqpConn.close();
 }
 
-module.exports = {startServer: startServer, stopServer: stopServer, setAutoRestart: setAutoRestart, getWebhooks: getWebhooks, setWebHookEndpoint: setWebHookEndpoint, setWebHookEvents: setWebHookEvents, setWebHookEnabled: setWebHookEnabled, setActiveQueues: setActiveQueues, setPrefetchMessages: setPrefetchMessages, logger: logger };
+module.exports = {startServer: startServer, stopServer: stopServer, setAutoRestart: setAutoRestart, getWebhooks: getWebhooks, setWebHookEndpoints: setWebHookEndpoints, setWebHookEvents: setWebHookEvents, setWebHookEnabled: setWebHookEnabled, setActiveQueues: setActiveQueues, setPrefetchMessages: setPrefetchMessages, logger: logger };

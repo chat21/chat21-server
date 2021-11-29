@@ -27,7 +27,7 @@ class Webhooks {
    * @param {Object} options.appId Mandatory. The appId.
    * @param {Object} options.exchange Mandatory. exchange name.
    * @param {Object} options.RABBITMQ_URI Mandatory. The RabbitMQ connection URI.
-   * @param {Object} options.webhook_endpoint Mandatory. This weebhook endpoint.
+   * @param {Object} options.webhook_endpoints Mandatory. This weebhook endpoint.
    * @param {Object} options.queue_name Optional. The queue name. Defaults to 'weebhooks'.
    * @param {Object} options.webhook_events Optional. The active webhook events.
    * @param {Object} options.logger Optional. The logger.
@@ -46,8 +46,8 @@ class Webhooks {
     if (!options.appId) {
       throw new Error('appId option can NOT be empty.');
     }
-    if (!options.webhook_endpoint) {
-      throw new Error('webhook_endpoint option can NOT be empty.');
+    if (!options.webhook_endpoints) {
+      throw new Error('webhook_endpoints option can NOT be empty.');
     }
     if (options.logger) {
       logger = options.logger;
@@ -56,7 +56,7 @@ class Webhooks {
       logger = require('../tiledesk-logger').logger;
     }
     // throw new Error('webhook_endpoint option can NOT be empty.......');
-    this.webhook_endpoint = options.webhook_endpoint;
+    this.webhook_endpoints = options.webhook_endpoints;
     this.RABBITMQ_URI = options.RABBITMQ_URI;
     this.appId = options.appId;
     this.topic_webhook_message_deliver = `observer.webhook.apps.${this.appId}.message_deliver`;
@@ -72,7 +72,6 @@ class Webhooks {
     this.offlinePubQueue = [];
     this.enabled = true
     this.queue = options.queue_name || 'webhooks';
-
     const DEFAULT_WEBHOOK_EVENTS = [
       MessageConstants.WEBHOOK_EVENTS.MESSAGE_SENT,
       MessageConstants.WEBHOOK_EVENTS.MESSAGE_DELIVERED,
@@ -82,25 +81,24 @@ class Webhooks {
       MessageConstants.WEBHOOK_EVENTS.CONVERSATION_UNARCHIVED,
     ]
     this.webhook_events_array = options.webhook_events || DEFAULT_WEBHOOK_EVENTS;
-        
-
     logger.debug("webhooks inizialized: this.exchange:", this.exchange, "this.offlinePubQueue:", this.offlinePubQueue)
   }
 
 
   getWebHookEnabled() {
-    return this.webhook_enabled;
+    return this.enabled;
   }
 
   setWebHookEnabled(enabled) {
-    this.webhook_enabled = enabled;
+    this.enabled = enabled;
   }
 
-  getWebHookEndpoint() {
-    return this.webhook_endpoint;
+  getWebHookEndpoints() {
+    return this.webhook_endpoints;
   }
-  setWebHookEndpoint(url) {
-    this.webhook_endpoint = url;
+  
+  setWebHookEndpoints(endpoints) {
+    this.webhook_endpoints = endpoints;
   }
   
   getWebHookEvents() {
@@ -109,90 +107,6 @@ class Webhooks {
   setWebHookEvents(events) {
     this.webhook_events_array = events;
   }
-  
-
-  // WHnotifyMessageReceived
-  // notifyMessageReceived(message) {
-  //   logger.debug("NOTIFY MESSAGE:", message)
-  //   const notify_topic = `observer.webhook.apps.${app_id}.message_received`
-  //   logger.debug("notifying webhook notifyMessageReceived topic:", notify_topic)
-  //   const message_payload = JSON.stringify(message)
-  //   this.publish(this.exchange, notify_topic, Buffer.from(message_payload), (err) => {
-  //     if (err) {
-  //       logger.debug("Err", err)
-  //     }
-  //   })
-  // }
-  
-
-  // WHprocess_webhook_message_received
-  // process_webhook_message_received(topic, message_string, callback) {
-  //   logger.debug("process_webhook_message_received.from.incoming:", message_string, "on topic", topic)
-  //   var message = JSON.parse(message_string)
-  //   logger.debug("timelineOf...:", message.timelineOf)
-  //   if (callback) {
-  //     callback(true)
-  //   }
-    
-  //   if (this.isMessageOnGroupTimeline(message)) {
-  //     logger.debug("Sending this message for group timeline:", message)
-  //   }
-  //   const message_id = message.message_id;
-  //   const recipient_id = message.recipient_id;
-  //   const app_id = message.app_id;
-    
-  //   var json = {
-  //     event_type: "new-message",
-  //     createdAt: new Date().getTime(),
-  //     recipient_id: recipient_id,
-  //     app_id: app_id,
-  //     message_id: message_id,
-  //     data: message
-  //   };
-  
-  //   var q = url.parse(process.env.WEBHOOK_ENDPOINT, true);
-  //   logger.debug("ENV WEBHOOK URL PARSED:", q)
-  //   var protocol = (q.protocol == "http") ? require('http') : require('https');
-  //   let options = {
-  //     path:  q.pathname,
-  //     host: q.hostname,
-  //     port: q.port,
-  //     method: 'POST',
-  //     headers: {
-  //       "Content-Type": "application/json"
-  //     }
-  //   };
-
-  //   callback = function(response) {
-  //     var respdata = ''
-  //     response.on('data', function (chunk) {
-  //       respdata += chunk;
-  //     });
-    
-  //     response.on('end', function () {
-  //       logger.debug("WEBHOOK RESPONSE:", respdata);
-  //     });
-  //   }
-    
-  //   var req = protocol.request(options, callback);
-  //   req.write(json);
-  //   req.end();
-    
-  // }
-  
-  
-  // WHisMessageOnGroupTimeline
-  // isMessageOnGroupTimeline(message) {
-  //   if (message && message.timelineOf) {
-  //     if (message.timelineOf.toLowerCase().indexOf("group") !== -1) {
-  //       return true
-  //     }
-  //   }
-  //   return false
-  // }
-  
-
-  // ************ WEBHOOKS *********** //
 
   WHnotifyMessageStatusSentOrDelivered(message_payload, topic, callback) {
     logger.log("WHnotifyMessageStatusSentOrDelivered()", message_payload)
@@ -207,7 +121,7 @@ class Webhooks {
         else {
           callback(null);
         }
-      })
+      });
     }
     else if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED) {
       logger.log("DELIVERED...")
@@ -218,10 +132,10 @@ class Webhooks {
         else {
           callback(null);
         }
-      })
+      });
     }
     else {
-      logger.log("FUCK THIS DELIVERED...")
+      logger.log("STATUS NEITHER SENT OR DELIVERED...");
       callback(null);
     }
   }
@@ -265,24 +179,25 @@ class Webhooks {
 
   WHnotifyMessageDeliver(message, callback) {
     // logger.debug("WH NOTIFY MESSAGE:", message);
-    if (this.enabled===false) {
+    if (this.enabled === false) {
       logger.debug("webhooks disabled");
-      callback(null)
-      return
+      callback(null);
+      return;
     }
+    message['temp_webhook_endpoints'] = this.webhook_endpoints;
     const notify_topic = `observer.webhook.apps.${this.appId}.message_deliver`
     logger.debug("notifying webhook MessageSent topic:" + notify_topic)
     const message_payload = JSON.stringify(message)
     logger.debug("MESSAGE_PAYLOAD: " + message_payload)
     this.publish(this.exchange, notify_topic, Buffer.from(message_payload), (err) => {
       if (err) {
-        logger.error("Err", err)
-        callback(err)
+        logger.error("Err", err);
+        callback(err);
       }
       else {
-        callback(null)
+        callback(null);
       }
-    })
+    });
   }
 
   WHnotifyMessageUpdate(message, callback) {
@@ -340,56 +255,52 @@ class Webhooks {
     if (callback) {
       callback(true)
     }
-    // if (this.enabled===false) {
-    //   logger.debug("WHprocess_webhook_message_deliver Discarding notification. webhook_enabled is false.");
-    //   return
-    // }
-
-    // if (!this.WHisMessageOnGroupTimeline(message)) {
-    //   logger.debug("WHprocess_webhook_message_deliver Discarding notification. Not to group.");
+    
+    // if (!this.webhook_endpoint) {
+    //   logger.debug("WHprocess_webhook_message_deliver Discarding notification. webhook_endpoint is undefined.")
     //   // callback(true);
     //   return
     // }
-    if (!this.webhook_endpoint) {
-      logger.debug("WHprocess_webhook_message_deliver Discarding notification. webhook_endpoint is undefined.")
+
+    if (!message['temp_webhook_endpoints']) {
+      logger.debug("WHprocess_webhook_message_deliver Discarding notification. webhook_endpoints is undefined.")
       // callback(true);
       return
     }
-    // if (this.webhook_methods_array.indexOf("new-message")==-1) {
-    //   logger.debug("WHprocess_webhook_message_deliver Discarding notification. new-message not enabled.");
-    //   // callback(true); 
-    //   return
-    // }
-
-    logger.debug("Sending notification to webhook (message_deliver) on webhook_endpoint:" + this.webhook_endpoint);
-    const message_id = message.message_id;
-    const recipient_id = message.recipient;
-    const app_id = message.app_id;
-    let event_type;
-    if (message.status === MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT) {
-      event_type = MessageConstants.WEBHOOK_EVENTS.MESSAGE_SENT;
-    }
-    else {
-      event_type = MessageConstants.WEBHOOK_EVENTS.MESSAGE_DELIVERED;
-    }
-    var json = {
-      event_type: event_type,
-      createdAt: new Date().getTime(),
-      recipient_id: recipient_id,
-      app_id: app_id, // or this.appId?
-      message_id: message_id,
-      data: message,
-      extras: {topic: message['temp_field_chat_topic']}
-    };
-    delete message['temp_field_chat_topic'];
-    // logger.debug("WHprocess_webhook_message_received Sending JSON webhook:", json)
-    this.WHsendData(json, function(err, data) {
-      if (err)  {
-        logger.error("Err WHsendData callback", err);
-      } else {
-        logger.debug("WHsendData sendata end with data:" + data);
+    
+    const endpoints = message['temp_webhook_endpoints'];
+    delete message['temp_webhook_endpoints'];
+    endpoints.forEach((endpoint) => {
+      logger.debug("Sending notification to webhook (message_deliver) on webhook_endpoint:", endpoint);
+      const message_id = message.message_id;
+      const recipient_id = message.recipient;
+      const app_id = message.app_id;
+      let event_type;
+      if (message.status === MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT) {
+        event_type = MessageConstants.WEBHOOK_EVENTS.MESSAGE_SENT;
       }
-    })
+      else {
+        event_type = MessageConstants.WEBHOOK_EVENTS.MESSAGE_DELIVERED;
+      }
+      var json = {
+        event_type: event_type,
+        createdAt: new Date().getTime(),
+        recipient_id: recipient_id,
+        app_id: app_id, // or this.appId?
+        message_id: message_id,
+        data: message,
+        extras: {topic: message['temp_field_chat_topic']} // the topic moves from "message" to "extras" 
+      };
+      delete message['temp_field_chat_topic']; // then deleted from "message"
+      // logger.debug("WHprocess_webhook_message_received Sending JSON webhook:", json)
+      this.WHsendData(endpoint, json, function(err, data) {
+        if (err)  {
+          logger.error("Err WHsendData callback", err);
+        } else {
+          logger.debug("WHsendData sendata end with data:" + data);
+        }
+      })
+    });
   }
 
   WHprocess_webhook_message_update(topic, message_string, callback) {
@@ -499,8 +410,8 @@ class Webhooks {
     return false
   }
 
-  WHsendData(json, callback) {
-    var q = url.parse(this.webhook_endpoint, true);
+  WHsendData(endpoint, json, callback) {
+    var q = url.parse(endpoint, true);
     var protocol = (q.protocol == "http:") ? require('http') : require('https');
     let options = {
       path:  q.pathname,
@@ -513,9 +424,9 @@ class Webhooks {
     };
     try {
       const req = protocol.request(options, (response) => {
-        logger.debug("statusCode: "+  response.statusCode + " for webhook_endpoint: " + this.webhook_endpoint);
+        logger.debug("statusCode: "+  response.statusCode + " for webhook_endpoint: " + endpoint);
         if (response.statusCode < 200 || response.statusCode > 299) { // (I don"t know if the 3xx responses come here, if so you"ll want to handle them appropriately
-          logger.debug("http statusCode error "+  response.statusCode + " for webhook_endpoint: " + this.webhook_endpoint);
+          logger.debug("http statusCode error "+  response.statusCode + " for webhook_endpoint: " + endpoint);
           return callback({statusCode:response.statusCode}, null)
         }
         var respdata = ''
@@ -524,7 +435,7 @@ class Webhooks {
           respdata += chunk;
         });
         response.on('end', () => {
-          logger.debug("WEBHOOK RESPONSE: "+ respdata + " for webhook_endpoint: " + this.webhook_endpoint);
+          logger.debug("WEBHOOK RESPONSE: "+ respdata + " for webhook_endpoint: " + endpoint);
           return callback(null, respdata) //TODO SE IL WEBHOOK NN RITORNA SEMBRA CHE SI BLOCCI
         });
       });

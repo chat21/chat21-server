@@ -1,25 +1,9 @@
 /*
     Chat21Client
 
-    v0.1.7
-    - removed logs
+    v0.1.8
 
-    v0.1.6
-    - added removeOnMessageAddedHandler()
-    - added removeOnGroupUpdatedHandler()
-
-    v. 0.1.5
-    - added groupSetMembers()
-    - renamed createGroup() in groupCreate()
-    - renamed leaveGroup() in groupLeave()
-    - renamed joinGroup() in groupJoin()
-    - renamed getGroup() in groupData()
-
-    v. 0.1.4
-    - added basicMessageBuilder()
-    - added sendMessageRaw()
-    - added leaveGroup()
-
+    @Author Andrea Sponziello
     (c) Tiledesk 2020
 */
 
@@ -427,6 +411,35 @@ class Chat21Client {
         }, this.log);
     }
 
+    saveInstance(instance_id, data, callback) {
+        if (this.log) {
+            console.log("saving instance_id:", instance_id, "data", data);
+        }
+
+        // /:app_id/:user_id/instances/:instance_id
+        const URL = `${this.APIendpoint}/${this.appid}/${this.user_id}/instances/${instance_id}`
+        if (this.log) {
+            console.log("saving instance...");
+        }
+        let options = {
+            url: URL,
+            headers: {
+                "Authorization": this.jwt,
+                "Content-Type": "application/json;charset=UTF-8"
+            },
+            data: data,
+            method: 'POST'
+        }
+        Chat21Client.myrequest(options, (err, response, json) => {
+            if (err) {
+                callback(err, null);
+            }
+            else if (json && callback) {
+                callback(null, json);
+            }
+        }, this.log);
+    }
+
     archiveConversation(conversWith, callback) {
         // callback - function (err) 
         if (this.log) {
@@ -784,8 +797,7 @@ class Chat21Client {
 
     conversationDetail(conversWith, callback) {
         // ex.: http://localhost:8004/tilechat/04-ANDREASPONZIELLO/conversations/CONVERS_WITH
-        const URL = `${this.APIendpoint}/${this.appid}/${this.user_id}/conversations/${conversWith}`
-        if (this.log) {console.log("getting conversation detail:", URL)}
+        const URL = `${this.APIendpoint}/${this.appid}/${this.user_id}/conversations/${conversWith}`;
         var xmlhttp = new XMLHttpRequest();
         xmlhttp.open("GET", URL, true);
         xmlhttp.setRequestHeader("authorization", this.jwt);
@@ -793,7 +805,12 @@ class Chat21Client {
             if (callback && xmlhttp.readyState == 4 && xmlhttp.status == 200 && xmlhttp.responseText) {
                 try {
                     const json = JSON.parse(xmlhttp.responseText);
-                    callback(null, json.result);
+                    if (json && json.result && Array.isArray(json.result) && json.result.length ==1) {
+                        callback(null, json.result[0]);
+                    }
+                    else {
+                        callback({"message": "Incorrect conversation result."}, null);
+                    }
                 }
                 catch (err) {
                     console.error("parsing json ERROR", err);
@@ -839,7 +856,7 @@ class Chat21Client {
         if (log) {
           console.log("HTTP Request:", options);
         }
-        if (isBrowser()) {
+        if (!axios) {
             let xmlhttp = new XMLHttpRequest();
             xmlhttp.open(options.method, options.url, true);
             Object.keys(options.headers).forEach((key) => {
@@ -1011,10 +1028,10 @@ class Chat21Client {
     }
 }
 
-function isBrowser() {
-    // return true;
-    return false;
-}
+// function isBrowser() {
+//     // return true;
+//     return false;
+// }
 
 // export { Chat21Client }; // Browser
 module.exports = { Chat21Client };

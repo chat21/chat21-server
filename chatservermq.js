@@ -64,7 +64,7 @@ else {
 }
 
 var webhook_enabled = process.env.WEBHOOK_ENABLED;
-logger.debug("process.env.WEBHOOK_ENABLED: " + process.env.WEBHOOK_ENABLED);
+console.log("process.env.WEBHOOK_ENABLED: " + process.env.WEBHOOK_ENABLED);
 if (webhook_enabled == undefined || webhook_enabled === "true" || webhook_enabled === true ) {
   webhook_enabled = true;
 }else {
@@ -72,8 +72,12 @@ if (webhook_enabled == undefined || webhook_enabled === "true" || webhook_enable
 }
 logger.debug("webhook_enabled: " + webhook_enabled);
 
-var webhook_endpoint = process.env.WEBHOOK_ENDPOINT;
-logger.debug("webhook_endpoint: " + webhook_endpoint);
+let webhook_endpoints_array = null;
+let env_webhook_endpoints = process.env.WEBHOOK_ENDPOINTS;
+if (env_webhook_endpoints) {
+  webhook_endpoints_array = env_webhook_endpoints.split(",");
+}
+logger.debug("webhook_endpoints_array: " + webhook_endpoints_array);
 
 let webhook_events_array = null;
 if (process.env.WEBHOOK_EVENTS) {
@@ -87,7 +91,7 @@ logger.info("Starting observer")
 async function start() {
 
       observer.setWebHookEnabled(webhook_enabled);
-      observer.setWebHookEndpoint(webhook_endpoint);
+      observer.setWebHookEndpoints(webhook_endpoints_array);
       observer.setWebHookEvents(webhook_events_array);
       observer.setActiveQueues(active_queues);
       if (process.env.PREFETCH_MESSAGES) {// && process.env.PREFETCH_MESSAGES > 0) {

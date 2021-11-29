@@ -54,7 +54,7 @@ const user5 = {
 // ** RABBITMQ, RUN IT WITH DOCKER
 // ** RUN LOCAL MONGODB, EX: mongod --dbpath /usr/local/var/mongodb
 const config = {
- 	APPID: 'tilechat',
+	APPID: 'tilechat',
 	MQTT_ENDPOINT: 'ws://localhost:15675/ws',
 	API_ENDPOINT: 'http://localhost:8010/api',
 	CLIENT_API_LOG: false,
@@ -62,14 +62,6 @@ const config = {
 	OBSERVER_LOG_LEVEL: 'ERROR',
 	LOCAL_STACK: true
 }
-
-// DEPRECATED
-// const MQTT_ENDPOINT = 'ws://localhost:15675/ws';
-// const API_ENDPOINT = 'http://localhost:8010/api'
-// const CLIENT_API_LOG = false;
-// const HTTP_SERVER_LOG_LEVEL = 'ERROR';
-// const OBSERVER_LOG_LEVEL = 'ERROR';
-// const LOCAL_STACK = true;
 
 // ** **LOCAL MACHINE COMPONENTS ****
 // ** RABBITMQ, RUN IT WITH DOCKER
@@ -168,20 +160,23 @@ describe('Main', function() {
 								await chat21HttpServer.startAMQP({rabbitmq_uri: process.env.RABBITMQ_URI});
 								logger.log('HTTP server AMQP connection started.');
 								observer.logger.setLog(config.OBSERVER_LOG_LEVEL);
-								observer.setWebHookEndpoint("http://localhost:8002/postdata");
+								observer.setWebHookEndpoints(["http://localhost:8002/postdata","http://localhost:8002/postdata2"]);
 								logger.log('setWebHookEndpoint ok.');
 								observer.setAutoRestart(false);
 								await observer.startServer({rabbitmq_uri: process.env.RABBITMQ_URI});
-								logger.log("observer started.");
+								logger.log("Observer started.");
 								// THE SERVER CLIENT FOR WEBHOOKS
+								logger.log("Setting webhooks endpoint...");
 								var webhooksServer = express();
 								// serverClient.use(bodyParser.json());
 								webhooksServer.post('/postdata', function (req, res) {
 									res.status(200).send({success: true})
 								});
+								webhooksServer.post('/postdata2', function (req, res) {
+									res.status(200).send({success: true})
+								});
 								webhook_app = webhooksServer.listen(8002, async function() {
-									logger.log('Node Client Express started.', webhook_app.address());
-									logger.log("Local http Express server started.");
+									logger.log('Webhooks App started.', webhook_app.address());
 									logger.log("Everything is ok to start testing in 2 seconds...");
 									await new Promise(resolve => setTimeout(resolve, 2000));
 									logger.log("Ready!");
@@ -1148,6 +1143,29 @@ NEW CHAT CLIENTS', function(done) {
 							});
 						}
 					);
+				}
+			);
+		});
+	});
+
+	describe('TiledeskClient - Groups - test 13', function() {
+		it('test 13 - Saves an app instance \
+REUSE SHARED CHAT CLIENTS', function(done) {
+			logger.log("test 13 - start.");
+			const instance_id = uuidv4();
+			chatClient1.saveInstance(
+				instance_id,
+				{
+					"device_model":  "Postman",
+					"language": "en-US",
+					"platform": "ionic",
+					"platform_version": "3.0.55"
+				},
+				(err, result) => {
+					assert(err == null);
+					assert(result != null);
+					assert(result.success == true);
+					done();
 				}
 			);
 		});
