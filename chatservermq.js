@@ -77,7 +77,7 @@ let env_webhook_endpoints = process.env.WEBHOOK_ENDPOINTS;
 if (env_webhook_endpoints) {
   webhook_endpoints_array = env_webhook_endpoints.split(",");
 }
-logger.debug("webhook_endpoints_array: " + webhook_endpoints_array);
+logger.debug("webhook_endpoints_array: ", webhook_endpoints_array);
 
 let webhook_events_array = null;
 if (process.env.WEBHOOK_EVENTS) {
