@@ -1,3 +1,9 @@
+
+## v0.2.2
+- removed process.exit(1) from "close" event in observer's AMQP connection handlers
+- refactored testing
+- added test 14, 15 for webhooks
+
 ## v0.2.1
 - added multiple webhooks support
 - added selective queues for performance improvements.

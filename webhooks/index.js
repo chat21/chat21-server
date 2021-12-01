@@ -27,7 +27,7 @@ class Webhooks {
    * @param {Object} options.appId Mandatory. The appId.
    * @param {Object} options.exchange Mandatory. exchange name.
    * @param {Object} options.RABBITMQ_URI Mandatory. The RabbitMQ connection URI.
-   * @param {Object} options.webhook_endpoints Mandatory. This weebhook endpoint.
+   * @param {Object} options.webhook_endpoints Optional. This weebhook endpoint.
    * @param {Object} options.queue_name Optional. The queue name. Defaults to 'weebhooks'.
    * @param {Object} options.webhook_events Optional. The active webhook events.
    * @param {Object} options.logger Optional. The logger.
@@ -46,9 +46,9 @@ class Webhooks {
     if (!options.appId) {
       throw new Error('appId option can NOT be empty.');
     }
-    if (!options.webhook_endpoints) {
-      throw new Error('webhook_endpoints option can NOT be empty.');
-    }
+    // if (!options.webhook_endpoints) {
+    //   throw new Error('webhook_endpoints option can NOT be empty.');
+    // }
     if (options.logger) {
       logger = options.logger;
     }
@@ -263,8 +263,7 @@ class Webhooks {
     // }
 
     if (!message['temp_webhook_endpoints']) {
-      logger.debug("WHprocess_webhook_message_deliver Discarding notification. webhook_endpoints is undefined.")
-      // callback(true);
+      logger.debug("WHprocess_webhook_message_deliver Discarding notification. webhook_endpoints undefined.")
       return
     }
     
@@ -299,7 +298,7 @@ class Webhooks {
         } else {
           logger.debug("WHsendData sendata end with data:" + data);
         }
-      })
+      });
     });
   }
 
@@ -310,38 +309,47 @@ class Webhooks {
     if (callback) {
       callback(true)
     }
-    if (!this.webhook_endpoint) {
-      logger.debug("WHprocess_webhook_message_update Discarding notification. webhook_endpoint is undefined.")
+    // if (!this.webhook_endpoint) {
+    //   logger.debug("WHprocess_webhook_message_update Discarding notification. webhook_endpoint is undefined.")
+    //   return
+    // }
+
+    if (!message['temp_webhook_endpoints']) {
+      logger.debug("WHprocess_webhook_message_update Discarding notification. temp_webhook_endpoints undefined.")
       return
     }
-    logger.debug("Sending notification to webhook (message_deliver) on webhook_endpoint:" + this.webhook_endpoint);
-    const message_id = message.message_id;
-    const recipient_id = message.recipient;
-    const app_id = message.app_id;
-    let event_type;
-    if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.RECEIVED) {
-      event_type = MessageConstants.WEBHOOK_EVENTS.MESSAGE_RECEIVED;
-    }
-    else if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.RETURN_RECEIPT) {
-      event_type = MessageConstants.WEBHOOK_EVENTS.MESSAGE_RETURN_RECEIPT;
-    }
-    var json = {
-      event_type: event_type,
-      createdAt: new Date().getTime(),
-      recipient_id: recipient_id,
-      app_id: app_id, // or this.appId?
-      message_id: message_id,
-      data: message,
-      extras: {topic: topic}
-    };
-    // logger.debug("WHprocess_webhook_message_received Sending JSON webhook:", json)
-    this.WHsendData(json, function(err, data) {
-      if (err)  {
-        logger.error("Err WHsendData callback", err);
-      } else {
-        logger.debug("WHsendData sendata end with data:" + data);
+    
+    const endpoints = message['temp_webhook_endpoints'];
+    delete message['temp_webhook_endpoints'];
+    endpoints.forEach((endpoint) => {
+      logger.debug("Sending notification to webhook (message_update) on webhook_endpoint:" + endpoint);
+      const message_id = message.message_id;
+      const recipient_id = message.recipient;
+      const app_id = message.app_id;
+      let event_type;
+      if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.RECEIVED) {
+        event_type = MessageConstants.WEBHOOK_EVENTS.MESSAGE_RECEIVED;
       }
-    })
+      else if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.RETURN_RECEIPT) {
+        event_type = MessageConstants.WEBHOOK_EVENTS.MESSAGE_RETURN_RECEIPT;
+      }
+      var json = {
+        event_type: event_type,
+        createdAt: new Date().getTime(),
+        recipient_id: recipient_id,
+        app_id: app_id,
+        message_id: message_id,
+        data: message,
+        extras: {topic: topic}
+      };
+      this.WHsendData(endpoint, json, function(err, data) {
+        if (err)  {
+          logger.error("Err WHsendData callback", err);
+        } else {
+          logger.debug("WHsendData sendata end with data:" + data);
+        }
+      });
+    });
   }
 
   WHprocess_webhook_conversation_archived(topic, payload, callback) {
@@ -360,45 +368,53 @@ class Webhooks {
       return
     }
 
-    if (!this.webhook_endpoint) {
-      logger.debug("WHprocess_webhook_conversation_archived: Discarding notification. webhook_endpoint is undefined.")
+    // if (!this.webhook_endpoint) {
+    //   logger.debug("WHprocess_webhook_conversation_archived: Discarding notification. webhook_endpoint is undefined.")
+    //   return
+    // }
+
+    if (!message['temp_webhook_endpoints']) {
+      logger.debug("WHprocess_webhook_conversation_archived Discarding notification. temp_webhook_endpoints undefined.")
       return
     }
-
-    logger.debug("Sending notification to webhook (webhook_conversation_archived):", this.webhook_endpoint)
-    if (!conversation['temp_field_chat_topic']) {
-      logger.debug("WHprocess_webhook_conversation_archived NO 'temp_field_chat_topic' error.")
-    }
-    var topic_parts = conversation['temp_field_chat_topic'].split(".")
-    logger.debug("ARCHIVE. TOPIC PARTS:", topic_parts)
-    if (topic_parts.length < 7) {
-      logger.debug("process_archive topic error. topic_parts.length < 7:" + topic)
-      return
-    }
-    const app_id = topic_parts[1];
-    const user_id = topic_parts[3];
-    const convers_with = topic_parts[5];
-
-    // chatdb.getConversation(timelineOf, conversWith, function(err, conversation) {
-    var json = {
-      event_type: MessageConstants.WEBHOOK_EVENTS.CONVERSATION_ARCHIVED,
-      createdAt: new Date().getTime(),
-      app_id: app_id,
-      user_id: user_id, // temporary patch for Tiledesk
-      recipient_id: convers_with,
-      convers_with: convers_with,
-      data: conversation,
-      extras: {topic: conversation['temp_field_chat_topic']}
-    };
-    delete conversation['temp_field_chat_topic'];
-    logger.debug("Sending JSON webhook:", json)
-    this.WHsendData(json, function(err, data) {
-      if (err)  {
-        logger.error("Err WHsendData callback", err);
-      } else {
-        logger.debug("WHsendData sendata end with data:" + data);
+    
+    const endpoints = message['temp_webhook_endpoints'];
+    delete message['temp_webhook_endpoints'];
+    endpoints.forEach((endpoint) => {
+      logger.debug("Sending notification to webhook (webhook_conversation_archived):", endpoint)
+      if (!conversation['temp_field_chat_topic']) {
+        logger.debug("WHprocess_webhook_conversation_archived NO 'temp_field_chat_topic' error.")
       }
-    })
+      var topic_parts = conversation['temp_field_chat_topic'].split(".")
+      logger.debug("ARCHIVE. TOPIC PARTS:", topic_parts)
+      if (topic_parts.length < 7) {
+        logger.debug("process_archive topic error. topic_parts.length < 7:" + topic)
+        return
+      }
+      const app_id = topic_parts[1];
+      const user_id = topic_parts[3];
+      const convers_with = topic_parts[5];
+
+      var json = {
+        event_type: MessageConstants.WEBHOOK_EVENTS.CONVERSATION_ARCHIVED,
+        createdAt: new Date().getTime(),
+        app_id: app_id,
+        user_id: user_id, // temporary patch for Tiledesk
+        recipient_id: convers_with,
+        convers_with: convers_with,
+        data: conversation,
+        extras: {topic: conversation['temp_field_chat_topic']}
+      };
+      delete conversation['temp_field_chat_topic'];
+      logger.debug("Sending JSON webhook:", json)
+      this.WHsendData(endpoint, json, function(err, data) {
+        if (err)  {
+          logger.error("Err WHsendData callback", err);
+        } else {
+          logger.debug("WHsendData sendata end with data:" + data);
+        }
+      });
+    });
   }
 
   WHisMessageOnGroupTimeline(message) {
@@ -411,6 +427,9 @@ class Webhooks {
   }
 
   WHsendData(endpoint, json, callback) {
+    if (!this.enabled) {
+      return;
+    }
     var q = url.parse(endpoint, true);
     var protocol = (q.protocol == "http:") ? require('http') : require('https');
     let options = {

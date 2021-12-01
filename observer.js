@@ -46,12 +46,10 @@ let active_queues = {
 
 let webhook_endpoints_array;
 let webhook_events_array;
-// let persistent_messages;
 
 function getWebhooks() {
   return webhooks;
 }
-
 
 function getWebHookEnabled() {
   return webhook_enabled;
@@ -67,15 +65,49 @@ function getWebHookEvents() {
 
 function setWebHookEnabled(enabled) {
   webhook_enabled = enabled;
+  if (webhooks) {
+    webhooks.setWebHookEnabled(webhook_enabled);
+  }
 }
 
 function setWebHookEndpoints(endpoints) {
   webhook_endpoints_array = endpoints;
+  if (webhooks) {
+    webhooks.setWebHookEndpoints(webhook_endpoints_array);
+  }
 }
 
 function setWebHookEvents(events) {
   webhook_events_array = events;
+  if (webhooks) {
+    webhooks.setWebHookEvents(events);
+  }
 }
+
+// function initWebhooks(config) {
+//   console.log("1")
+//   if (!config) {
+//     config = {}
+//   }
+//   app_id = config.app_id || "tilechat";
+//   exchange = config.exchange || 'amq.topic';
+//   if (config && config.rabbitmq_uri) {
+//     // console.log("rabbitmq_uri found in config", config)
+//     rabbitmq_uri = config.rabbitmq_uri;
+//   }
+//   else if (process.env.RABBITMQ_URI) {
+//     // console.log("rabbimq_uri found in env")
+//     rabbitmq_uri = process.env.RABBITMQ_URI;
+//   }
+//   else {
+//     throw new Error('please configure process.env.RABBITMQ_URI or use parameter config.rabbimq_uri option.');
+//   }
+//   console.log("2")
+//   webhooks = new Webhooks({appId: app_id, RABBITMQ_URI: rabbitmq_uri, exchange: exchange, webhook_endpoints: webhook_endpoints_array, webhook_events: webhook_events_array, queue_name: 'webhooks', logger: logger});
+//   webhooks.enabled = webhook_enabled;
+//   // await webhooks.start();
+//   console.log("3")
+// }
 
 function setActiveQueues(queues) {
   logger.log("active queues setting", queues)
@@ -128,12 +160,13 @@ function startMQ(resolve, reject) {
           }
       });
       conn.on("close", () => {
-        logger.error("[Observer AMQP] close");
+        logger.info("[Observer AMQP] close");
         if (autoRestart) {
-            logger.error("[Observer AMQP] reconnecting");
+            logger.info("[Observer AMQP] reconnecting because of a disconnection (Autorestart = true)");
             return setTimeout(() => { startMQ(resolve, reject) }, 1000);
         } else {
-            process.exit(1);
+            // process.exit(1);
+            logger.info("[Observer AMQP] close event. No action.");
         }
       });
       amqpConn = conn;
@@ -1006,22 +1039,28 @@ async function startServer(config) {
   mongo_uri = config.mongo_uri || "mongodb://localhost:27017/chatdb";
   var db;
   logger.debug("connecting to mongodb...");
+  console.log("connecting to mongodb...");
   var client = await mongodb.MongoClient.connect(mongo_uri, { useNewUrlParser: true, useUnifiedTopology: true })
   db = client.db();
   logger.debug("Mongodb connected.");
   chatdb = new ChatDB({database: db})
   logger.info("Starting webhooks...");
-  webhooks = new Webhooks({appId: app_id, RABBITMQ_URI: rabbitmq_uri, exchange: exchange, webhook_endpoints: webhook_endpoints_array, webhook_events: webhook_events_array, queue_name: 'webhooks', logger: logger});
-  await webhooks.start();
-  webhooks.enabled = webhook_enabled;
+  try {
+    webhooks = new Webhooks({appId: app_id, RABBITMQ_URI: rabbitmq_uri, exchange: exchange, webhook_endpoints: webhook_endpoints_array, webhook_events: webhook_events_array, queue_name: 'webhooks', logger: logger});
+    webhooks.enabled = webhook_enabled;
+    await webhooks.start();
+  }
+  catch(error) {
+    logger.error("An error occurred initializing webhooks:", error)
+  }
   logger.debug('Starting AMQP connection....');
   var amqpConnection = await start();
   logger.debug("[Observer.AMQP] connected.");
-  console.log("Observer started.");
+  logger.debug("Observer started.");
 }
 
-function stopServer() {
-  amqpConn.close();
+function stopServer(callback) {
+  amqpConn.close(callback);
 }
 
 module.exports = {startServer: startServer, stopServer: stopServer, setAutoRestart: setAutoRestart, getWebhooks: getWebhooks, setWebHookEndpoints: setWebHookEndpoints, setWebHookEvents: setWebHookEvents, setWebHookEnabled: setWebHookEnabled, setActiveQueues: setActiveQueues, setPrefetchMessages: setPrefetchMessages, logger: logger };

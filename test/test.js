@@ -9,6 +9,8 @@ const loggers = new require('../tiledesk-logger');
 let logger = new loggers.TiledeskLogger("debug");
 // logger.setLog('DEBUG');
 // let bodyParser = require('body-parser');
+const bodyParser = require('body-parser');
+const messageConstants = require('../models/messageConstants.js');
 
 const user1 = {
 	userid: 'USER1',
@@ -100,7 +102,7 @@ const CHANNEL_TYPE_DIRECT = 'direct';
 let chatClient1;
 let chatClient2;
 let chatClient3;
-let http_server;
+let http_api_server;
 let webhook_app;
 
 describe('Main', function() {
@@ -154,34 +156,36 @@ describe('Main', function() {
 						// **************************
 						if (config.LOCAL_STACK) {
 							chat21HttpServer.logger.setLog(config.HTTP_SERVER_LOG_LEVEL);
-							http_server = chat21HttpServer.app.listen(8010, async() => {
+							http_api_server = chat21HttpServer.app.listen(8010, async() => {
 								logger.log('HTTP server started.');
 								logger.log('Starting AMQP publisher...');
 								await chat21HttpServer.startAMQP({rabbitmq_uri: process.env.RABBITMQ_URI});
 								logger.log('HTTP server AMQP connection started.');
 								observer.logger.setLog(config.OBSERVER_LOG_LEVEL);
-								observer.setWebHookEndpoints(["http://localhost:8002/postdata","http://localhost:8002/postdata2"]);
-								logger.log('setWebHookEndpoint ok.');
+								// const webhook_endpoints = ["http://localhost:8002/postdata","http://localhost:8002/postdata2"];
+								// observer.setWebHookEndpoints();
+								observer.setWebHookEnabled(false);
+								// observer_config = {rabbitmq_uri: process.env.RABBITMQ_URI};
 								observer.setAutoRestart(false);
 								await observer.startServer({rabbitmq_uri: process.env.RABBITMQ_URI});
-								logger.log("Observer started.");
+								logger.log("Observer ready.");
 								// THE SERVER CLIENT FOR WEBHOOKS
-								logger.log("Setting webhooks endpoint...");
-								var webhooksServer = express();
-								// serverClient.use(bodyParser.json());
-								webhooksServer.post('/postdata', function (req, res) {
-									res.status(200).send({success: true})
-								});
-								webhooksServer.post('/postdata2', function (req, res) {
-									res.status(200).send({success: true})
-								});
-								webhook_app = webhooksServer.listen(8002, async function() {
-									logger.log('Webhooks App started.', webhook_app.address());
-									logger.log("Everything is ok to start testing in 2 seconds...");
+								// logger.log("Setting webhooks endpoint...");
+								// var webhooksServer = express();
+								// webhooksServer.post('/postdata', function (req, res) {
+								// 	res.status(200).send({success: true})
+								// });
+								// webhooksServer.post('/postdata2', function (req, res) {
+								// 	res.status(200).send({success: true})
+								// });
+								// let webhook_app = webhooksServer.listen(8002, async function() {
+								// 	logger.log('Webhooks App started.', webhook_app.address());
+									logger.log("Ready to start tests in 2 seconds...");
 									await new Promise(resolve => setTimeout(resolve, 2000));
-									logger.log("Ready!");
-									done();
-								});
+								// 	logger.log("Ready!");
+								// 	done();
+								// });
+								done();
 							});
 						}
 						else {
@@ -195,29 +199,58 @@ describe('Main', function() {
 	
 	after(function(done) {
 		logger.log("after - Ending test...");
-		chatClient1.close(() => {
+		chatClient1.close(async () => {
 			logger.log("after - ...chatClient1 successfully disconnected.");
-			chatClient2.close(() => {
+			chatClient2.close(async () => {
 				logger.log("after - ...chatClient2 successfully disconnected.");
 				chatClient3.close(async () => {
 					logger.log("after - ...chatClient3 successfully disconnected.");
 					chatClient4.close(async () => {
 						logger.log("after - ...chatClient4 successfully disconnected.");
 						if (config.LOCAL_STACK) {
-							http_server.close();
-							logger.log("after - HTTP Server closed.");
-							webhook_app.close();
-							logger.log("after - Webhooks endpoint closed.");
-							logger.log("after - Waiting some seconds before stopping observer (it allows completing pending publish->ack).");
-							await new Promise(resolve => setTimeout(resolve, 1000));
-							observer.stopServer();
-							logger.log("after - Waiting 1 second after observer stops.");
+							http_api_server.close(async () => {
+								logger.log("after - HTTP Server closed.");
+								logger.log("after - Waiting 2s before stopping observer (allowing completion of pending publish->ack).");
+								await new Promise(resolve => setTimeout(resolve, 2000));
+								observer.stopServer(async () => {
+									logger.log("after - Connection to AMQP closed.");
+									logger.log("after - Waiting 2s after observer stop.");
+									await new Promise(resolve => setTimeout(resolve, 2000));
+									done();
+								});
+							});
+							// logger.log("after - HTTP Server closed.");
+							// webhook_app.close();
+							// logger.log("after - Webhooks endpoint closed.");
+							// logger.log("after - Waiting some seconds before stopping observer (allowing completion of pending publish->ack).");
+							// await new Promise(resolve => setTimeout(resolve, 5000));
+							// setTimeout(function() {
+							// 	logger.log("......................................");
+							// 	setTimeout(function() {
+							// 		logger.log("---------------------------------------");
+									// observer.stopServer(() => {
+									// 	logger.log("Connection to AMQP closed.");
+									// // 	logger.log("after - Waiting 5 second after observer stops.");
+									// 	// setTimeout(function() {
+									// 	// 	logger.log("************************************");
+										
+									// 		done();
+									// 	// }, 5000);
+									// });
+							// 	}, 2000);
+							// }, 2000);
+
+							
+							
+							// logger.log("after - Waiting 5 second after observer stops.");
+							// NON RISPONDONO QUESTI TIMEOUT! Ovvio: sull'evento close l'observer lanciava una process.exit(1)!!!!!!!!!
 							// setTimeout(function() {
 							// 	logger.log("************************************");
+							// 	// done();
 							// }, 5000)
-							// await new Promise(resolve => setTimeout(resolve, 1000));
-							logger.log("after() - end (ALL-IN-ONE STACK).");
-							done();
+							// await new Promise(resolve => setTimeout(resolve, 5000));
+							// logger.log("after() - end (ALL-IN-ONE STACK).");
+							// done();
 						}
 						else {
 							logger.log("after() - end.");
@@ -240,6 +273,13 @@ describe('Main', function() {
 	// *********************************************
 	// **************** TEST CASES *****************
     // *********************************************
+
+	describe('TiledeskClient - test 0', function() {
+		it('Test 0', function(done) {
+			logger.log("test 0 - start.");
+			done();
+		});
+	});
 
 	describe('TiledeskClient - Direct - test 1', function() {
 		it('User1 sends a direct message to User2 using client.sendMessage() \
@@ -703,133 +743,108 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 			group_members[user1.userid] = 1;
 			group_members[user2.userid] = 1;
 			let update_notifications = {};
-			// let _chatClient1 = new Chat21Client(
-			// 	{
-			// 		appId: APPID,
-			// 		MQTTendpoint: MQTT_ENDPOINT,
-			// 		APIendpoint: API_ENDPOINT,
-			// 		log: CLIENT_API_LOG
-			// 	}
-			// );
-			// let _chatClient2 = new Chat21Client(
-			// 	{
-			// 		appId: APPID,
-			// 		MQTTendpoint: MQTT_ENDPOINT,
-			// 		APIendpoint: API_ENDPOINT,
-			// 		log: CLIENT_API_LOG
-			// 	}
-			// );
-			// _chatClient1.connect(user1.userid, user1.token, () => {
-			// 	logger.log("test 9 - _chatClient1 connected.");
-			// 	_chatClient2.connect(user1.userid, user1.token, () => {
-			// 		logger.log("test 9 - _chatClient2 connected.");
-					let handler_message_added_client1 = chatClient1.onMessageAdded((message, topic) => {
-						if (message.recipient === group_id) {
-							logger.log("test 9 - message added - chatClient1:", JSON.stringify(message));
-							if (
-								message &&
-								message.recipient === group_id &&
-								message.attributes &&
-								message.attributes.messagelabel &&
-								message.attributes.messagelabel.key &&
-								message.attributes.messagelabel.parameters &&
-								message.attributes.messagelabel.parameters.member_id &&
-								message.attributes.messagelabel.key === 'MEMBER_JOINED_GROUP' &&
-								message.attributes.messagelabel.parameters.member_id === user3.userid) {
-									update_notifications['message_' + user1.userid] = 1;
-									check_if_done();
-							}
-						}
-					});
-					let handler_message_added_client2 = chatClient2.onMessageAdded((message, topic) => {
-						if (message.recipient === group_id) {
-							logger.log("test 9 - message added - chatClient2:", JSON.stringify(message));
-							if (
-								message &&
-								message.recipient === group_id &&
-								message.attributes &&
-								message.attributes.messagelabel &&
-								message.attributes.messagelabel.key &&
-								message.attributes.messagelabel.parameters &&
-								message.attributes.messagelabel.parameters.member_id &&
-								message.attributes.messagelabel.key === 'MEMBER_JOINED_GROUP' &&
-								message.attributes.messagelabel.parameters.member_id === user3.userid) {
-									update_notifications['message_' + user2.userid] = 1;
-									check_if_done();
-							}
-						}
-					});
-					let handler_group_updated_client1 = chatClient1.onGroupUpdated((group, topic) => {
-						if (group.uid === group_id) {
-							logger.log("test 9 - group updated - chatClient1:", JSON.stringify(group));
-							if (group.notification &&
-								group.notification.messagelabel &&
-								group.notification.messagelabel.key === "MEMBER_JOINED_GROUP" &&
-								group.notification.messagelabel.parameters &&
-								group.notification.messagelabel.parameters.member_id === "USER3") {
-									update_notifications['group_update_notification_' + user1.userid] = 1;
-									check_if_done();
-							}
-						}
-					});
-					let handler_group_updated_client2 = chatClient2.onGroupUpdated((group, topic) => {
-						if (group.uid === group_id) {
-							logger.log("test 9 - group updated - chatClient2:", JSON.stringify(group));
-							if (group.notification &&
-								group.notification.messagelabel &&
-								group.notification.messagelabel.key === "MEMBER_JOINED_GROUP" &&
-								group.notification.messagelabel.parameters &&
-								group.notification.messagelabel.parameters.member_id === "USER3") {
-									update_notifications['group_update_notification_' + user2.userid] = 1;
-									check_if_done();
-							}
-						}
-					});
-					function check_if_done() {
-						if (update_notifications['message_' + user1.userid] === 1 &&
-							update_notifications['message_' + user2.userid] === 1 &&
-							update_notifications['group_update_notification_' + user1.userid] === 1 &&
-							update_notifications['group_update_notification_' + user2.userid] === 1) {
-								logger.log("test 9 - ALL NOTIFICATIONS RECEIVED");
-								chatClient1.removeOnMessageAddedHandler(handler_message_added_client1);
-								logger.log("test 9 - chatClient1.removeOnMessageAddedHandler(handler_message_added_client1) OK.", handler_message_added_client1);
-								chatClient1.removeOnMessageAddedHandler(handler_message_added_client2);
-								logger.log("test 9 - chatClient1.removeOnMessageAddedHandler(handler_message_added_client2) OK.", handler_message_added_client2);
-								chatClient1.removeOnGroupUpdatedHandler(handler_group_updated_client1);
-								logger.log("test 9 - chatClient1.removeOnGroupUpdatedHandler(handler_group_updated_client1) OK.", handler_group_updated_client1);
-								chatClient1.removeOnGroupUpdatedHandler(handler_group_updated_client2);
-								logger.log("test 9 - chatClient1.removeOnGroupUpdatedHandler(handler_group_updated_client2) OK.", handler_group_updated_client2);
-								// chatClient1.close(() => {
-								// 	logger.log("test 9 - _chatClient1 successfully disconnected.");
-								// 	chatClient2.close(() => {
-								// 		logger.log("test 9 - _chatClient2 successfully disconnected.");
-								done();
-								logger.log("test 9 - done()");
-								// 	});
-								// });
-						}
+			let handler_message_added_client1 = chatClient1.onMessageAdded((message, topic) => {
+				if (message.recipient === group_id) {
+					logger.log("test 9 - message added - chatClient1:", JSON.stringify(message));
+					if (
+						message &&
+						message.recipient === group_id &&
+						message.attributes &&
+						message.attributes.messagelabel &&
+						message.attributes.messagelabel.key &&
+						message.attributes.messagelabel.parameters &&
+						message.attributes.messagelabel.parameters.member_id &&
+						message.attributes.messagelabel.key === 'MEMBER_JOINED_GROUP' &&
+						message.attributes.messagelabel.parameters.member_id === user3.userid) {
+							update_notifications['message_' + user1.userid] = 1;
+							check_if_done();
 					}
-					chatClient1.groupCreate(
-						group_name,
-						group_id,
-						group_members,
-						(err, result) => {
-							assert(err == null);
-							assert(result != null);
-							assert(result.success == true);
-							assert(result.group.name === group_name);
-							logger.log("test 9 - group", group_id, "created");
-							chatClient1.groupJoin(group_id, user3.userid, (err, json) => {
-								if (err) {
-									logger.log("test 9 - member joined error!", err);
-								}
-								assert(err == null);
-								logger.log("test 9 - member joined json:", json);
-							});
+				}
+			});
+			let handler_message_added_client2 = chatClient2.onMessageAdded((message, topic) => {
+				if (message.recipient === group_id) {
+					logger.log("test 9 - message added - chatClient2:", JSON.stringify(message));
+					if (
+						message &&
+						message.recipient === group_id &&
+						message.attributes &&
+						message.attributes.messagelabel &&
+						message.attributes.messagelabel.key &&
+						message.attributes.messagelabel.parameters &&
+						message.attributes.messagelabel.parameters.member_id &&
+						message.attributes.messagelabel.key === 'MEMBER_JOINED_GROUP' &&
+						message.attributes.messagelabel.parameters.member_id === user3.userid) {
+							update_notifications['message_' + user2.userid] = 1;
+							check_if_done();
+					}
+				}
+			});
+			let handler_group_updated_client1 = chatClient1.onGroupUpdated((group, topic) => {
+				if (group.uid === group_id) {
+					logger.log("test 9 - group updated - chatClient1:", JSON.stringify(group));
+					if (group.notification &&
+						group.notification.messagelabel &&
+						group.notification.messagelabel.key === "MEMBER_JOINED_GROUP" &&
+						group.notification.messagelabel.parameters &&
+						group.notification.messagelabel.parameters.member_id === "USER3") {
+							update_notifications['group_update_notification_' + user1.userid] = 1;
+							check_if_done();
+					}
+				}
+			});
+			let handler_group_updated_client2 = chatClient2.onGroupUpdated((group, topic) => {
+				if (group.uid === group_id) {
+					logger.log("test 9 - group updated - chatClient2:", JSON.stringify(group));
+					if (group.notification &&
+						group.notification.messagelabel &&
+						group.notification.messagelabel.key === "MEMBER_JOINED_GROUP" &&
+						group.notification.messagelabel.parameters &&
+						group.notification.messagelabel.parameters.member_id === "USER3") {
+							update_notifications['group_update_notification_' + user2.userid] = 1;
+							check_if_done();
+					}
+				}
+			});
+			function check_if_done() {
+				if (update_notifications['message_' + user1.userid] === 1 &&
+					update_notifications['message_' + user2.userid] === 1 &&
+					update_notifications['group_update_notification_' + user1.userid] === 1 &&
+					update_notifications['group_update_notification_' + user2.userid] === 1) {
+						logger.log("test 9 - ALL NOTIFICATIONS RECEIVED");
+						chatClient1.removeOnMessageAddedHandler(handler_message_added_client1);
+						logger.log("test 9 - chatClient1.removeOnMessageAddedHandler(handler_message_added_client1) OK.", handler_message_added_client1);
+						chatClient1.removeOnMessageAddedHandler(handler_message_added_client2);
+						logger.log("test 9 - chatClient1.removeOnMessageAddedHandler(handler_message_added_client2) OK.", handler_message_added_client2);
+						chatClient1.removeOnGroupUpdatedHandler(handler_group_updated_client1);
+						logger.log("test 9 - chatClient1.removeOnGroupUpdatedHandler(handler_group_updated_client1) OK.", handler_group_updated_client1);
+						chatClient1.removeOnGroupUpdatedHandler(handler_group_updated_client2);
+						logger.log("test 9 - chatClient1.removeOnGroupUpdatedHandler(handler_group_updated_client2) OK.", handler_group_updated_client2);
+						
+						done();
+						logger.log("test 9 - done()");
+						
+				}
+			}
+			chatClient1.groupCreate(
+				group_name,
+				group_id,
+				group_members,
+				(err, result) => {
+					assert(err == null);
+					assert(result != null);
+					assert(result.success == true);
+					assert(result.group.name === group_name);
+					logger.log("test 9 - group", group_id, "created");
+					chatClient1.groupJoin(group_id, user3.userid, (err, json) => {
+						if (err) {
+							logger.log("test 9 - member joined error!", err);
 						}
-					);
-			// 	});
-			// });
+						assert(err == null);
+						logger.log("test 9 - member joined json:", json);
+					});
+				}
+			);
+			
 		});
 	});
 
@@ -1165,9 +1180,113 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 					assert(err == null);
 					assert(result != null);
 					assert(result.success == true);
+					logger.log("test 13 - end.");
 					done();
 				}
 			);
+		});
+	});
+
+	describe('TiledeskClient - Webhooks - test 14', function() {
+		it('test 14 - "message-sent" webhook event, 1 endpoint \
+REUSE SHARED CHAT CLIENTS', function(done) {
+			logger.log("test 14 - start.");
+			let SENT_MESSAGE = 'MESSAGE TEST 14';
+			observer.setWebHookEndpoints(["http://localhost:10456/postdata3"]);
+			// observer.setWebHookEvents([messageConstants.WEBHOOK_EVENTS.MESSAGE_SENT]);
+			observer.setWebHookEnabled(true);
+			let webhooksServer = express();
+			webhooksServer.use(bodyParser.json());
+			logger.log('setWebHookEndpoint ok.');
+			webhooksServer.post('/postdata3', function (req, res) {
+				logger.log("test 14 - message-sent received:", req.body);
+				res.status(200).send({success: true});
+				if (req.body.event_type === messageConstants.WEBHOOK_EVENTS.MESSAGE_SENT &&
+					req.body.data.text === SENT_MESSAGE) {
+					done();
+					observer.setWebHookEnabled(false);
+					observer.setWebHookEndpoints(null);
+					webhook_app.close();
+				}
+			});
+			let webhook_app = webhooksServer.listen(10456, async function() {
+				logger.log('test 14 - Webhooks App started.', webhook_app.address());
+				chatClient1.sendMessage(
+					SENT_MESSAGE,
+					TYPE_TEXT,
+					user2.userid,
+					user2.fullname,
+					user1.fullname,
+					null,
+					null,
+					CHANNEL_TYPE_DIRECT,
+					() => {
+						logger.log("Message sent:", SENT_MESSAGE);
+					}
+				);
+			});
+		});
+	});
+
+	describe('TiledeskClient - Webhooks - test 15', function() {
+		it('test 15 - "message-sent" webhook event, 2 endpoints \
+REUSE SHARED CHAT CLIENTS', function(done) {
+			logger.log("test 15 - start.");
+			let SENT_MESSAGE = 'MESSAGE TEST 15';
+			observer.setWebHookEndpoints(["http://localhost:10456/postdata3", "http://localhost:10456/postdata4"]);
+			observer.setWebHookEvents([messageConstants.WEBHOOK_EVENTS.MESSAGE_SENT]);
+			observer.setWebHookEnabled(true);
+			let webhooksServer = express();
+			webhooksServer.use(bodyParser.json());
+			logger.log('setWebHookEndpoint ok.');
+			let endpoints_call = {
+				postdata3: false,
+				postdata4: false
+			}
+			webhooksServer.post('/postdata3', function (req, res) {
+				logger.log("test 15 - message-sent received:", req.body);
+				res.status(200).send({success: true});
+				if (req.body.event_type === messageConstants.WEBHOOK_EVENTS.MESSAGE_SENT &&
+					req.body.data.text === SENT_MESSAGE) {
+						endpoints_call.postdata3 = true;
+				}
+				if (endpoints_call.postdata3 && endpoints_call.postdata4) {
+					done();
+					observer.setWebHookEnabled(false);
+					observer.setWebHookEndpoints(null);
+					webhook_app.close();
+				}
+			});
+			webhooksServer.post('/postdata4', function (req, res) {
+				logger.log("test 15 - message-sent received:", req.body);
+				res.status(200).send({success: true});
+				if (req.body.event_type === messageConstants.WEBHOOK_EVENTS.MESSAGE_SENT &&
+					req.body.data.text === SENT_MESSAGE) {
+						endpoints_call.postdata4 = true;
+				}
+				if (endpoints_call.postdata3 && endpoints_call.postdata4) {
+					done();
+					observer.setWebHookEnabled(false);
+					observer.setWebHookEndpoints(null);
+					webhook_app.close();
+				}
+			});
+			let webhook_app = webhooksServer.listen(10456, async function() {
+				logger.log('test 15 - Webhooks App started.', webhook_app.address());
+				chatClient1.sendMessage(
+					SENT_MESSAGE,
+					TYPE_TEXT,
+					user2.userid,
+					user2.fullname,
+					user1.fullname,
+					null,
+					null,
+					CHANNEL_TYPE_DIRECT,
+					() => {
+						logger.log("Message sent:", SENT_MESSAGE);
+					}
+				);
+			});
 		});
 	});
 
