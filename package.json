@@ -1,6 +1,6 @@
 {
   "name": "@chat21/chat21-server",
-  "version": "0.1.14",
+  "version": "0.2.2",
   "description": "Chat21 AMQP messages dispatcher",
   "dependencies": {
     "aedes": "^0.40.1",
@@ -14,24 +14,21 @@
     "mongoose": "^5.9.10",
     "mqtt": "^4.2.6",
     "rhea": "^1.0.20",
+    "uuid": "^8.3.2",
     "uuidv4": "^6.1.1",
     "websocket-stream": "^5.5.2"
   },
   "devDependencies": {
-    "@chat21/chat21-http-server": "^0.1.15",
+    "@chat21/chat21-http-server": "^0.2.2",
     "axios": "^0.21.1",
-    "should": "^9.0.2",
-    "loadtest": "^1.4.3"
+    "loadtest": "^1.4.3",
+    "should": "^9.0.2"
   },
   "scripts": {
-    "test": "mocha ./test/*.js --timeout 4000",
+    "test": "mocha ./test/*.js --timeout 60000 --exit",
     "benchmarks": "node ./benchmarks/index.js",
     "start": "node chatservermq.js"
   },
-  "engines": {
-    "node": "12.21.0",
-    "npm": "7.20.3"
-  },
-  "author": "Andrea Sponziello",
+  "author": "",
   "license": "MIT"
 }

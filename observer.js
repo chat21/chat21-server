@@ -14,28 +14,6 @@ const app = express();
 app.use(bodyParser.json());
 const logger = require('./tiledesk-logger').logger;
 
-/*
-var webhook_endpoint = process.env.WEBHOOK_ENDPOINT || "http://localhost:3000/chat21/requests";
-logger.info("webhook_endpoint: " + webhook_endpoint);
-
-let webhook_events_array = null;
-if (process.env.WEBHOOK_EVENTS) {
-  logger.log(typeof process.env.WEBHOOK_EVENTS);
-  const webhook_events = process.env.WEBHOOK_EVENTS;
-  webhook_events_array = webhook_events.split(",");
-}
-logger.info("webhook_events_array: " , webhook_events_array);
-
-var webhook_enabled = process.env.WEBHOOK_ENABLED;
-if (webhook_enabled == undefined || webhook_enabled === "true" || webhook_enabled === true ) {
-  webhook_enabled = true;
-}else {
-  webhook_enabled = false;
-}
-logger.info("webhook_enabled: " + webhook_enabled);
-
-*/
-
 var amqpConn = null;
 let exchange;
 let app_id;
@@ -55,26 +33,30 @@ let autoRestart;
 
 if (webhook_enabled == undefined || webhook_enabled === "true" || webhook_enabled === true ) {
   webhook_enabled = true;
-}else {
+}
+else {
   webhook_enabled = false;
 }
-logger.info("webhook_enabled: " + webhook_enabled);
+logger.info("(Observer) webhook_enabled: " + webhook_enabled);
 
-let webhook_endpoint;
+let active_queues = {
+  'messages': true,
+  'persist': true
+};
+
+let webhook_endpoints_array;
 let webhook_events_array;
-let persistent_messages;
 
 function getWebhooks() {
   return webhooks;
 }
 
-
 function getWebHookEnabled() {
   return webhook_enabled;
 }
 
-function getWebHookEndpoint() {
-  return webhook_endpoint;
+function getWebHookEndpoints() {
+  return webhook_endpoints_array;
 }
 
 function getWebHookEvents() {
@@ -83,14 +65,58 @@ function getWebHookEvents() {
 
 function setWebHookEnabled(enabled) {
   webhook_enabled = enabled;
+  if (webhooks) {
+    webhooks.setWebHookEnabled(webhook_enabled);
+  }
 }
 
-function setWebHookEndpoint(url) {
-  webhook_endpoint = url;
+function setWebHookEndpoints(endpoints) {
+  webhook_endpoints_array = endpoints;
+  if (webhooks) {
+    webhooks.setWebHookEndpoints(webhook_endpoints_array);
+  }
 }
 
 function setWebHookEvents(events) {
   webhook_events_array = events;
+  if (webhooks) {
+    webhooks.setWebHookEvents(events);
+  }
+}
+
+// function initWebhooks(config) {
+//   console.log("1")
+//   if (!config) {
+//     config = {}
+//   }
+//   app_id = config.app_id || "tilechat";
+//   exchange = config.exchange || 'amq.topic';
+//   if (config && config.rabbitmq_uri) {
+//     // console.log("rabbitmq_uri found in config", config)
+//     rabbitmq_uri = config.rabbitmq_uri;
+//   }
+//   else if (process.env.RABBITMQ_URI) {
+//     // console.log("rabbimq_uri found in env")
+//     rabbitmq_uri = process.env.RABBITMQ_URI;
+//   }
+//   else {
+//     throw new Error('please configure process.env.RABBITMQ_URI or use parameter config.rabbimq_uri option.');
+//   }
+//   console.log("2")
+//   webhooks = new Webhooks({appId: app_id, RABBITMQ_URI: rabbitmq_uri, exchange: exchange, webhook_endpoints: webhook_endpoints_array, webhook_events: webhook_events_array, queue_name: 'webhooks', logger: logger});
+//   webhooks.enabled = webhook_enabled;
+//   // await webhooks.start();
+//   console.log("3")
+// }
+
+function setActiveQueues(queues) {
+  logger.log("active queues setting", queues)
+  active_queues = queues;
+}
+
+let prefetch_messages = 10;
+function setPrefetchMessages(prefetch) {
+  prefetch_messages = prefetch;
 }
 
 let autoRestartProperty;
@@ -98,9 +124,9 @@ function setAutoRestart(_autoRestart) {
   autoRestartProperty = _autoRestart;
 }
 
-function setPersistentMessages(persist) {
-  persistent_messages = persist;
-}
+// function setPersistentMessages(persist) {
+//   persistent_messages = persist;
+// }
 
 
 function start() {
@@ -119,9 +145,9 @@ function startMQ(resolve, reject) {
   logger.debug("Observer. Connecting to RabbitMQ...")
   amqp.connect(rabbitmq_uri, (err, conn) => {
       if (err) {
-          logger.error("[AMQP]", err);
+          logger.error("[Observer AMQP]", err);
           if (autoRestart) {
-            logger.error("[AMQP] reconnecting");
+            logger.error("[Observer AMQP] reconnecting");
             return setTimeout(() => { startMQ(resolve, reject) }, 1000);
           } else {
               process.exit(1);
@@ -129,17 +155,18 @@ function startMQ(resolve, reject) {
       }
       conn.on("error", (err) => {
           if (err.message !== "Connection closing") {
-            logger.error("[AMQP] conn error", err);
+            logger.error("[Observer AMQP] conn error", err);
               return reject(err);
           }
       });
       conn.on("close", () => {
-        logger.error("[AMQP] close");
+        logger.info("[Observer AMQP] close");
         if (autoRestart) {
-            logger.error("[AMQP] reconnecting");
+            logger.info("[Observer AMQP] reconnecting because of a disconnection (Autorestart = true)");
             return setTimeout(() => { startMQ(resolve, reject) }, 1000);
         } else {
-            process.exit(1);
+            // process.exit(1);
+            logger.info("[Observer AMQP] close event. No action.");
         }
       });
       amqpConn = conn;
@@ -214,32 +241,62 @@ function startWorker() {
     ch.on("close", function () {
       logger.debug("[AMQP] channel closed");
     });
-    ch.prefetch(10);
+    logger.info("Prefetch messages:", prefetch_messages);
+    ch.prefetch(prefetch_messages);
     ch.assertExchange(exchange, 'topic', {
       durable: true
     });
-    ch.assertQueue("messages", { durable: true }, function (err, _ok) {
-      if (closeOnErr(err)) return;
-      subscribeTo(topic_outgoing, ch, _ok.queue)
-      subscribeTo(topic_persist, ch, _ok.queue)
-      subscribeTo(topic_update, ch, _ok.queue)
-      subscribeTo(topic_archive, ch, _ok.queue)
-      subscribeTo(topic_presence, ch, _ok.queue)
-      // subscribeTo(topic_create_group, ch, _ok.queue)
-      subscribeTo(topic_update_group, ch, _ok.queue)
-      subscribeTo(topic_delivered, ch, _ok.queue)
-      ch.consume("messages", processMsg, { noAck: false });
-    });
+    logger.info("enabling queues", active_queues);
+    if (active_queues['messages']) {
+      ch.assertQueue("messages", { durable: true }, function (err, _ok) {
+        if (closeOnErr(err)) return;
+        let queue = _ok.queue;
+        logger.log("asserted queue:", queue);
+        // if (subscription_topics['outgoing']) {
+          subscribeTo(topic_outgoing, ch, queue, exchange)
+        // }
+        // if (subscription_topics['update']) {
+          subscribeTo(topic_update, ch, queue, exchange)
+        // }
+        // if (subscription_topics['persist']) {
+        //   subscribeTo(topic_persist, ch, queue, exchange)
+        // }
+        // if (subscription_topics['archive']) {
+          subscribeTo(topic_archive, ch, queue, exchange)
+        // }
+        // if (subscription_topics['presence']) {
+          subscribeTo(topic_presence, ch, queue, exchange)
+        // }
+        // if (subscription_topics['update_group']) {
+          subscribeTo(topic_update_group, ch, queue, exchange)
+        // }
+        // if (subscription_topics['delivered']) {
+          subscribeTo(topic_delivered, ch, queue, exchange)
+        // }
+        ch.consume(queue, processMsg, { noAck: false });
+      });
+    }
+    if (active_queues['persist']) {
+      ch.assertQueue("persist", { durable: true }, function (err, _ok) {
+        if (closeOnErr(err)) return;
+        let queue = _ok.queue;
+        logger.log("asserted queue:", queue);
+        // if (subscription_topics['persist']) {
+          subscribeTo(topic_persist, ch, queue, exchange)
+        // }
+        ch.consume(queue, processMsg, { noAck: false });
+      });
+    }
   });
 }
 
-function subscribeTo(topic, channel, queue) {
+function subscribeTo(topic, channel, queue, exchange) {
   channel.bindQueue(queue, exchange, topic, {}, function (err, oka) {
     if (err) {
       logger.error("Error:", err, " binding on queue:", queue, "topic:", topic)
     }
     else {
-      logger.info("bind: '" + queue + "' on topic: " + topic);
+      logger.info("binded queue: '" + queue + "' on topic: " + topic);
     }
   });
 }
@@ -314,7 +371,7 @@ function process_presence(topic, message_string, callback) {
 }
 
 function process_outgoing(topic, message_string, callback) {
-  logger.debug("process outgoing topic:" + topic)
+  logger.debug("***** TOPIC outgoing: " + topic +  " MESSAGE PAYLOAD: " + message_string)
   var topic_parts = topic.split(".")
   // /apps/tilechat/users/(ME)SENDER_ID/messages/RECIPIENT_ID/outgoing
   const app_id = topic_parts[1]
@@ -443,9 +500,9 @@ function getGroup(group_id, callback) {
   // else {
   //   logger.log("--GROUP", group_id, "NOT FOUND! QUERYING DB...");
     chatdb.getGroup(group_id, function(err, group) {
-      if (!err) {
-        groups[group_id] = group;
-      }
+      // if (!err) {
+      //   groups[group_id] = group;
+      // }
       callback(err, group);
     });
   // }
@@ -475,8 +532,8 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
   const persist_topic = `apps.observer.${app_id}.users.${inbox_of}.messages.${convers_with_id}.persist`
   // mqtt (client) flow
   const added_topic = `apps.${app_id}.users.${inbox_of}.messages.${convers_with_id}.clientadded`
-  logger.debug("persist_topic: " + persist_topic)
-  logger.debug("added_topic: " + added_topic)
+  logger.debug("will pubblish on added_topic: " + added_topic)
+  logger.debug("will pubblish on persist_topic: " + persist_topic)
   const mstatus = message.status;
   logger.log("mstatus:", mstatus)
   const message_payload = JSON.stringify(message)
@@ -504,7 +561,7 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
               callback(false);
               return;
             }
-            logger.debug("... ALL GOOD ON:", persist_topic);
+            logger.debug("(WEBHOOK ENABLED) SUCCESSFULLY PUBLISHED ON:", persist_topic);
             callback(true);
           })
         }
@@ -518,7 +575,7 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
           callback(false);
           return;
         }
-        logger.debug("... ALL GOOD ON:", persist_topic);
+        logger.debug("(NO WEBHOOK) SUCCESSFULLY PUBLISHED ON::", persist_topic);
         callback(true);
       })
     }
@@ -553,7 +610,7 @@ function process_delivered(topic, message_string, callback) {
 // This handler only persists messages and persists/updates conversations.
 // Original messages were already delivered with *.messages.*.clientadded
 function process_persist(topic, message_string, callback) {
-  logger.debug(">>>>> TOPIC persist: " + topic +  " MESSAGE PAYLOAD: " +message_string)
+  logger.debug(">>>>> TOPIC persist: " + topic +  " MESSAGE PAYLOAD: " + message_string)
   var topic_parts = topic.split(".")
   // /apps/observer/tilechat/users/ME/messages/CONVERS_WITH/persist -> WITH "SERVER" THIS MESSAGES WILL NOT BE DELIVERED TO CLIENTS
   const app_id = topic_parts[2]
@@ -590,6 +647,7 @@ function process_persist(topic, message_string, callback) {
           callback(false)
         }
         else {
+          logger.log("Conversation saved.");
           callback(true)
         }
       });
@@ -981,22 +1039,28 @@ async function startServer(config) {
   mongo_uri = config.mongo_uri || "mongodb://localhost:27017/chatdb";
   var db;
   logger.debug("connecting to mongodb...");
+  console.log("connecting to mongodb...");
   var client = await mongodb.MongoClient.connect(mongo_uri, { useNewUrlParser: true, useUnifiedTopology: true })
   db = client.db();
-  logger.debug("mongodb connected...", db);
+  logger.debug("Mongodb connected.");
   chatdb = new ChatDB({database: db})
   logger.info("Starting webhooks...");
-  webhooks = new Webhooks({appId: app_id, RABBITMQ_URI: rabbitmq_uri, exchange: exchange, webhook_endpoint: webhook_endpoint, webhook_events: webhook_events_array, queue_name: 'webhooks', logger: logger});
-  await webhooks.start();
-  webhooks.enabled = webhook_enabled;
+  try {
+    webhooks = new Webhooks({appId: app_id, RABBITMQ_URI: rabbitmq_uri, exchange: exchange, webhook_endpoints: webhook_endpoints_array, webhook_events: webhook_events_array, queue_name: 'webhooks', logger: logger});
+    webhooks.enabled = webhook_enabled;
+    await webhooks.start();
+  }
+  catch(error) {
+    logger.error("An error occurred initializing webhooks:", error)
+  }
   logger.debug('Starting AMQP connection....');
   var amqpConnection = await start();
   logger.debug("[Observer.AMQP] connected.");
-  console.log("Observer started.");
+  logger.debug("Observer started.");
 }
 
-function stopServer() {
-  amqpConn.close();
+function stopServer(callback) {
+  amqpConn.close(callback);
 }
 
-module.exports = {startServer: startServer, stopServer: stopServer, setAutoRestart: setAutoRestart, getWebhooks: getWebhooks, setWebHookEndpoint: setWebHookEndpoint, setWebHookEvents: setWebHookEvents, setWebHookEnabled: setWebHookEnabled, logger: logger };
+module.exports = {startServer: startServer, stopServer: stopServer, setAutoRestart: setAutoRestart, getWebhooks: getWebhooks, setWebHookEndpoints: setWebHookEndpoints, setWebHookEvents: setWebHookEvents, setWebHookEnabled: setWebHookEnabled, setActiveQueues: setActiveQueues, setPrefetchMessages: setPrefetchMessages, logger: logger };
