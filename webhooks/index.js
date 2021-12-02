@@ -441,6 +441,12 @@ class Webhooks {
         "Content-Type": "application/json"
       }
     };
+    if (q.protocol == "https:") {
+      const httpsAgent = new protocol.Agent({
+        rejectUnauthorized: false // (NOTE: this will disable client verification)
+      });
+      options.httpsAgent = httpsAgent;
+    }
     try {
       const req = protocol.request(options, (response) => {
         logger.debug("statusCode: "+  response.statusCode + " for webhook_endpoint: " + endpoint);
