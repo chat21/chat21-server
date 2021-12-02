@@ -442,11 +442,13 @@ class Webhooks {
       }
     };
     if (q.protocol == "https:") {
+      logger.debug("Setting rejectUnauthorized: false");
       const httpsAgent = new protocol.Agent({
         rejectUnauthorized: false // (NOTE: this will disable client verification)
       });
       options.httpsAgent = httpsAgent;
     }
+    logger.debug("Using request options:", options);
     try {
       const req = protocol.request(options, (response) => {
         logger.debug("statusCode: "+  response.statusCode + " for webhook_endpoint: " + endpoint);
@@ -473,7 +475,7 @@ class Webhooks {
       // logger.debug("end")
     }
     catch(err) {
-      logger.error("an error occurred while posting this json " + JSON.stringify(json), err)
+      logger.error("An error occurred while posting this json " + JSON.stringify(json), err)
       return callback(err, null)
     }
   }
