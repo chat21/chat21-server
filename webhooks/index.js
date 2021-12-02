@@ -442,11 +442,12 @@ class Webhooks {
       }
     };
     if (q.protocol == "https:") {
-      logger.debug("Setting rejectUnauthorized: false");
-      const httpsAgent = new protocol.Agent({
-        rejectUnauthorized: false // (NOTE: this will disable client verification)
-      });
-      options.httpsAgent = httpsAgent;
+      process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"
+      // logger.debug("Setting rejectUnauthorized: false");
+      // const httpsAgent = new protocol.Agent({
+      //   rejectUnauthorized: false // (NOTE: this will disable client verification)
+      // });
+      // options.httpsAgent = httpsAgent;
     }
     logger.debug("Using request options:", options);
     try {
