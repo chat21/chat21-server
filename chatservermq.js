@@ -64,7 +64,6 @@ else {
 }
 
 var webhook_enabled = process.env.WEBHOOK_ENABLED;
-console.log("process.env.WEBHOOK_ENABLED: " + process.env.WEBHOOK_ENABLED);
 if (webhook_enabled == undefined || webhook_enabled === "true" || webhook_enabled === true ) {
   webhook_enabled = true;
 }else {

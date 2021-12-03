@@ -91,6 +91,7 @@ class Webhooks {
 
   setWebHookEnabled(enabled) {
     this.enabled = enabled;
+    logger.log("Webhooks.enabled:", this.enabled);
   }
 
   getWebHookEndpoints() {
@@ -99,6 +100,7 @@ class Webhooks {
   
   setWebHookEndpoints(endpoints) {
     this.webhook_endpoints = endpoints;
+    logger.log("New webhook endpoints:", this.webhook_endpoints)
   }
   
   getWebHookEvents() {

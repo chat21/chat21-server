@@ -13,7 +13,7 @@ const { Console } = require("console");
 const app = express();
 app.use(bodyParser.json());
 const logger = require('./tiledesk-logger').logger;
-
+console.log("Logger in observer:", logger)
 var amqpConn = null;
 let exchange;
 let app_id;
@@ -1006,7 +1006,7 @@ function closeOnErr(err) {
 }
 
 async function startServer(config) {
-  console.log("Starting observer....");
+  logger.info("Starting observer....");
   if (!config) {
     config = {}
   }
@@ -1016,11 +1016,9 @@ async function startServer(config) {
   exchange = config.exchange || 'amq.topic';
 
   if (config && config.rabbitmq_uri) {
-    // console.log("rabbitmq_uri found in config", config)
     rabbitmq_uri = config.rabbitmq_uri;
   }
   else if (process.env.RABBITMQ_URI) {
-    // console.log("rabbimq_uri found in env")
     rabbitmq_uri = process.env.RABBITMQ_URI;
   }
   else {
@@ -1044,7 +1042,7 @@ async function startServer(config) {
   db = client.db();
   logger.debug("Mongodb connected.");
   chatdb = new ChatDB({database: db})
-  logger.info("Starting webhooks...");
+  logger.info("Starting webhooks..., logger", logger);
   try {
     webhooks = new Webhooks({appId: app_id, RABBITMQ_URI: rabbitmq_uri, exchange: exchange, webhook_endpoints: webhook_endpoints_array, webhook_events: webhook_events_array, queue_name: 'webhooks', logger: logger});
     webhooks.enabled = webhook_enabled;
