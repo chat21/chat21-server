@@ -259,7 +259,7 @@ describe('Main', function() {
 		});
 	});
 
-	describe('TiledeskClient - Direct - test 1', function() {
+	describe('TiledeskClient - Direct -test 1-', function() {
 		it('User1 sends a direct message to User2 using client.sendMessage() \
 REUSE SHARED CHAT CLIENTS', function(done) {
 			logger.log("test 1 - start.");
@@ -281,7 +281,7 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 		});
 	});
 
-	describe('TiledeskClient - Direct - test 2', function() {
+	describe('TiledeskClient - Direct -test 2-', function() {
 		it('User1 sends a direct message and User2 receives the message \
 REUSE SHARED CHAT CLIENTS', function(done) {
 			logger.log("test 2 - start.");
@@ -316,7 +316,7 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 		});
 	});
 
-	describe('TiledeskClient - Groups - test 3', function() {
+	describe('TiledeskClient - Groups -test 3-', function() {
 		it('test 3 - Creates a group \
 REUSE SHARED CHAT CLIENTS', function(done) {
 			logger.log("test 3 - start.");
@@ -355,7 +355,7 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 		});
 	});
 
-	describe('TiledeskClient - Groups - test 4', function() {
+	describe('TiledeskClient - Groups -test 4-', function() {
 		it('test 4 - Create group info messages. \
 User1 creates a group with 2 members (user1, user2). \
 User2 receives all the group info messages(user1.GROUP_CREATED, user1.MEMBER_JOINED_GROUP, user2.MEMBER_JOINED_GROUP) \
@@ -433,7 +433,7 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 		});
 	});
 
-	describe('TiledeskClient - Groups - test 5', function() {
+	describe('TiledeskClient - Groups -test 5-', function() {
 		it('test 5 - Send message to group. \
 User1 creates a group. \
 Group creator (User1) sends a message to the group and receives the sent message back. \
@@ -504,7 +504,7 @@ NEW CHAT CLIENTS', function(done) {
 		});
 	});
 
-	describe('TiledeskClient - Groups - test 6', function() {
+	describe('TiledeskClient - Groups -test 6-', function() {
 		it('test 6 - Leave group. \
 Creates group with 3 members, \
 user1 creates group, \
@@ -570,7 +570,7 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 		});
 	});
 
-	describe('TiledeskClient - Groups - test 7 - Join group with group-updated callback', function() {
+	describe('TiledeskClient - Groups -test 7- Join group with group-updated callback', function() {
 		it('test 7 - Join group (group/clientupdate notification subscription). \
 Creates group with 2 members. \
 User1 creates group, user1 (owner) adds user3 to the group, user1 & user2 receive e group/clientupdate notification \
@@ -629,7 +629,7 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 		});
 	});
 
-	describe('TiledeskClient - test 8 - Join group with JOINED_MEMBER message notification', function() {
+	describe('TiledeskClient -test 8- Join group with JOINED_MEMBER message notification', function() {
 		it('test 8 - Join group (group info messages). \
 User1 (owner) creates a group with 2 members (User1, User2). \
 User1 adds User3 to the group, user1 & user2 receive e MEMBER_JOINED_GROUP message \
@@ -708,7 +708,7 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 		});
 	});
 
-	describe('TiledeskClient - Groups - test 9 - Join group - full notifications (group-update, JOINED_MEMBER messages)', function() {
+	describe('TiledeskClient - Groups -test 9- Join group - full notifications (group-update, JOINED_MEMBER messages)', function() {
 		it('test 9 - Join group, complete notifications (testing receiving of both info-messages & group-update notifications). \
 User1 creates a group with 2 members. \
 User1 adds user3 to the group.\
@@ -826,7 +826,7 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 		});
 	});
 
-	describe('TiledeskClient - test 10 - Join group - history messages 1', function() {
+	describe('TiledeskClient -test 10- Join group - history messages 1', function() {
 		it('test 10 - Join group (get group messages history, 1 message). User1 (owner) creates a group with 2 members (User1, User2). \
 User1 sends 1 message. \
 User1 adds User3 to the group. \
@@ -896,7 +896,7 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 		});
 	});
 
-	describe('TiledeskClient - test 11 -  - history messages 2 (full history)', function() {
+	describe('TiledeskClient -test 11- history messages 2 (full history)', function() {
 		it('\
 test 11 - Join group (get FULL group messages history). \
 User1 (owner) creates a group with 2 members (User1, User2). \
@@ -1063,7 +1063,7 @@ NEW CHAT CLIENTS', function(done) {
 		});
 	});
 
-	describe('TiledeskClient - test 12', function() {
+	describe('TiledeskClient -test 12-', function() {
 		it('\
 test 12 - Set Members (not testing messages history). \
 User1 (owner) creates a group with 2 members: User1, User2 \
@@ -1141,7 +1141,7 @@ NEW CHAT CLIENTS', function(done) {
 		});
 	});
 
-	describe('TiledeskClient - Groups - test 13', function() {
+	describe('TiledeskClient - Groups -test 13-', function() {
 		it('test 13 - Saves an app instance \
 REUSE SHARED CHAT CLIENTS', function(done) {
 			logger.log("test 13 - start.");
@@ -1165,7 +1165,7 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 		});
 	});
 
-	describe('TiledeskClient - Webhooks - test 14', function() {
+	describe('TiledeskClient - Webhooks -test 14-', function() {
 		it('test 14 - "message-sent" webhook event, 1 endpoint \
 REUSE SHARED CHAT CLIENTS', function(done) {
 			logger.log("test 14 - start.");
@@ -1206,7 +1206,7 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 		});
 	});
 
-	describe('TiledeskClient - Webhooks - test 15', function() {
+	describe('TiledeskClient - Webhooks -test 15-', function() {
 		it('test 15 - "message-sent" webhook event, 2 endpoints \
 REUSE SHARED CHAT CLIENTS', function(done) {
 			logger.log("test 15 - start.");
