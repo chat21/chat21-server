@@ -57,7 +57,7 @@ const user5 = {
 // ** RUN LOCAL MONGODB, EX: mongod --dbpath /usr/local/var/mongodb
 const config = {
 	APPID: 'tilechat',
-	MQTT_ENDPOINT: 'ws://localhost:15675/ws',
+	MQTT_ENDPOINT: 'wss://localhost:15676/ws',
 	API_ENDPOINT: 'http://localhost:8010/api',
 	CLIENT_API_LOG: false,
 	HTTP_SERVER_LOG_LEVEL: 'error',
