@@ -1,8 +1,7 @@
 var amqp = require('amqplib/callback_api');
 const { ChatDB } = require('./chatdb/index.js');
-// const { Webhooks } = require('./webhooks/index.js');
-// const uuidv4 = require('uuid/v4');
-const { uuid } = require('uuidv4');
+//const { uuid } = require('uuidv4');
+const { v4: uuidv4 } = require('uuid');
 var mongodb = require("mongodb");
 var MessageConstants = require("./models/messageConstants");
 const express = require('express');
@@ -380,7 +379,7 @@ function process_outgoing(topic, message_string, callback) {
   const me = sender_id
 
   let message = JSON.parse(message_string)
-  let messageId = uuid()
+  let messageId = uuidv4()
   const now = Date.now()
   let outgoing_message = message
   outgoing_message.message_id = messageId

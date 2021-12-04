@@ -1,3 +1,5 @@
+## v0.2.3
+- replaced uuidv4 with uuid
 
 ## v0.2.2
 - removed process.exit(1) from "close" event in observer's AMQP connection handlers

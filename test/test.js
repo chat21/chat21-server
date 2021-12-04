@@ -1206,66 +1206,66 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 		});
 	});
 
-// 	describe('TiledeskClient - Webhooks - test 15', function() {
-// 		it('test 15 - "message-sent" webhook event, 2 endpoints \
-// REUSE SHARED CHAT CLIENTS', function(done) {
-// 			logger.log("test 15 - start.");
-// 			let SENT_MESSAGE = 'MESSAGE TEST 15';
-// 			observer.setWebHookEndpoints(["http://localhost:10456/postdata3", "http://localhost:10456/postdata4"]);
-// 			observer.setWebHookEvents([messageConstants.WEBHOOK_EVENTS.MESSAGE_SENT]);
-// 			observer.setWebHookEnabled(true);
-// 			let webhooksServer = express();
-// 			webhooksServer.use(bodyParser.json());
-// 			logger.log('setWebHookEndpoint ok.');
-// 			let endpoints_call = {
-// 				postdata3: false,
-// 				postdata4: false
-// 			}
-// 			webhooksServer.post('/postdata3', function (req, res) {
-// 				logger.log("test 15 - message-sent received:", req.body);
-// 				res.status(200).send({success: true});
-// 				if (req.body.event_type === messageConstants.WEBHOOK_EVENTS.MESSAGE_SENT &&
-// 					req.body.data.text === SENT_MESSAGE) {
-// 						endpoints_call.postdata3 = true;
-// 				}
-// 				if (endpoints_call.postdata3 && endpoints_call.postdata4) {
-// 					done();
-// 					observer.setWebHookEnabled(false);
-// 					observer.setWebHookEndpoints(null);
-// 					webhook_app.close();
-// 				}
-// 			});
-// 			webhooksServer.post('/postdata4', function (req, res) {
-// 				logger.log("test 15 - message-sent received:", req.body);
-// 				res.status(200).send({success: true});
-// 				if (req.body.event_type === messageConstants.WEBHOOK_EVENTS.MESSAGE_SENT &&
-// 					req.body.data.text === SENT_MESSAGE) {
-// 						endpoints_call.postdata4 = true;
-// 				}
-// 				if (endpoints_call.postdata3 && endpoints_call.postdata4) {
-// 					done();
-// 					observer.setWebHookEnabled(false);
-// 					observer.setWebHookEndpoints(null);
-// 					webhook_app.close();
-// 				}
-// 			});
-// 			let webhook_app = webhooksServer.listen(10456, async function() {
-// 				logger.log('test 15 - Webhooks App started.', webhook_app.address());
-// 				chatClient1.sendMessage(
-// 					SENT_MESSAGE,
-// 					TYPE_TEXT,
-// 					user2.userid,
-// 					user2.fullname,
-// 					user1.fullname,
-// 					null,
-// 					null,
-// 					CHANNEL_TYPE_DIRECT,
-// 					() => {
-// 						logger.log("Message sent:", SENT_MESSAGE);
-// 					}
-// 				);
-// 			});
-// 		});
-// 	});
+	describe('TiledeskClient - Webhooks - test 15', function() {
+		it('test 15 - "message-sent" webhook event, 2 endpoints \
+REUSE SHARED CHAT CLIENTS', function(done) {
+			logger.log("test 15 - start.");
+			let SENT_MESSAGE = 'MESSAGE TEST 15';
+			observer.setWebHookEndpoints(["http://localhost:10456/postdata3", "http://localhost:10456/postdata4"]);
+			observer.setWebHookEvents([messageConstants.WEBHOOK_EVENTS.MESSAGE_SENT]);
+			observer.setWebHookEnabled(true);
+			let webhooksServer = express();
+			webhooksServer.use(bodyParser.json());
+			logger.log('setWebHookEndpoint ok.');
+			let endpoints_call = {
+				postdata3: false,
+				postdata4: false
+			}
+			webhooksServer.post('/postdata3', function (req, res) {
+				logger.log("test 15 - message-sent received:", req.body);
+				res.status(200).send({success: true});
+				if (req.body.event_type === messageConstants.WEBHOOK_EVENTS.MESSAGE_SENT &&
+					req.body.data.text === SENT_MESSAGE) {
+						endpoints_call.postdata3 = true;
+				}
+				if (endpoints_call.postdata3 && endpoints_call.postdata4) {
+					done();
+					observer.setWebHookEnabled(false);
+					observer.setWebHookEndpoints(null);
+					webhook_app.close();
+				}
+			});
+			webhooksServer.post('/postdata4', function (req, res) {
+				logger.log("test 15 - message-sent received:", req.body);
+				res.status(200).send({success: true});
+				if (req.body.event_type === messageConstants.WEBHOOK_EVENTS.MESSAGE_SENT &&
+					req.body.data.text === SENT_MESSAGE) {
+						endpoints_call.postdata4 = true;
+				}
+				if (endpoints_call.postdata3 && endpoints_call.postdata4) {
+					done();
+					observer.setWebHookEnabled(false);
+					observer.setWebHookEndpoints(null);
+					webhook_app.close();
+				}
+			});
+			let webhook_app = webhooksServer.listen(10456, async function() {
+				logger.log('test 15 - Webhooks App started.', webhook_app.address());
+				chatClient1.sendMessage(
+					SENT_MESSAGE,
+					TYPE_TEXT,
+					user2.userid,
+					user2.fullname,
+					user1.fullname,
+					null,
+					null,
+					CHANNEL_TYPE_DIRECT,
+					() => {
+						logger.log("Message sent:", SENT_MESSAGE);
+					}
+				);
+			});
+		});
+	});
 
 });

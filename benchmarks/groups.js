@@ -1,5 +1,7 @@
 var assert = require('assert');
-const { uuid } = require('uuidv4');
+// const { uuid } = require('uuidv4');
+const { v4: uuidv4 } = require('uuid');
+
 const { Chat21Client } = require('../mqttclient/chat21client.js');
 
 const user1 = {
@@ -46,7 +48,7 @@ startBenchmark();
 function startBenchmark() {
     console.log("Sending " + TOTAL_SENT_MESSAGES + " messages to 3 users. Delivering a total of " + TOTAL_DELIVERED_MESSAGES + " messages.");
     let messages_count = 0;
-    const group_id = "group-" + uuid();
+    const group_id = "group-" + uuidv4().replace("-", "");
     const group_name = "test send message group";
     const group_members = {}
     group_members[user1.userid] = 1;
