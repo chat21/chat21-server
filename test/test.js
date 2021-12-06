@@ -194,7 +194,12 @@ describe('Main', function() {
 								observer.setWebHookEnabled(false);
 								// observer_config = {rabbitmq_uri: process.env.RABBITMQ_URI};
 								observer.setAutoRestart(false);
-								await observer.startServer({rabbitmq_uri: process.env.RABBITMQ_URI});
+								await observer.startServer(
+									{
+										rabbitmq_uri: process.env.RABBITMQ_URI,
+										mongodb_uri: process.env.MONGODB_URI
+									}
+								);
 								logger.log("Observer ready.");
 								// THE SERVER CLIENT FOR WEBHOOKS
 								// logger.log("Setting webhooks endpoint...");

@@ -1031,10 +1031,22 @@ async function startServer(config) {
   topic_delivered = `apps.observer.${app_id}.users.*.messages.*.delivered`;
   // topic_create_group = `apps.observer.${app_id}.groups.create`
   topic_update_group = `apps.observer.${app_id}.groups.update`;
-  mongo_uri = config.mongo_uri || "mongodb://localhost:27017/chatdb";
+  // mongo_uri = config.mongo_uri || "mongodb://localhost:27017/chatdb";
+
+  let mongouri = null;
+  if (config && config.mongodb_uri) {
+    mongouri = config.mongodb_uri;
+  }
+  else if (process.env.MONGODB_URI) {
+    mongouri = process.env.MONGODB_URI;
+  }
+  else {
+    throw new Error('please configure process.env.MONGODB_URI or use parameter config.mongodb_uri option.');
+  }
+
   var db;
-  logger.debug("[Observer] connecting to mongodb:", mongo_uri);
-  var client = await mongodb.MongoClient.connect(mongo_uri, { useNewUrlParser: true, useUnifiedTopology: true });
+  logger.debug("[Observer] connecting to mongodb:", mongouri);
+  var client = await mongodb.MongoClient.connect(mongouri, { useNewUrlParser: true, useUnifiedTopology: true });
   db = client.db();
   logger.debug("Mongodb connected.");
   chatdb = new ChatDB({database: db})
