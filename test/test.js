@@ -52,17 +52,39 @@ const user5 = {
 	token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxYjMyOTIyMC1kMmFlLTQ4N2ItYmNlMy05N2I5NjYzNGRhZTMiLCJzdWIiOiJVU0VSNSIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjUuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVI1LioiLCJyYWJiaXRtcS5jb25maWd1cmU6Ki8qLyoiXSwiY2xpZW50X2lkIjoiVVNFUjUiLCJjaWQiOiJVU0VSNSIsImF6cCI6IlVTRVI1IiwidXNlcl9pZCI6IlVTRVI1IiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE2Mjc3NDg2MTEsImV4cCI6MTkzODc4ODYxMSwiYXVkIjpbInJhYmJpdG1xIiwiVVNFUjUiXSwia2lkIjoidGlsZWRlc2sta2V5IiwidGlsZWRlc2tfYXBpX3JvbGVzIjoidXNlciJ9.7xzZhSAXzceHQwyObbLxQrOWs0xUVDyJ1J4rbh4fd-g'
 };
 
+let local_stack = true;
+if (process.env && process.env.TEST_LOCAL_STACK === undefined) {
+	local_stack = true;
+}
+else if (process.env && process.env.TEST_LOCAL_STACK === 'false') {
+	local_stack = false;
+}
+
+let client_api_log = true;
+if (process.env && process.env.TEST_CLIENT_API_LOG !== 'true') {
+	client_api_log = false;
+}
+
 // ** ALL-IN-ONE
 // ** RABBITMQ, RUN IT WITH DOCKER
 // ** RUN LOCAL MONGODB, EX: mongod --dbpath /usr/local/var/mongodb
+/* example .env conf
+TEST_APPID="tilechat"
+TEST_MQTT_ENDPOINT=ws://localhost:15675/ws
+TEST_API_ENDPOINT=http://localhost:8010/api
+TEST_CLIENT_API_LOG=false
+TEST_HTTP_SERVER_LOG_LEVEL=error
+TEST_OBSERVER_LOG_LEVEL=error
+TEST_LOCAL_STACK=true
+*/
 const config = {
-	APPID: 'tilechat',
-	MQTT_ENDPOINT: 'ws://localhost:15676/ws',
-	API_ENDPOINT: 'http://localhost:8010/api',
-	CLIENT_API_LOG: false,
-	HTTP_SERVER_LOG_LEVEL: 'error',
-	OBSERVER_LOG_LEVEL: 'error',
-	LOCAL_STACK: true
+	APPID: process.env.TEST_APPID || 'tilechat',
+	MQTT_ENDPOINT: process.env.TEST_MQTT_ENDPOINT || 'ws://localhost:15675/ws',
+	API_ENDPOINT: process.env.API_ENDPOINT || 'http://localhost:8010/api',
+	CLIENT_API_LOG: client_api_log,
+	HTTP_SERVER_LOG_LEVEL: process.env.TEST_HTTP_SERVER_LOG_LEVEL || 'error',
+	OBSERVER_LOG_LEVEL: process.env.TEST_OBSERVER_LOG_LEVEL || 'error',
+	LOCAL_STACK: local_stack
 }
 
 // ** **LOCAL MACHINE COMPONENTS ****

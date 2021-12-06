@@ -444,7 +444,7 @@ class Webhooks {
       }
     };
     if (q.protocol == "https:") {
-      process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"
+      // process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"
       // logger.debug("Setting rejectUnauthorized: false");
       // const httpsAgent = new protocol.Agent({
       //   rejectUnauthorized: false // (NOTE: this will disable client verification)
@@ -455,17 +455,16 @@ class Webhooks {
     try {
       const req = protocol.request(options, (response) => {
         logger.debug("statusCode: "+  response.statusCode + " for webhook_endpoint: " + endpoint);
-        if (response.statusCode < 200 || response.statusCode > 299) { // (I don"t know if the 3xx responses come here, if so you"ll want to handle them appropriately
+        if (response.statusCode < 200 || response.statusCode > 299) { // I don't know if the 3xx responses come here, if so you"ll want to handle them appropriately
           logger.debug("http statusCode error "+  response.statusCode + " for webhook_endpoint: " + endpoint);
-          return callback({statusCode:response.statusCode}, null)
+          return callback({statusCode:response.statusCode}, null);
         }
-        var respdata = ''
+        var respdata = '';
         response.on('data', (chunk) => {
-          // logger.debug("chunk"+chunk)
           respdata += chunk;
         });
         response.on('end', () => {
-          logger.debug("WEBHOOK RESPONSE: "+ respdata + " for webhook_endpoint: " + endpoint);
+          logger.debug("WEBHOOK RESPONSE: " + respdata + " for webhook_endpoint: " + endpoint);
           return callback(null, respdata) //TODO SE IL WEBHOOK NN RITORNA SEMBRA CHE SI BLOCCI
         });
       });
