@@ -1022,20 +1022,19 @@ async function startServer(config) {
     throw new Error('please configure process.env.RABBITMQ_URI or use parameter config.rabbimq_uri option.');
   }
 
-  topic_outgoing = `apps.${app_id}.users.*.messages.*.outgoing`
-  topic_update = `apps.${app_id}.users.#.update`
-  topic_archive = `apps.${app_id}.users.#.archive`
-  topic_presence = `apps.${app_id}.users.*.presence.*`
+  topic_outgoing = `apps.${app_id}.users.*.messages.*.outgoing`;
+  topic_update = `apps.${app_id}.users.#.update`;
+  topic_archive = `apps.${app_id}.users.#.archive`;
+  topic_presence = `apps.${app_id}.users.*.presence.*`;
 // FOR OBSERVER TOPICS
-  topic_persist = `apps.observer.${app_id}.users.*.messages.*.persist`
-  topic_delivered = `apps.observer.${app_id}.users.*.messages.*.delivered`
+  topic_persist = `apps.observer.${app_id}.users.*.messages.*.persist`;
+  topic_delivered = `apps.observer.${app_id}.users.*.messages.*.delivered`;
   // topic_create_group = `apps.observer.${app_id}.groups.create`
-  topic_update_group = `apps.observer.${app_id}.groups.update`
+  topic_update_group = `apps.observer.${app_id}.groups.update`;
   mongo_uri = config.mongo_uri || "mongodb://localhost:27017/chatdb";
   var db;
-  logger.debug("connecting to mongodb...");
-  console.log("connecting to mongodb...");
-  var client = await mongodb.MongoClient.connect(mongo_uri, { useNewUrlParser: true, useUnifiedTopology: true })
+  logger.debug("[Observer] connecting to mongodb:", mongo_uri);
+  var client = await mongodb.MongoClient.connect(mongo_uri, { useNewUrlParser: true, useUnifiedTopology: true });
   db = client.db();
   logger.debug("Mongodb connected.");
   chatdb = new ChatDB({database: db})

@@ -181,7 +181,12 @@ describe('Main', function() {
 							http_api_server = chat21HttpServer.app.listen(8010, async() => {
 								logger.log('HTTP server started.');
 								logger.log('Starting AMQP publisher...');
-								await chat21HttpServer.startAMQP({rabbitmq_uri: process.env.RABBITMQ_URI});
+								await chat21HttpServer.startAMQP(
+									{
+										rabbitmq_uri: process.env.RABBITMQ_URI,
+										mongodb_uri: process.env.MONGODB_URI
+									}
+								);
 								logger.log('HTTP server AMQP connection started.');
 								observer.logger.setLog(config.OBSERVER_LOG_LEVEL);
 								// const webhook_endpoints = ["http://localhost:8002/postdata","http://localhost:8002/postdata2"];
