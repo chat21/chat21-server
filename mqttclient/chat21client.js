@@ -955,7 +955,7 @@ class Chat21Client {
             clientId: this.client_id,
             username: 'JWT',
             password: jwt,
-            rejectUnauthorized: true
+            rejectUnauthorized: false
         }
         if (this.log) {console.log("starting mqtt connection with LWT on:", presence_topic, this.endpoint)}
         // client = mqtt.connect('mqtt://127.0.0.1:15675/ws',options)
