@@ -1,7 +1,8 @@
 ## v0.2.4
 - Webhooks: moved process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0" in .env
 - Webhooks: process.env.WEBHOOK_ENDPOINTS separator "," now support spaces
-- Added testing configuration in .env. See 'example.env' for a complete list of test properties (starting with TEST_)
+- Testing: added configuration in .env. See 'example.env' for a complete list of test properties (starting with TEST_)
+- Testing: bug fix
 
 ## v0.2.3
 - replaced uuidv4 with uuid
