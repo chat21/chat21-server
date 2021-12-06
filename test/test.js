@@ -80,7 +80,7 @@ TEST_LOCAL_STACK=true
 const config = {
 	APPID: process.env.TEST_APPID || 'tilechat',
 	MQTT_ENDPOINT: process.env.TEST_MQTT_ENDPOINT || 'ws://localhost:15675/ws',
-	API_ENDPOINT: process.env.API_ENDPOINT || 'http://localhost:8010/api',
+	API_ENDPOINT: process.env.TEST_API_ENDPOINT || 'http://localhost:8010/api',
 	CLIENT_API_LOG: client_api_log,
 	HTTP_SERVER_LOG_LEVEL: process.env.TEST_HTTP_SERVER_LOG_LEVEL || 'error',
 	OBSERVER_LOG_LEVEL: process.env.TEST_OBSERVER_LOG_LEVEL || 'error',
@@ -1190,6 +1190,11 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 	describe('TiledeskClient - Webhooks _test 14_', function() {
 		it('test 14 - "message-sent" webhook event, 1 endpoint \
 REUSE SHARED CHAT CLIENTS', function(done) {
+			if (!config.LOCAL_STACK) {
+				logger.log("LOCAL_STACK=false, skipping webhooks test 14");
+				done();
+				return;
+			}
 			logger.log("test 14 - start.");
 			let SENT_MESSAGE = 'MESSAGE TEST 14';
 			observer.setWebHookEndpoints(["http://localhost:10456/postdata3"]);
@@ -1231,6 +1236,11 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 	describe('TiledeskClient - Webhooks _test 15_', function() {
 		it('test 15 - "message-sent" webhook event, 2 endpoints \
 REUSE SHARED CHAT CLIENTS', function(done) {
+			if (!config.LOCAL_STACK) {
+				logger.log("LOCAL_STACK=false, skipping webhooks test 15");
+				done();
+				return;
+			}
 			logger.log("test 15 - start.");
 			let SENT_MESSAGE = 'MESSAGE TEST 15';
 			observer.setWebHookEndpoints(["http://localhost:10456/postdata3", "http://localhost:10456/postdata4"]);

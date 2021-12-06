@@ -12,7 +12,6 @@ const { Console } = require("console");
 const app = express();
 app.use(bodyParser.json());
 const logger = require('./tiledesk-logger').logger;
-console.log("Logger in observer:", logger)
 var amqpConn = null;
 let exchange;
 let app_id;
@@ -646,7 +645,6 @@ function process_persist(topic, message_string, callback) {
           callback(false)
         }
         else {
-          logger.log("Conversation saved.");
           callback(true)
         }
       });
