@@ -270,7 +270,6 @@ class Webhooks {
     let delivered_to_inbox_of = null;
     if (message.status === MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED && message['temp_field_chat_topic']) {
       const topic_parts = message['temp_field_chat_topic'].split(".");
-      console.log("topic_parts...", topic_parts)
       // extras: {topic: 'apps.tilechat.users.03-ANDREALEO.messages.6d011n62ir097c0143cc42dc.clientadded'}
       // /apps/tilechat/users/(INBOX_OF)/messages/CONVERS_WITH/ACTION
       if (topic_parts.length >= 4) {
@@ -417,13 +416,13 @@ class Webhooks {
     //   return
     // }
 
-    if (!message['temp_webhook_endpoints']) {
+    if (!conversation['temp_webhook_endpoints']) {
       logger.debug("WHprocess_webhook_conversation_archived Discarding notification. temp_webhook_endpoints undefined.")
       return
     }
     
-    const endpoints = message['temp_webhook_endpoints'];
-    delete message['temp_webhook_endpoints'];
+    const endpoints = conversation['temp_webhook_endpoints'];
+    delete conversation['temp_webhook_endpoints'];
     endpoints.forEach((endpoint) => {
       logger.debug("Sending notification to webhook (webhook_conversation_archived):", endpoint)
       if (!conversation['temp_field_chat_topic']) {
