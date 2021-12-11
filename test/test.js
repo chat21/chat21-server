@@ -12,45 +12,76 @@ let logger = new loggers.TiledeskLogger("debug");
 const bodyParser = require('body-parser');
 const messageConstants = require('../models/messageConstants.js');
 
-const user1 = {
-	userid: 'USER1',
-	fullname: 'User 1',
-	firstname: 'User',
-	lastname: '1',
-	token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI2NzI5NDc4ZS1mOWIwLTRiODctYjNhYS03ZjU1OWExNzc5YjIiLCJzdWIiOiJVU0VSMSIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjEuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVIxLioiLCJyYWJiaXRtcS5jb25maWd1cmU6Ki8qLyoiXSwiY2xpZW50X2lkIjoiVVNFUjEiLCJjaWQiOiJVU0VSMSIsImF6cCI6IlVTRVIxIiwidXNlcl9pZCI6IlVTRVIxIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE2MjM3Njc1MjAsImV4cCI6MTkzNDgwNzUyMCwiYXVkIjpbInJhYmJpdG1xIiwiVVNFUjEiXSwia2lkIjoidGlsZWRlc2sta2V5IiwidGlsZWRlc2tfYXBpX3JvbGVzIjoidXNlciJ9.r-GBXo1fIUtl1QjOkXxcRaenVNQBElRkus3omh9YtjQ'
-};
+const user1 =  { userid: 'USER1',
+  fullname: 'User 1',
+  firstname: 'User',
+  lastname: '1',
+  token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxNzkwNDBkNy00NzdiLTQ5NmUtYjA0NS0zMTdhM2JiYzY4NjUiLCJzdWIiOiJVU0VSMSIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjEuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVIxLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSMS4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVIxIiwiY2lkIjoiVVNFUjEiLCJhenAiOiJVU0VSMSIsInVzZXJfaWQiOiJVU0VSMSIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjM5MjE0NDE4LCJleHAiOjE5NTAyNTQ0MTgsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVIxIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.0qLEOVWY0iN7polG9HU33yC7YHRmFNkB1WPruXmHxJ8'
+}
 
-const user2 = {
-	userid: 'USER2',
-	fullname: 'User 2',
-	firstname: 'User',
-	lastname: '2',
-	token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI0MmEwMjc2ZC1lODUzLTQ5YjMtOTU4ZS0xODBkMjFjZGZjNWMiLCJzdWIiOiJVU0VSMiIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjIuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVIyLioiLCJyYWJiaXRtcS5jb25maWd1cmU6Ki8qLyoiXSwiY2xpZW50X2lkIjoiVVNFUjIiLCJjaWQiOiJVU0VSMiIsImF6cCI6IlVTRVIyIiwidXNlcl9pZCI6IlVTRVIyIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE2MjM3Njc1MjAsImV4cCI6MTkzNDgwNzUyMCwiYXVkIjpbInJhYmJpdG1xIiwiVVNFUjIiXSwia2lkIjoidGlsZWRlc2sta2V5IiwidGlsZWRlc2tfYXBpX3JvbGVzIjoidXNlciJ9.Zkbr3e9MfGGDKRdVUyG4330LxeNaKYS0y3upPtS4Wgg'
-};
+const user2 =  {
+  userid: 'USER2',
+  fullname: 'User 2',
+  firstname: 'User',
+  lastname: '2',
+  token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzMWY0NGFmMy0zOGVmLTRkZmMtODM2Yi05YTI5ZjQ3Y2VmMTgiLCJzdWIiOiJVU0VSMiIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjIuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVIyLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSMi4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVIyIiwiY2lkIjoiVVNFUjIiLCJhenAiOiJVU0VSMiIsInVzZXJfaWQiOiJVU0VSMiIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjM5MjE0NDE4LCJleHAiOjE5NTAyNTQ0MTgsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVIyIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.zARfYud7bbRIfK4l9rFrHVrXA6CRlTcol_KJv9yL1q4'
+}
 
-const user3 = {
-	userid: 'USER3',
- 	fullname: 'User 3',
- 	firstname: 'User',
- 	lastname: '3',
- 	token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlMmI2Y2RhMi0yNjhmLTQxZDMtYjBjYy1kZWNjN2I0M2UwMjEiLCJzdWIiOiJVU0VSMyIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjMuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVIzLioiLCJyYWJiaXRtcS5jb25maWd1cmU6Ki8qLyoiXSwiY2xpZW50X2lkIjoiVVNFUjMiLCJjaWQiOiJVU0VSMyIsImF6cCI6IlVTRVIzIiwidXNlcl9pZCI6IlVTRVIzIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE2MjM3Njc1MjAsImV4cCI6MTkzNDgwNzUyMCwiYXVkIjpbInJhYmJpdG1xIiwiVVNFUjMiXSwia2lkIjoidGlsZWRlc2sta2V5IiwidGlsZWRlc2tfYXBpX3JvbGVzIjoidXNlciJ9.-Cio8ITPCQswv_4KnxJrRbm-5RCXMefuT91wWUNZJmU'
-};
+const user3 =  {
+  userid: 'USER3',
+  fullname: 'User 3',
+  firstname: 'User',
+  lastname: '3',
+  token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyM2Q4Yjk3YS1jNzU4LTQxNTUtYTM2NC0wYTZiYjY4OTE5MTIiLCJzdWIiOiJVU0VSMyIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjMuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVIzLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSMy4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVIzIiwiY2lkIjoiVVNFUjMiLCJhenAiOiJVU0VSMyIsInVzZXJfaWQiOiJVU0VSMyIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjM5MjE0NDE4LCJleHAiOjE5NTAyNTQ0MTgsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVIzIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.eS1FVzg5DIfBbRRX08LlmIS1sHm0Lh2HqA1nq3jLwgM'
+}
 
-const user4 = {
-	userid: 'USER4',
-	fullname: 'User 4',
-	firstname: 'User',
-	lastname: '4',
-	token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI0NjUzYTVkYy02YWFjLTQ2Y2ItYTFlYi03OTE1NWQ2Y2Q3OWUiLCJzdWIiOiJVU0VSNCIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjQuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVI0LioiLCJyYWJiaXRtcS5jb25maWd1cmU6Ki8qLyoiXSwiY2xpZW50X2lkIjoiVVNFUjQiLCJjaWQiOiJVU0VSNCIsImF6cCI6IlVTRVI0IiwidXNlcl9pZCI6IlVTRVI0IiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE2Mjc3NDg2MTEsImV4cCI6MTkzODc4ODYxMSwiYXVkIjpbInJhYmJpdG1xIiwiVVNFUjQiXSwia2lkIjoidGlsZWRlc2sta2V5IiwidGlsZWRlc2tfYXBpX3JvbGVzIjoidXNlciJ9.ZeC2JYQpjfZsczvd2Fjpf7WIJ1bRIoxIYp8BTyWDmHE'
-};
+const user4 =  {
+  userid: 'USER4',
+  fullname: 'User 4',
+  firstname: 'User',
+  lastname: '4',
+  token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlMGM2Y2ZiOC1mODQwLTQxZTYtOWM2OS1mOWE5OTM2OTA3ODkiLCJzdWIiOiJVU0VSNCIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjQuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVI0LioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSNC4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVI0IiwiY2lkIjoiVVNFUjQiLCJhenAiOiJVU0VSNCIsInVzZXJfaWQiOiJVU0VSNCIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjM5MjE0NDE4LCJleHAiOjE5NTAyNTQ0MTgsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVI0Il0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.7bDSCmMYSB8fCFFNuFim846KB_owkIl9oHX32N3j-rs'
+}
 
-const user5 = {
-	userid: 'USER5',
-	fullname: 'User 5',
-	firstname: 'User',
-	lastname: '5',
-	token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxYjMyOTIyMC1kMmFlLTQ4N2ItYmNlMy05N2I5NjYzNGRhZTMiLCJzdWIiOiJVU0VSNSIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjUuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVI1LioiLCJyYWJiaXRtcS5jb25maWd1cmU6Ki8qLyoiXSwiY2xpZW50X2lkIjoiVVNFUjUiLCJjaWQiOiJVU0VSNSIsImF6cCI6IlVTRVI1IiwidXNlcl9pZCI6IlVTRVI1IiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE2Mjc3NDg2MTEsImV4cCI6MTkzODc4ODYxMSwiYXVkIjpbInJhYmJpdG1xIiwiVVNFUjUiXSwia2lkIjoidGlsZWRlc2sta2V5IiwidGlsZWRlc2tfYXBpX3JvbGVzIjoidXNlciJ9.7xzZhSAXzceHQwyObbLxQrOWs0xUVDyJ1J4rbh4fd-g'
-};
+// const user1 = {
+// 	userid: 'USER1',
+// 	fullname: 'User 1',
+// 	firstname: 'User',
+// 	lastname: '1',
+// 	token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI2NzI5NDc4ZS1mOWIwLTRiODctYjNhYS03ZjU1OWExNzc5YjIiLCJzdWIiOiJVU0VSMSIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjEuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVIxLioiLCJyYWJiaXRtcS5jb25maWd1cmU6Ki8qLyoiXSwiY2xpZW50X2lkIjoiVVNFUjEiLCJjaWQiOiJVU0VSMSIsImF6cCI6IlVTRVIxIiwidXNlcl9pZCI6IlVTRVIxIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE2MjM3Njc1MjAsImV4cCI6MTkzNDgwNzUyMCwiYXVkIjpbInJhYmJpdG1xIiwiVVNFUjEiXSwia2lkIjoidGlsZWRlc2sta2V5IiwidGlsZWRlc2tfYXBpX3JvbGVzIjoidXNlciJ9.r-GBXo1fIUtl1QjOkXxcRaenVNQBElRkus3omh9YtjQ'
+// };
+
+// const user2 = {
+// 	userid: 'USER2',
+// 	fullname: 'User 2',
+// 	firstname: 'User',
+// 	lastname: '2',
+// 	token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI0MmEwMjc2ZC1lODUzLTQ5YjMtOTU4ZS0xODBkMjFjZGZjNWMiLCJzdWIiOiJVU0VSMiIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjIuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVIyLioiLCJyYWJiaXRtcS5jb25maWd1cmU6Ki8qLyoiXSwiY2xpZW50X2lkIjoiVVNFUjIiLCJjaWQiOiJVU0VSMiIsImF6cCI6IlVTRVIyIiwidXNlcl9pZCI6IlVTRVIyIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE2MjM3Njc1MjAsImV4cCI6MTkzNDgwNzUyMCwiYXVkIjpbInJhYmJpdG1xIiwiVVNFUjIiXSwia2lkIjoidGlsZWRlc2sta2V5IiwidGlsZWRlc2tfYXBpX3JvbGVzIjoidXNlciJ9.Zkbr3e9MfGGDKRdVUyG4330LxeNaKYS0y3upPtS4Wgg'
+// };
+
+// const user3 = {
+// 	userid: 'USER3',
+//  	fullname: 'User 3',
+//  	firstname: 'User',
+//  	lastname: '3',
+//  	token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlMmI2Y2RhMi0yNjhmLTQxZDMtYjBjYy1kZWNjN2I0M2UwMjEiLCJzdWIiOiJVU0VSMyIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjMuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVIzLioiLCJyYWJiaXRtcS5jb25maWd1cmU6Ki8qLyoiXSwiY2xpZW50X2lkIjoiVVNFUjMiLCJjaWQiOiJVU0VSMyIsImF6cCI6IlVTRVIzIiwidXNlcl9pZCI6IlVTRVIzIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE2MjM3Njc1MjAsImV4cCI6MTkzNDgwNzUyMCwiYXVkIjpbInJhYmJpdG1xIiwiVVNFUjMiXSwia2lkIjoidGlsZWRlc2sta2V5IiwidGlsZWRlc2tfYXBpX3JvbGVzIjoidXNlciJ9.-Cio8ITPCQswv_4KnxJrRbm-5RCXMefuT91wWUNZJmU'
+// };
+
+// const user4 = {
+// 	userid: 'USER4',
+// 	fullname: 'User 4',
+// 	firstname: 'User',
+// 	lastname: '4',
+// 	token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI0NjUzYTVkYy02YWFjLTQ2Y2ItYTFlYi03OTE1NWQ2Y2Q3OWUiLCJzdWIiOiJVU0VSNCIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjQuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVI0LioiLCJyYWJiaXRtcS5jb25maWd1cmU6Ki8qLyoiXSwiY2xpZW50X2lkIjoiVVNFUjQiLCJjaWQiOiJVU0VSNCIsImF6cCI6IlVTRVI0IiwidXNlcl9pZCI6IlVTRVI0IiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE2Mjc3NDg2MTEsImV4cCI6MTkzODc4ODYxMSwiYXVkIjpbInJhYmJpdG1xIiwiVVNFUjQiXSwia2lkIjoidGlsZWRlc2sta2V5IiwidGlsZWRlc2tfYXBpX3JvbGVzIjoidXNlciJ9.ZeC2JYQpjfZsczvd2Fjpf7WIJ1bRIoxIYp8BTyWDmHE'
+// };
+
+// const user5 = {
+// 	userid: 'USER5',
+// 	fullname: 'User 5',
+// 	firstname: 'User',
+// 	lastname: '5',
+// 	token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxYjMyOTIyMC1kMmFlLTQ4N2ItYmNlMy05N2I5NjYzNGRhZTMiLCJzdWIiOiJVU0VSNSIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjUuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVI1LioiLCJyYWJiaXRtcS5jb25maWd1cmU6Ki8qLyoiXSwiY2xpZW50X2lkIjoiVVNFUjUiLCJjaWQiOiJVU0VSNSIsImF6cCI6IlVTRVI1IiwidXNlcl9pZCI6IlVTRVI1IiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE2Mjc3NDg2MTEsImV4cCI6MTkzODc4ODYxMSwiYXVkIjpbInJhYmJpdG1xIiwiVVNFUjUiXSwia2lkIjoidGlsZWRlc2sta2V5IiwidGlsZWRlc2tfYXBpX3JvbGVzIjoidXNlciJ9.7xzZhSAXzceHQwyObbLxQrOWs0xUVDyJ1J4rbh4fd-g'
+// };
 
 let local_stack = true;
 if (process.env && process.env.TEST_LOCAL_STACK === undefined) {
@@ -291,101 +322,101 @@ describe('Main', function() {
 		});
 	});
 
-	describe('TiledeskClient - Direct _test 1_', function() {
-		it('User1 sends a direct message to User2 using client.sendMessage() \
-REUSE SHARED CHAT CLIENTS', function(done) {
-			logger.log("test 1 - start.");
-			let SENT_MESSAGE = 'FIRST MESSAGE 1';
-			chatClient1.sendMessage(
-				SENT_MESSAGE,
-				TYPE_TEXT,
-				user2.userid, // recipient id
-				user2.fullname, // recipient fullname
-				user1.fullname, // sender fullname
-				null,
-				null,
-				CHANNEL_TYPE_DIRECT,
-				() => {
-					logger.log("Message sent.");
-					done();
-				}
-			);
-		});
-	});
+// 	describe('TiledeskClient - Direct _test 1_', function() {
+// 		it('User1 sends a direct message to User2 using client.sendMessage() \
+// REUSE SHARED CHAT CLIENTS', function(done) {
+// 			logger.log("test 1 - start.");
+// 			let SENT_MESSAGE = 'FIRST MESSAGE 1';
+// 			chatClient1.sendMessage(
+// 				SENT_MESSAGE,
+// 				TYPE_TEXT,
+// 				user2.userid, // recipient id
+// 				user2.fullname, // recipient fullname
+// 				user1.fullname, // sender fullname
+// 				null,
+// 				null,
+// 				CHANNEL_TYPE_DIRECT,
+// 				() => {
+// 					logger.log("Message sent.");
+// 					done();
+// 				}
+// 			);
+// 		});
+// 	});
 
-	describe('TiledeskClient - Direct _test 2_', function() {
-		it('User1 sends a direct message and User2 receives the message \
-REUSE SHARED CHAT CLIENTS', function(done) {
-			logger.log("test 2 - start.");
-			let SENT_MESSAGE = 'FIRST MESSAGE 2';
-			let handler = chatClient2.onMessageAdded((message, topic) => {
-				logger.log("test 2 - message added:", message);
-				logger.log("test 2 - topic:", topic);
-				if (
-					message &&
-					message.text &&
-					!message.attributes &&
-					message.text === SENT_MESSAGE &&
-					message.sender === user1.userid &&
-					topic.conversWith === user1.userid) {
-						chatClient2.removeOnMessageAddedHandler(handler);
-						done();
-				}
-			});
-			chatClient1.sendMessage(
-				SENT_MESSAGE,
-				TYPE_TEXT,
-				user2.userid,
-				user2.fullname,
-				user1.fullname,
-				null,
-				null,
-				CHANNEL_TYPE_DIRECT,
-				() => {
-					logger.log("Message sent:", SENT_MESSAGE);
-				}
-			);
-		});
-	});
+// 	describe('TiledeskClient - Direct _test 2_', function() {
+// 		it('User1 sends a direct message and User2 receives the message \
+// REUSE SHARED CHAT CLIENTS', function(done) {
+// 			logger.log("test 2 - start.");
+// 			let SENT_MESSAGE = 'FIRST MESSAGE 2';
+// 			let handler = chatClient2.onMessageAdded((message, topic) => {
+// 				logger.log("test 2 - message added:", message);
+// 				logger.log("test 2 - topic:", topic);
+// 				if (
+// 					message &&
+// 					message.text &&
+// 					!message.attributes &&
+// 					message.text === SENT_MESSAGE &&
+// 					message.sender === user1.userid &&
+// 					topic.conversWith === user1.userid) {
+// 						chatClient2.removeOnMessageAddedHandler(handler);
+// 						done();
+// 				}
+// 			});
+// 			chatClient1.sendMessage(
+// 				SENT_MESSAGE,
+// 				TYPE_TEXT,
+// 				user2.userid,
+// 				user2.fullname,
+// 				user1.fullname,
+// 				null,
+// 				null,
+// 				CHANNEL_TYPE_DIRECT,
+// 				() => {
+// 					logger.log("Message sent:", SENT_MESSAGE);
+// 				}
+// 			);
+// 		});
+// 	});
 
-	describe('TiledeskClient - Groups _test 3_', function() {
-		it('test 3 - Creates a group \
-REUSE SHARED CHAT CLIENTS', function(done) {
-			logger.log("test 3 - start.");
-			const group_id = "group-test3_" + uuidv4();
-			const group_name = "test3 group " + group_id;
-			const group_members = {}
-			group_members[user2.userid] = 1;
-			chatClient1.groupCreate(
-				group_name,
-				group_id,
-				group_members,
-				(err, result) => {
-					assert(err == null);
-					assert(result != null);
-					assert(result.success == true);
-					assert(result.group.name === group_name);
-					assert(result.group.members != null);
-					assert(result.group.members[user2.userid] == 1);
-					logger.log("test 3 - Group created:", result);
-					chatClient1.groupData(group_id, (err, json) => {
-						logger.log("test 3 - Verified group updated:", group_id, "data:", json);
-						assert(err == null);
-						assert(json != null);
-						assert(json.success == true);
-						assert(json.result != null);
-						assert(json.result.uid === group_id);
-						assert(json.result.owner === user1.userid);
-						assert(json.result.members != null);
-						assert(json.result.members[user1.userid] != null);
-						assert(json.result.members[user2.userid] != null);
-						logger.log("test 3 - assertions ok -> done()");
-						done();
-					});
-				}
-			);
-		});
-	});
+// 	describe('TiledeskClient - Groups _test 3_', function() {
+// 		it('test 3 - Creates a group \
+// REUSE SHARED CHAT CLIENTS', function(done) {
+// 			logger.log("test 3 - start.");
+// 			const group_id = "group-test3_" + uuidv4();
+// 			const group_name = "test3 group " + group_id;
+// 			const group_members = {}
+// 			group_members[user2.userid] = 1;
+// 			chatClient1.groupCreate(
+// 				group_name,
+// 				group_id,
+// 				group_members,
+// 				(err, result) => {
+// 					assert(err == null);
+// 					assert(result != null);
+// 					assert(result.success == true);
+// 					assert(result.group.name === group_name);
+// 					assert(result.group.members != null);
+// 					assert(result.group.members[user2.userid] == 1);
+// 					logger.log("test 3 - Group created:", result);
+// 					chatClient1.groupData(group_id, (err, json) => {
+// 						logger.log("test 3 - Verified group updated:", group_id, "data:", json);
+// 						assert(err == null);
+// 						assert(json != null);
+// 						assert(json.success == true);
+// 						assert(json.result != null);
+// 						assert(json.result.uid === group_id);
+// 						assert(json.result.owner === user1.userid);
+// 						assert(json.result.members != null);
+// 						assert(json.result.members[user1.userid] != null);
+// 						assert(json.result.members[user2.userid] != null);
+// 						logger.log("test 3 - assertions ok -> done()");
+// 						done();
+// 					});
+// 				}
+// 			);
+// 		});
+// 	});
 
 	describe('TiledeskClient - Groups _test 4_', function() {
 		it('test 4 - Create group info messages. \

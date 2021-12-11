@@ -1,3 +1,7 @@
+
+## v0.2.5
+- added support for the new outgoing path apps.appId.outgoing
+
 ## v0.2.4
 - Webhooks: moved process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0" in .env
 - Webhooks: process.env.WEBHOOK_ENDPOINTS separator "," now support spaces

@@ -149,7 +149,6 @@ class Webhooks {
       callback(null);
     } else {
       logger.log("WH MESSAGE_SENT enabled");
-      logger.debug("WH MESSAGE_DELIVERED enabled.");
       this.WHnotifyMessageDeliver(message, (err) => {
         callback(err);
       });
@@ -180,7 +179,6 @@ class Webhooks {
   }
 
   WHnotifyMessageDeliver(message, callback) {
-    // logger.debug("WH NOTIFY MESSAGE:", message);
     if (this.enabled === false) {
       logger.debug("webhooks disabled");
       callback(null);
@@ -268,31 +266,75 @@ class Webhooks {
       logger.debug("WHprocess_webhook_message_deliver Discarding notification. webhook_endpoints undefined.")
       return
     }
+
+    let delivered_to_inbox_of = null;
+    if (message.status === MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED && message['temp_field_chat_topic']) {
+      const topic_parts = message['temp_field_chat_topic'].split(".");
+      console.log("topic_parts...", topic_parts)
+      // extras: {topic: 'apps.tilechat.users.03-ANDREALEO.messages.6d011n62ir097c0143cc42dc.clientadded'}
+      // /apps/tilechat/users/(INBOX_OF)/messages/CONVERS_WITH/ACTION
+      if (topic_parts.length >= 4) {
+        delivered_to_inbox_of = topic_parts[3]
+      }
+      else {
+        logger.error("Error: inbox_of not found in topic:", topic);
+        return;
+      }
+    }
+    else {
+      logger.error("topic processing error on message-delivered event. Topic:", topic, ",message:", message);
+    }
+
+    
+    const message_id = message.message_id;
+    const recipient_id = message.recipient;
+    const app_id = message.app_id;
+    let event_type;
+    if (message.status === MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT) {
+      event_type = MessageConstants.WEBHOOK_EVENTS.MESSAGE_SENT;
+    }
+    else {
+      event_type = MessageConstants.WEBHOOK_EVENTS.MESSAGE_DELIVERED;
+    }
+    var json = {
+      event_type: event_type,
+      createdAt: new Date().getTime(),
+      recipient_id: recipient_id,
+      app_id: app_id, // or this.appId?
+      message_id: message_id,
+      data: message,
+      extras: {topic: message['temp_field_chat_topic']} // the topic moves from "message" to "extras" ...
+    };
+    if (delivered_to_inbox_of) {
+      json['delivered_to'] = delivered_to_inbox_of;
+    }
+    delete message['temp_field_chat_topic']; // ...then the topic is deleted from "message"
     
     const endpoints = message['temp_webhook_endpoints'];
     delete message['temp_webhook_endpoints'];
+    logger.log("Event JSON:", json);
     endpoints.forEach((endpoint) => {
       logger.debug("Sending notification to webhook (message_deliver) on webhook_endpoint:", endpoint);
-      const message_id = message.message_id;
-      const recipient_id = message.recipient;
-      const app_id = message.app_id;
-      let event_type;
-      if (message.status === MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT) {
-        event_type = MessageConstants.WEBHOOK_EVENTS.MESSAGE_SENT;
-      }
-      else {
-        event_type = MessageConstants.WEBHOOK_EVENTS.MESSAGE_DELIVERED;
-      }
-      var json = {
-        event_type: event_type,
-        createdAt: new Date().getTime(),
-        recipient_id: recipient_id,
-        app_id: app_id, // or this.appId?
-        message_id: message_id,
-        data: message,
-        extras: {topic: message['temp_field_chat_topic']} // the topic moves from "message" to "extras" 
-      };
-      delete message['temp_field_chat_topic']; // then deleted from "message"
+      // const message_id = message.message_id;
+      // const recipient_id = message.recipient;
+      // const app_id = message.app_id;
+      // let event_type;
+      // if (message.status === MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT) {
+      //   event_type = MessageConstants.WEBHOOK_EVENTS.MESSAGE_SENT;
+      // }
+      // else {
+      //   event_type = MessageConstants.WEBHOOK_EVENTS.MESSAGE_DELIVERED;
+      // }
+      // var json = {
+      //   event_type: event_type,
+      //   createdAt: new Date().getTime(),
+      //   recipient_id: recipient_id,
+      //   app_id: app_id, // or this.appId?
+      //   message_id: message_id,
+      //   data: message,
+      //   extras: {topic: message['temp_field_chat_topic']} // the topic moves from "message" to "extras" 
+      // };
+      // delete message['temp_field_chat_topic']; // then deleted from "message"
       // logger.debug("WHprocess_webhook_message_received Sending JSON webhook:", json)
       this.WHsendData(endpoint, json, function(err, data) {
         if (err)  {
@@ -564,7 +606,6 @@ class Webhooks {
   }
 
   processMsg(msg) {
-    logger.debug("Webhooks.subscribeTo:" + this);
     this.work(msg, (ok) => {
       logger.debug("Webhooks.worked.");
       try {

@@ -371,10 +371,12 @@ function process_presence(topic, message_string, callback) {
 function process_outgoing(topic, message_string, callback) {
   logger.debug("***** TOPIC outgoing: " + topic +  " MESSAGE PAYLOAD: " + message_string)
   var topic_parts = topic.split(".")
-  // /apps/tilechat/users/(ME)SENDER_ID/messages/RECIPIENT_ID/outgoing
+  // /apps/tilechat/outgoing/users/(ME)SENDER_ID/messages/RECIPIENT_ID/outgoing
   const app_id = topic_parts[1]
-  const sender_id = topic_parts[3]
-  const recipient_id = topic_parts[5]
+  // const sender_id = topic_parts[3]
+  const sender_id = topic_parts[4]
+  // const recipient_id = topic_parts[5]
+  const recipient_id = topic_parts[6];
   const me = sender_id
 
   let message = JSON.parse(message_string)
@@ -767,7 +769,7 @@ function process_update(topic, message_string, callback) {
     logger.debug(">>> ON DISK... CONVERSATION TOPIC " + topic + " WITH PATCH " + patch)
     logger.debug("Updating conversation 2.")
     chatdb.saveOrUpdateConversation(patch, function(err, doc) {
-      logger.debug(">>> CONVERSATION ON TOPIC" + topic + " UPDATED!")
+      logger.debug(">>> CONVERSATION ON TOPIC:", topic, "UPDATED!")
       if (err) {
         logger.error("error",err);
         callback(false)
@@ -829,7 +831,7 @@ function process_archive(topic, payload, callback) {
     logger.debug(">>> ON DISK... ARCHIVE CONVERSATION ON TOPIC: " + topic)
     logger.debug("Updating conversation 3.")
     chatdb.saveOrUpdateConversation(conversation_archive_patch, function(err, msg) {
-      logger.debug(">>> CONVERSATION ON TOPIC: " + topic + " ARCHIVED!")
+      logger.debug(">>> CONVERSATION ON TOPIC:", topic, "ARCHIVED!")
       if (err) {
         logger.error("error",err);
         callback(false)
@@ -1022,7 +1024,8 @@ async function startServer(config) {
     throw new Error('please configure process.env.RABBITMQ_URI or use parameter config.rabbimq_uri option.');
   }
 
-  topic_outgoing = `apps.${app_id}.users.*.messages.*.outgoing`;
+  // topic_outgoing = `apps.${app_id}.users.*.messages.*.outgoing`;
+  topic_outgoing = `apps.${app_id}.outgoing.users.*.messages.*.outgoing`;
   topic_update = `apps.${app_id}.users.#.update`;
   topic_archive = `apps.${app_id}.users.#.archive`;
   topic_presence = `apps.${app_id}.users.*.presence.*`;

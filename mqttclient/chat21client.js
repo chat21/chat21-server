@@ -1,7 +1,7 @@
 /*
     Chat21Client
 
-    v0.1.8
+    v0.1.9
 
     @Author Andrea Sponziello
     (c) Tiledesk 2020
@@ -22,6 +22,7 @@ class Chat21Client {
         this.client = null;
         this.reconnections = 0 // just to check how many reconnections
         this.client_id = this.uuidv4();
+        this.log = options._log ? true : false;
         if (options && options.MQTTendpoint) {
             if (options.MQTTendpoint.startsWith('/')) {
                 if (this.log) {
@@ -48,7 +49,6 @@ class Chat21Client {
         else {
             this.endpoint = "ws://34.253.207.0:15675/ws"
         }
-        this.log = options.log ? true : false;
         this.APIendpoint = options.APIendpoint;
         this.appid = options.appId;
         if (this.log) {
@@ -90,21 +90,9 @@ class Chat21Client {
         });
     }
 
-    // subscribeToMyMessages() {
-    //     // this subscription because in /conversations I receive my messages
-    //     // 'apps/tilechat/users/ME/messages/TO/outgoing'
-    //     // 'apps/tilechat/users/ME/messages/FROM/incoming'
-    //     let messages_inbox = 'apps/tilechat/users/' + this.user_id + '/messages/+'
-    //     console.log("subscribing to inbox of:", this.user_id, "topic", messages_inbox)
-    //     this.client.subscribe(messages_inbox, (err)  => {
-    //         console.log("subscribed to:", messages_inbox, " with err", err)
-    //     })
-    // }
-
     sendMessage(text, type, recipient_id, recipient_fullname, sender_fullname, attributes, metadata, channel_type, callback) {
-        // callback - function (err) 
-        // console.log("recipient_id:", recipient_id)
-        let dest_topic = `apps/${this.appid}/users/${this.user_id}/messages/${recipient_id}/outgoing`
+        // console.log("sendMessage:",text, recipient_id)
+        let dest_topic = `apps/${this.appid}/outgoing/users/${this.user_id}/messages/${recipient_id}/outgoing`
         // console.log("dest_topic:", dest_topic)
         let outgoing_message = {
             text: text,
@@ -136,9 +124,9 @@ class Chat21Client {
     }
 
     sendMessageRaw(outgoing_message, recipient_id, callback) {
-        // callback - function (err) 
+        // callback - function (err)
         // console.log("recipient_id:", recipient_id)
-        let dest_topic = `apps/${this.appid}/users/${this.user_id}/messages/${recipient_id}/outgoing`
+        let dest_topic = `apps/${this.appid}/outgoing/users/${this.user_id}/messages/${recipient_id}/outgoing`
         // console.log("dest_topic:", dest_topic)
         // let outgoing_message = {
         //     text: text,
@@ -797,7 +785,9 @@ class Chat21Client {
 
     conversationDetail(conversWith, callback) {
         // ex.: http://localhost:8004/tilechat/04-ANDREASPONZIELLO/conversations/CONVERS_WITH
-        const URL = `${this.APIendpoint}/${this.appid}/${this.user_id}/conversations/${conversWith}`;
+        const URL = `${this.APIendpoint}/${this.appid}/${this.user_id}/conversations/${conversWith}`
+        console.log("getting conversation detail:", URL)
+        console.log("conversWith:", conversWith)
         var xmlhttp = new XMLHttpRequest();
         xmlhttp.open("GET", URL, true);
         xmlhttp.setRequestHeader("authorization", this.jwt);
@@ -856,7 +846,7 @@ class Chat21Client {
         if (log) {
           console.log("HTTP Request:", options);
         }
-        if (!axios) {
+        if (isBrowser()) {
             let xmlhttp = new XMLHttpRequest();
             xmlhttp.open(options.method, options.url, true);
             Object.keys(options.headers).forEach((key) => {
@@ -1028,10 +1018,10 @@ class Chat21Client {
     }
 }
 
-// function isBrowser() {
-//     // return true;
-//     return false;
-// }
+function isBrowser() {
+    // return true;
+    return false;
+}
 
 // export { Chat21Client }; // Browser
 module.exports = { Chat21Client };

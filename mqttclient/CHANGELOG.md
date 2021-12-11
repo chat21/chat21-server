@@ -1,4 +1,8 @@
-Chat21Client
+Chat21Client.js CHANGELOG
+
+### v0.1.9
+- added /outgoing to write path
+- modified options.log => options._log
 
 ### v0.1.8
 - added saveInstance() for push notifications
