@@ -322,101 +322,101 @@ describe('Main', function() {
 		});
 	});
 
-// 	describe('TiledeskClient - Direct _test 1_', function() {
-// 		it('User1 sends a direct message to User2 using client.sendMessage() \
-// REUSE SHARED CHAT CLIENTS', function(done) {
-// 			logger.log("test 1 - start.");
-// 			let SENT_MESSAGE = 'FIRST MESSAGE 1';
-// 			chatClient1.sendMessage(
-// 				SENT_MESSAGE,
-// 				TYPE_TEXT,
-// 				user2.userid, // recipient id
-// 				user2.fullname, // recipient fullname
-// 				user1.fullname, // sender fullname
-// 				null,
-// 				null,
-// 				CHANNEL_TYPE_DIRECT,
-// 				() => {
-// 					logger.log("Message sent.");
-// 					done();
-// 				}
-// 			);
-// 		});
-// 	});
+	describe('TiledeskClient - Direct _test 1_', function() {
+		it('User1 sends a direct message to User2 using client.sendMessage() \
+REUSE SHARED CHAT CLIENTS', function(done) {
+			logger.log("test 1 - start.");
+			let SENT_MESSAGE = 'FIRST MESSAGE 1';
+			chatClient1.sendMessage(
+				SENT_MESSAGE,
+				TYPE_TEXT,
+				user2.userid, // recipient id
+				user2.fullname, // recipient fullname
+				user1.fullname, // sender fullname
+				null,
+				null,
+				CHANNEL_TYPE_DIRECT,
+				() => {
+					logger.log("Message sent.");
+					done();
+				}
+			);
+		});
+	});
 
-// 	describe('TiledeskClient - Direct _test 2_', function() {
-// 		it('User1 sends a direct message and User2 receives the message \
-// REUSE SHARED CHAT CLIENTS', function(done) {
-// 			logger.log("test 2 - start.");
-// 			let SENT_MESSAGE = 'FIRST MESSAGE 2';
-// 			let handler = chatClient2.onMessageAdded((message, topic) => {
-// 				logger.log("test 2 - message added:", message);
-// 				logger.log("test 2 - topic:", topic);
-// 				if (
-// 					message &&
-// 					message.text &&
-// 					!message.attributes &&
-// 					message.text === SENT_MESSAGE &&
-// 					message.sender === user1.userid &&
-// 					topic.conversWith === user1.userid) {
-// 						chatClient2.removeOnMessageAddedHandler(handler);
-// 						done();
-// 				}
-// 			});
-// 			chatClient1.sendMessage(
-// 				SENT_MESSAGE,
-// 				TYPE_TEXT,
-// 				user2.userid,
-// 				user2.fullname,
-// 				user1.fullname,
-// 				null,
-// 				null,
-// 				CHANNEL_TYPE_DIRECT,
-// 				() => {
-// 					logger.log("Message sent:", SENT_MESSAGE);
-// 				}
-// 			);
-// 		});
-// 	});
+	describe('TiledeskClient - Direct _test 2_', function() {
+		it('User1 sends a direct message and User2 receives the message \
+REUSE SHARED CHAT CLIENTS', function(done) {
+			logger.log("test 2 - start.");
+			let SENT_MESSAGE = 'FIRST MESSAGE 2';
+			let handler = chatClient2.onMessageAdded((message, topic) => {
+				logger.log("test 2 - message added:", message);
+				logger.log("test 2 - topic:", topic);
+				if (
+					message &&
+					message.text &&
+					!message.attributes &&
+					message.text === SENT_MESSAGE &&
+					message.sender === user1.userid &&
+					topic.conversWith === user1.userid) {
+						chatClient2.removeOnMessageAddedHandler(handler);
+						done();
+				}
+			});
+			chatClient1.sendMessage(
+				SENT_MESSAGE,
+				TYPE_TEXT,
+				user2.userid,
+				user2.fullname,
+				user1.fullname,
+				null,
+				null,
+				CHANNEL_TYPE_DIRECT,
+				() => {
+					logger.log("Message sent:", SENT_MESSAGE);
+				}
+			);
+		});
+	});
 
-// 	describe('TiledeskClient - Groups _test 3_', function() {
-// 		it('test 3 - Creates a group \
-// REUSE SHARED CHAT CLIENTS', function(done) {
-// 			logger.log("test 3 - start.");
-// 			const group_id = "group-test3_" + uuidv4();
-// 			const group_name = "test3 group " + group_id;
-// 			const group_members = {}
-// 			group_members[user2.userid] = 1;
-// 			chatClient1.groupCreate(
-// 				group_name,
-// 				group_id,
-// 				group_members,
-// 				(err, result) => {
-// 					assert(err == null);
-// 					assert(result != null);
-// 					assert(result.success == true);
-// 					assert(result.group.name === group_name);
-// 					assert(result.group.members != null);
-// 					assert(result.group.members[user2.userid] == 1);
-// 					logger.log("test 3 - Group created:", result);
-// 					chatClient1.groupData(group_id, (err, json) => {
-// 						logger.log("test 3 - Verified group updated:", group_id, "data:", json);
-// 						assert(err == null);
-// 						assert(json != null);
-// 						assert(json.success == true);
-// 						assert(json.result != null);
-// 						assert(json.result.uid === group_id);
-// 						assert(json.result.owner === user1.userid);
-// 						assert(json.result.members != null);
-// 						assert(json.result.members[user1.userid] != null);
-// 						assert(json.result.members[user2.userid] != null);
-// 						logger.log("test 3 - assertions ok -> done()");
-// 						done();
-// 					});
-// 				}
-// 			);
-// 		});
-// 	});
+	describe('TiledeskClient - Groups _test 3_', function() {
+		it('test 3 - Creates a group \
+REUSE SHARED CHAT CLIENTS', function(done) {
+			logger.log("test 3 - start.");
+			const group_id = "group-test3_" + uuidv4();
+			const group_name = "test3 group " + group_id;
+			const group_members = {}
+			group_members[user2.userid] = 1;
+			chatClient1.groupCreate(
+				group_name,
+				group_id,
+				group_members,
+				(err, result) => {
+					assert(err == null);
+					assert(result != null);
+					assert(result.success == true);
+					assert(result.group.name === group_name);
+					assert(result.group.members != null);
+					assert(result.group.members[user2.userid] == 1);
+					logger.log("test 3 - Group created:", result);
+					chatClient1.groupData(group_id, (err, json) => {
+						logger.log("test 3 - Verified group updated:", group_id, "data:", json);
+						assert(err == null);
+						assert(json != null);
+						assert(json.success == true);
+						assert(json.result != null);
+						assert(json.result.uid === group_id);
+						assert(json.result.owner === user1.userid);
+						assert(json.result.members != null);
+						assert(json.result.members[user1.userid] != null);
+						assert(json.result.members[user2.userid] != null);
+						logger.log("test 3 - assertions ok -> done()");
+						done();
+					});
+				}
+			);
+		});
+	});
 
 	describe('TiledeskClient - Groups _test 4_', function() {
 		it('test 4 - Create group info messages. \
@@ -965,7 +965,7 @@ test 11 - Join group (get FULL group messages history). \
 User1 (owner) creates a group with 2 members (User1, User2). \
 User1 sends 1 message. \
 User1 adds User3 to the group. \
-User3 receives 5 messages. \
+User3 receives 5 messages. grouped as follows:\
 1. All the 4 group info messages: FIRST_MESSAGE, GROUP_CREATED, USER1 MEMBER_JOINED_GROUP, USER2 MEMBER_JOINED_GROUP, USER3 MEMBER_JOINED_GROUP \
 2. The message sent by USER1. \
 NEW CHAT CLIENTS', function(done) {
@@ -1337,6 +1337,189 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 						logger.log("Message sent:", SENT_MESSAGE);
 					}
 				);
+			});
+		});
+	});
+
+	describe('TiledeskClient - Webhooks _test 16_', function() {
+		it('test 15 - "message-sent" webhook event, 2 endpoints \
+REUSE SHARED CHAT CLIENTS', function(done) {
+			if (!config.LOCAL_STACK) {
+				logger.log("LOCAL_STACK=false, skipping webhooks test 16");
+				done();
+				return;
+			}
+			logger.log("test 16 - start.");
+			let _chatClient1 = new Chat21Client(
+				{
+					appId: config.APPID,
+					MQTTendpoint: config.MQTT_ENDPOINT,
+					APIendpoint: config.API_ENDPOINT,
+					log: config.CLIENT_API_LOG
+				}
+			);
+			observer.setWebHookEndpoints(
+				[
+					"http://localhost:10456/delivered-endpoint",
+					"http://localhost:10456/sent-endpoint"
+				]
+			);
+			observer.setWebHookEvents(
+				[
+					messageConstants.WEBHOOK_EVENTS.MESSAGE_SENT,
+					messageConstants.WEBHOOK_EVENTS.MESSAGE_DELIVERED
+				]
+			);
+			observer.setWebHookEnabled(true);
+			let webhooksServer = express();
+			webhooksServer.use(bodyParser.json());
+			logger.log('setWebHookEndpoint ok.');
+			let delivered_in_history_count = 0;
+			webhooksServer.post('/delivered-endpoint', function (req, res) {
+				console.log("req.body.event_type", req.body.event_type)
+				res.status(200).send({success: true});
+				if (req.body.event_type !== 'message-delivered') {
+					return;
+				}
+				logger.log("test 16 WEBHOOK - Delivered endpoint event_type:", req.body.event_type, " delivered_to", req.body.delivered_to);
+				logger.log("test 16 WEBHOOK - Delivered endpoint text:", req.body.data.text, " __history?", req.body.data.__history);
+				if (req.body.data.__history) {
+					logger.log("Adding to delivered history:", req.body.data.text);
+					delivered_in_history_count++;
+				}
+
+				// 1. test 16 WEBHOOK - Delivered endpoint text: Group created  __history? true
+				// 2. test 16 WEBHOOK - Delivered endpoint text: USER1 joined group on creation  __history? true
+				// 3. test 16 WEBHOOK - Delivered endpoint text: USER2 joined group on creation  __history? true
+				// 4. test 16 WEBHOOK - Delivered endpoint text: test 16, user1, first message  __history? true
+				
+				if (delivered_in_history_count == 4) {
+					observer.setWebHookEnabled(false);
+					observer.setWebHookEndpoints(null);
+					webhook_app.close();
+					_chatClient1.close(() => {
+						logger.log("test 16 - _chatClient1 successfully disconnected.");
+						done();
+					});
+				}
+			});
+			webhooksServer.post('/sent-endpoint', function (req, res) {
+				res.status(200).send({success: true});
+				if (req.body.event_type !== 'message-sent') {
+					return;
+				}
+				if (req.body.data.__history) {
+					// test fails if "history messages" (__history = true) got through the "message-sent" event!
+					assert(false);
+				}
+				logger.log("test 16 WEBHOOK - Sent endpoint event_type:", req.body.event_type);
+				logger.log("test 16 WEBHOOK - Sent endpoint text:", req.body.data.text, " __history?", req.body.data.__history);
+			});
+			let webhook_app = webhooksServer.listen(10456, async function() {
+				logger.log('test 16 - Webhooks App started.', webhook_app.address());
+				const group_id = "group-test16_" + uuidv4();
+				const group_name = "group-join test16";
+				const MESSAGE1_USER1 = "test 16, user1, first message";
+				let group_members = {};
+				group_members[user1.userid] = 1;
+				group_members[user2.userid] = 1;
+				// let history_messages = {};
+				// let _chatClient3 = new Chat21Client(
+				// 	{
+				// 		appId: config.APPID,
+				// 		MQTTendpoint: config.MQTT_ENDPOINT,
+				// 		APIendpoint: config.API_ENDPOINT,
+				// 		log: config.CLIENT_API_LOG
+				// 	}
+				// );
+				_chatClient1.connect(user1.userid, user1.token, () => {
+					logger.log("test 16 - _chatClient1 connected.");
+					// _chatClient3.connect(user3.userid, user3.token, () => { // TODO if token is wrong it mustreply with an error!
+					// 	logger.log("test 16 - _chatClient3 connected.");
+					// 	let added_handler3 = _chatClient3.onMessageAdded((message, topic) => {
+					// 		if (message.recipient === group_id) {
+					// 			logger.log("test 16 - Client3 - message added:", JSON.stringify(message));
+					// 			if (
+					// 				message &&
+					// 				message.recipient === group_id &&
+					// 				message.text === MESSAGE1_USER1) {
+					// 				logger.log("test 16 - MESSAGE1_USER1 message received:", message.text);
+					// 				history_messages['MESSAGE1_USER1'] = 1;
+					// 			}
+								
+					// 			if (message &&
+					// 				message.recipient === group_id &&
+					// 				history_messages['MESSAGE1_USER1'] === 1) {
+					// 				logger.log("test 16 - FULL HISTORY RECEIVED.");
+					// 				_chatClient3.removeOnMessageAddedHandler(added_handler3);
+					// 				_chatClient1.close(() => {
+					// 					logger.log("test 16 - _chatClient1 successfully disconnected.");
+					// 					_chatClient3.close(() => {
+					// 						logger.log("test 16 - _chatClient3 successfully disconnected.");
+					// 						logger.log("test 16 -> done()");
+					// 						done();
+					// 					});
+					// 				});
+					// 			}
+					// 		}
+					// 	});
+						logger.log("test 16 - creating group:", group_id);
+						_chatClient1.groupCreate(
+							group_name,
+							group_id,
+							group_members,
+							async (err, result) => {
+								assert(err == null);
+								assert(result != null);
+								assert(result.success == true);
+								assert(result.group.name === group_name);
+								logger.log("test 16 - group:", group_id, "created");
+								_chatClient1.sendMessageRaw(
+									{
+										text: MESSAGE1_USER1,
+										type: TYPE_TEXT,
+										recipient_fullname: group_name,
+										sender_fullname: user1.fullname,
+										attributes: null,
+										metadata: null,
+										channel_type: CHANNEL_TYPE_GROUP
+									},
+									group_id, // recipient
+									async (err, msg) => {
+										if (err) {
+											logger.log("test 11 - Error sending message:", err);
+										}
+										assert(err == null);
+										logger.log("test 16 - message sent:", msg);
+										logger.log("test 16 - waiting some time to allow the sent message to reach the 'persistent' status...");
+										await new Promise(resolve => setTimeout(resolve, 1000)); // it gives time to join message to reach the "persistent" status
+										logger.log("test 16 - end waiting.");
+										_chatClient1.groupJoin(group_id, user3.userid, (err, json) => {
+											if (err) {
+												logger.log("test 16 - member joinned error:", err);
+											}
+											assert(err == null);
+											logger.log("test 16 - member joined json:", json);
+										});
+									}
+								);
+							}
+						);
+					// });
+				});
+				// chatClient1.sendMessage(
+				// 	SENT_MESSAGE,
+				// 	TYPE_TEXT,
+				// 	user2.userid,
+				// 	user2.fullname,
+				// 	user1.fullname,
+				// 	null,
+				// 	null,
+				// 	CHANNEL_TYPE_DIRECT,
+				// 	() => {
+				// 		logger.log("Message sent:", SENT_MESSAGE);
+				// 	}
+				// );
 			});
 		});
 	});

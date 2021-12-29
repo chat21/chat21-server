@@ -1,3 +1,5 @@
+## v0.2.8
+- added test #16 for testing that only webhook "message-delivered" event willreceive history notifications && "message-sent" to NEVER receive history messages notifications
 
 ## v0.2.5
 - added support for the new outgoing path apps.appId.outgoing

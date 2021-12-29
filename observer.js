@@ -592,19 +592,24 @@ function process_delivered(topic, message_string, callback) {
   const inbox_of = topic_parts[4]
   const convers_with = topic_parts[6]
   const message = JSON.parse(message_string)
-  logger.debug("____DELIVER MESSAGE:", message.message_id)
+  if (message.status != MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED) {
+    logger.error("process_delivered() error: status != DELIVERED (150). Only delivering messages with status DELIVERED", message);
+    callback(true);
+    return;
+  }
+  logger.debug("____DELIVER MESSAGE (status=" + message.status + "):", message.text, message.message_id, ", __history:", message.__history);
   deliverMessage(message, app_id, inbox_of, convers_with, function(ok) {
     logger.debug("MESSAGE DELIVERED?: "+ ok)
     if (!ok) {
-      logger.error("____Error delivering message. NOACKED:", message)
-      logger.log("____DELIVER MESSAGE:", message.message_id, " NOACKED!")
+      logger.error("____Error delivering message. NOACKED:", message);
+      logger.log("____DELIVER MESSAGE:", message.message_id, " NOACKED!");
       callback(false)
     }
     else {
-      logger.log("____DELIVER MESSAGE ", message.message_id, " ACKED")
+      logger.log("____DELIVER MESSAGE ", message.message_id, " ACKED");
       callback(true)
     }
-  })
+  });
 }
 
 // This handler only persists messages and persists/updates conversations.
