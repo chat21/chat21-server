@@ -1,3 +1,10 @@
+
+## v0.2.10
+- added test #17 - conversation/archivedConversation detail
+
+## v0.2.9
+- minor fixes on testing: added assert.fail() in test #16
+
 ## v0.2.8
 - added test #16 for testing that only webhook "message-delivered" event willreceive history notifications && "message-sent" to NEVER receive history messages notifications
 

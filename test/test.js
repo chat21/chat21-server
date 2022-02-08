@@ -158,6 +158,33 @@ let chatClient3;
 let http_api_server;
 let webhook_app;
 
+console.log(`
+
+
+
+************************************************************
+************************************************************
+************************************************************
+************************************************************
+************************************************************
+**************                           *******************
+************** BEFORE STARTING TAKE CARE *******************
+**************                           *******************
+                                         *******************
+SHUT DOWN ANY LOCAL STANDALONE COMPONENT *******************
+OF THE CHAT21 INFRASTRUCTURE             *******************
+(I.E. CHATSERVERMQ, CHAT21HTTP ETC.)     *******************
+YOU ONLY NEED TO START                   *******************
+- RABBITMQ                               *******************
+- MONGODB                                *******************
+************************************************************
+************************************************************
+************************************************************
+************************************************************
+************************************************************
+************************************************************
+************************************************************
+************************************************************`);
 describe('Main', function() {
 	before(function(done) {
 		chatClient1 = new Chat21Client(
@@ -1204,7 +1231,7 @@ NEW CHAT CLIENTS', function(done) {
 		});
 	});
 
-	describe('TiledeskClient - Groups _test 13_', function() {
+	describe('TiledeskClient - Save app instance _test 13_', function() {
 		it('test 13 - Saves an app instance \
 REUSE SHARED CHAT CLIENTS', function(done) {
 			logger.log("test 13 - start.");
@@ -1227,6 +1254,10 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 			);
 		});
 	});
+
+	// ************************************************
+	// ******************* WEBHOOKS *******************
+	// ************************************************
 
 	describe('TiledeskClient - Webhooks _test 14_', function() {
 		it('test 14 - "message-sent" webhook event, 1 endpoint \
@@ -1410,7 +1441,7 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 				}
 				if (req.body.data.__history) {
 					// test fails if "history messages" (__history = true) got through the "message-sent" event!
-					assert(false);
+					assert.fail("'history messages' (__history = true) got through the 'message-sent' event");
 				}
 				logger.log("test 16 WEBHOOK - Sent endpoint event_type:", req.body.event_type);
 				logger.log("test 16 WEBHOOK - Sent endpoint text:", req.body.data.text, " __history?", req.body.data.__history);
@@ -1524,4 +1555,76 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 		});
 	});
 
+	// *******************************************
+	// ************** CONVERSATIONS **************
+	// *******************************************
+
+	describe('TiledeskClient - Direct _test 17_', function() {
+		it('\
+User1 sends a direct message and User2 receives the conversation update by callback \
+User 2 checks conversationDetail. Got the conversation \
+User 2 checks archivedConversationDetail. Not available \
+User 2 archives the conversation \
+User 2 receives the conversation-archived event \
+User 2 checks archivedConversationDetail. Got the conversation \
+User 2 checks conversationDetail. Not available \
+REUSE SHARED CHAT CLIENTS', function(done) {
+			logger.log("test 17 - start.");
+			let SENT_MESSAGE = 'FIRST MESSAGE 17';
+			let onConversationAddedHandler = chatClient2.onConversationAdded((conv, topic) => {
+				logger.log("test 17 - conversation added:", conv);
+				logger.log("test 17 - conversation topic:", topic);
+				if (
+					conv &&
+					conv.text &&
+					!conv.attributes &&
+					conv.text === SENT_MESSAGE &&
+					conv.sender === user1.userid &&
+					topic.conversWith === user1.userid) {
+					// chatClient2.removeOnConversationAddedHandler(handler);
+					chatClient2.conversationDetail(topic.conversWith, (err, conv) => {
+						console.log("conv detail:", conv);
+						assert(err == null);
+						assert(conv != null);
+						chatClient2.archivedConversationDetail(topic.conversWith, (err, conv) => {
+							console.log("archived conv detail:", conv);
+							assert(err == null);
+							assert(conv == null);
+							chatClient2.archiveConversation(topic.conversWith, (err) => {
+								assert(err == null);
+							});
+						});
+					});
+				}
+			});
+			let onArchivedConversationAddedHandler = chatClient2.onArchivedConversationAdded((archived_conv, topic) => {
+				console.log("conv was archived:", archived_conv, topic);
+				assert(archived_conv != null);
+				chatClient2.conversationDetail(topic.conversWith, (err, conv) => {
+					console.log("conv detail:", conv);
+					assert(err == null);
+					assert(conv == null);
+					chatClient2.archivedConversationDetail(topic.conversWith, (err, arch_conv_detail) => {
+						console.log("got archived conv detail:", arch_conv_detail);
+						assert(err == null);
+						assert(arch_conv_detail != null);
+						done();
+					});
+				});
+			});
+			chatClient1.sendMessage(
+				SENT_MESSAGE,
+				TYPE_TEXT,
+				user2.userid,
+				user2.fullname,
+				user1.fullname,
+				null,
+				null,
+				CHANNEL_TYPE_DIRECT,
+				() => {
+					logger.log("Message sent:", SENT_MESSAGE);
+				}
+			);
+		});
+	});
 });

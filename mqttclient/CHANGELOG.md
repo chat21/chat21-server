@@ -1,5 +1,13 @@
 Chat21Client.js CHANGELOG
 
+### v0.1.11
+- crossConversationDetail improved with xmlhttprequest + nodejs request support
+
+### v0.1.10
+- added archivedConversationDetail()
+- added crossConversationDetail()
+- refactored conversationDetail() impl to use crossConversationDetail()
+    
 ### v0.1.9
 - added /outgoing to write path
 - modified options.log => options._log
