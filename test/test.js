@@ -1583,11 +1583,11 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 					topic.conversWith === user1.userid) {
 					// chatClient2.removeOnConversationAddedHandler(handler);
 					chatClient2.conversationDetail(topic.conversWith, (err, conv) => {
-						console.log("conv detail:", conv);
+						logger.log("conv detail:", conv);
 						assert(err == null);
 						assert(conv != null);
 						chatClient2.archivedConversationDetail(topic.conversWith, (err, conv) => {
-							console.log("archived conv detail:", conv);
+							logger.log("archived conv detail:", conv);
 							assert(err == null);
 							assert(conv == null);
 							chatClient2.archiveConversation(topic.conversWith, (err) => {
@@ -1600,6 +1600,7 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 			let onArchivedConversationAddedHandler = chatClient2.onArchivedConversationAdded((archived_conv, topic) => {
 				console.log("conv was archived:", archived_conv, topic);
 				assert(archived_conv != null);
+				assert(archived_conv.last_message_text != null); // checking archived-conversation is metadata-full
 				chatClient2.conversationDetail(topic.conversWith, (err, conv) => {
 					console.log("conv detail:", conv);
 					assert(err == null);

@@ -1,4 +1,7 @@
 
+## v0.2.11
+- archive-conversation payload now publishes on MQTT the full conversation data, not only the conversation patch
+
 ## v0.2.10
 - added test #17 - conversation/archivedConversation detail
 

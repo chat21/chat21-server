@@ -118,8 +118,25 @@ class ChatDB {
     });
   }
 
-  getConversation(timelineOf, conversWith, callback) {
-    this.db.collection(this.conversations_collection).findOne( { timelineOf: timelineOf, conversWith: conversWith }, function(err, doc) {
+  // DEPRECATED? //
+  // getConversation(timelineOf, conversWith, callback) {
+  //   this.db.collection(this.conversations_collection).findOne( { timelineOf: timelineOf, conversWith: conversWith }, function(err, doc) {
+  //     if (err) {
+  //       if (callback) {
+  //         callback(err, null)
+  //       }
+  //     }
+  //     else {
+  //       if (callback) {
+  //         callback(null, doc)
+  //       }
+  //     }
+  //   });
+  // }
+
+  conversationDetail(appid, timelineOf, conversWith, archived, callback) {
+    logger.debug("DB. app: "+ appid+ " user: " + timelineOf + " conversWith: "+ conversWith);
+    this.db.collection(this.conversations_collection).find( { timelineOf: timelineOf, app_id: appid, conversWith: conversWith, archived: archived } ).limit(1).toArray(function(err, docs) {
       if (err) {
         if (callback) {
           callback(err, null)
@@ -127,7 +144,7 @@ class ChatDB {
       }
       else {
         if (callback) {
-          callback(null, doc)
+          callback(null, docs)
         }
       }
     });
