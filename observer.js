@@ -381,13 +381,19 @@ function process_outgoing(topic, message_string, callback) {
 
   let message = JSON.parse(message_string)
   let messageId = uuidv4()
-  const now = Date.now()
   let outgoing_message = message
   outgoing_message.message_id = messageId
   outgoing_message.sender = me
   outgoing_message.recipient = recipient_id
   outgoing_message.app_id = app_id
-  outgoing_message.timestamp = now
+  if (!outgoing_message.timestamp) {
+    logger.debug("No timestamp provided, forcing to Date.now()");
+    const now = Date.now()
+    outgoing_message.timestamp = now
+  }
+  else {
+    logger.debug("Timestamp provided.");
+  }
 
   let inbox_of;
   let convers_with;
