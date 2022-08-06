@@ -467,6 +467,10 @@ function process_outgoing(topic, message_string, callback) {
           logger.debug("inbox_of === outgoing_message.sender. status=SENT system YES?", inbox_of);
           outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT;
         }
+        else if (outgoing_message.attributes && outgoing_message.attributes.hiddenFor && outgoing_message.attributes.hiddenFor === inbox_of) {
+          console.log('sendGroupMessageToMembersTimeline skip message for ' +  outgoing_message.attributes.hiddenFor);
+          break;
+        }
         else {
           logger.debug("inbox_of != outgoing_message.sender. status=DELIVERED no system, is:", inbox_of);
           outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED;
