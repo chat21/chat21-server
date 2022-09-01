@@ -207,6 +207,15 @@ function startPublisher() {
 }
 
 function publish(exchange, routingKey, content, callback) {
+  logger.debug("[AMQP] publish routingKey:", routingKey);
+  logger.debug("[AMQP] publish content:", content);
+  console.log("routingKey.length:", routingKey.length);
+  logger.log("logger.log should work");
+  if (routingKey.length > 255) {
+    logger.error("routingKey invalid length (> 255). Publish canceled.");
+    callback(null);
+    return;
+  }
   try {
     pubChannel.publish(exchange, routingKey, content, { persistent: true },
       function (err, ok) {

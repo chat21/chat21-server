@@ -1,0 +1,1 @@
+node chatservermq.js ALL

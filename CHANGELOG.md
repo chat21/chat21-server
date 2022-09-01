@@ -1,4 +1,13 @@
 
+## v0.2.16
+- Deployed new version
+
+## v0.2.15
+- Added check on "routingKey invalid length (> 255). Publish canceled."
+
+## v0.2.14
+- added logs for better debug "routingKey" error
+
 ## v0.2.11
 - archive-conversation payload now publishes on MQTT the full conversation data, not only the conversation patch
 
