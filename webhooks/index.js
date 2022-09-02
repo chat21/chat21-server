@@ -84,7 +84,6 @@ class Webhooks {
     logger.debug("webhooks inizialized: this.exchange:", this.exchange, "this.offlinePubQueue:", this.offlinePubQueue)
   }
 
-
   getWebHookEnabled() {
     return this.enabled;
   }
@@ -111,6 +110,11 @@ class Webhooks {
   }
 
   WHnotifyMessageStatusSentOrDelivered(message_payload, topic, callback) {
+    if (this.enabled === false) {
+      logger.debug("webhooks disabled");
+      callback(null);
+      return;
+    }
     logger.log("WHnotifyMessageStatusSentOrDelivered()", message_payload)
     let message = JSON.parse(message_payload);
     message['temp_field_chat_topic'] = topic;
@@ -120,9 +124,9 @@ class Webhooks {
         if (callback) {
           callback(err);
         }
-        else {
-          callback(null);
-        }
+        // else {
+        //   callback(null);
+        // }
       });
     }
     else if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED) {
@@ -131,18 +135,25 @@ class Webhooks {
         if (callback) {
           callback(err);
         }
-        else {
-          callback(null);
-        }
+        // else {
+        //   callback(null);
+        // }
       });
     }
     else {
       logger.log("STATUS NEITHER SENT OR DELIVERED...");
-      callback(null);
+      if (callback) {
+        callback(null);
+      }
     }
   }
 
   WHnotifyMessageStatusSent(message, callback) {
+    if (this.enabled === false) {
+      logger.debug("webhooks disabled");
+      callback(null);
+      return;
+    }
     logger.log("WH Sent method.");
     if (this.webhook_events_array.indexOf(MessageConstants.WEBHOOK_EVENTS.MESSAGE_SENT) == -1) {
       logger.debug("WH MESSAGE_SENT disabled.");
@@ -156,6 +167,11 @@ class Webhooks {
   }
 
   WHnotifyMessageStatusDelivered(message, callback) {
+    if (this.enabled === false) {
+      logger.debug("webhooks disabled");
+      callback(null);
+      return;
+    }
     if (this.webhook_events_array.indexOf(MessageConstants.WEBHOOK_EVENTS.MESSAGE_DELIVERED) == -1) {
       logger.debug("WH MESSAGE_DELIVERED disabled.");
       callback(null);
@@ -168,6 +184,11 @@ class Webhooks {
   }
 
   WHnotifyMessageStatusReturnReceipt(message, callback) {
+    if (this.enabled === false) {
+      logger.debug("webhooks disabled");
+      callback(null);
+      return;
+    }
     if (this.webhook_events_array.indexOf(MessageConstants.WEBHOOK_EVENTS.MESSAGE_RETURN_RECEIPT) == -1) {
       logger.debug("WH MESSAGE_RETURN_RECEIPT disabled.");
       callback(null);
@@ -191,7 +212,7 @@ class Webhooks {
     logger.debug("MESSAGE_PAYLOAD: " + message_payload)
     this.publish(this.exchange, notify_topic, Buffer.from(message_payload), (err) => {
       if (err) {
-        logger.error("Err", err);
+        logger.error("Error publishing webhook WHnotifyMessageDeliver", err);
         callback(err);
       }
       else {
@@ -201,12 +222,12 @@ class Webhooks {
   }
 
   WHnotifyMessageUpdate(message, callback) {
-    logger.debug("NOTIFY MESSAGE UPDATE:", message);
     if (this.enabled===false) {
       logger.debug("webhooks disabled");
       callback(null)
       return
     }
+    logger.debug("NOTIFY MESSAGE UPDATE:", message);
     const notify_topic = `observer.webhook.apps.${this.appId}.message_update`
     logger.debug("notifying webhook message_update topic:" + notify_topic)
     const message_payload = JSON.stringify(message)
@@ -223,17 +244,13 @@ class Webhooks {
   }
 
   WHnotifyConversationArchived(conversation, topic, callback) {
-    logger.debug("NOTIFY CONVERSATION ARCHIVED:", conversation)
-
     if (this.enabled===false) {
       logger.debug("WHnotifyConversationArchived Discarding notification. webhook_enabled is false.");
-      // callback({err: "WHnotifyConversationArchived Discarding notification. webhook_enabled is false."}); 
-      callback(null)
-      return
+      callback(null);
+      return;
     }
-
+    logger.debug("NOTIFY CONVERSATION ARCHIVED:", conversation)
     conversation['temp_field_chat_topic'] = topic;
-
     const notify_topic = `observer.webhook.apps.${this.appId}.conversation_archived`
     logger.debug("notifying webhook notifyConversationArchived topic: " + notify_topic)
     const payload = JSON.stringify(conversation)
@@ -251,9 +268,9 @@ class Webhooks {
 
   WHprocess_webhook_message_deliver(topic, message_string, callback) {
     logger.debug("process WHprocess_webhook_message_deliver: " + message_string + " on topic: " + topic)
-    var message = JSON.parse(message_string)
+    var message = JSON.parse(message_string);
     if (callback) {
-      callback(true)
+      callback(true);
     }
     
     // if (!this.webhook_endpoint) {
@@ -263,15 +280,16 @@ class Webhooks {
     // }
 
     if (!message['temp_webhook_endpoints']) {
-      logger.debug("WHprocess_webhook_message_deliver Discarding notification. webhook_endpoints undefined.")
-      return
+      logger.debug("Error. WHprocess_webhook_message_deliver Discarding notification. webhook_endpoints undefined.")
+      return;
     }
 
     let delivered_to_inbox_of = null;
-    if (message.status === MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED && message['temp_field_chat_topic']) {
+    if (
+    message.status === MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED ||
+    message.status === MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT
+    && message['temp_field_chat_topic']) {
       const topic_parts = message['temp_field_chat_topic'].split(".");
-      // extras: {topic: 'apps.tilechat.users.03-ANDREALEO.messages.6d011n62ir097c0143cc42dc.clientadded'}
-      // /apps/tilechat/users/(INBOX_OF)/messages/CONVERS_WITH/ACTION
       if (topic_parts.length >= 4) {
         delivered_to_inbox_of = topic_parts[3]
       }
@@ -281,9 +299,9 @@ class Webhooks {
       }
     }
     else {
-      logger.error("topic processing error on message-delivered event. Topic:", topic, ",message:", message);
+      logger.error("Error. Topic processing error on message-delivered/message-sent event. Topic:", topic, ",message:", message);
+      return;
     }
-
     
     const message_id = message.message_id;
     const recipient_id = message.recipient;
@@ -470,9 +488,9 @@ class Webhooks {
   }
 
   WHsendData(endpoint, json, callback) {
-    if (!this.enabled) {
-      return;
-    }
+    // if (!this.enabled) {
+    //   return;
+    // }
     var q = url.parse(endpoint, true);
     var protocol = (q.protocol == "http:") ? require('http') : require('https');
     let options = {
@@ -599,7 +617,7 @@ class Webhooks {
         logger.error("Webooks.Error:", err, " binding on queue:", queue, "topic:", topic)
       }
       else {
-        logger.info("Webooks.bind: '" + queue + "' on topic: " + topic);
+        logger.info("Webhooks.bind: '" + queue + "' on topic: " + topic);
       }
     });
   }

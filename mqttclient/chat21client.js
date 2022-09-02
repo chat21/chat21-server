@@ -22,7 +22,7 @@ class Chat21Client {
         this.client = null;
         this.reconnections = 0 // just to check how many reconnections
         this.client_id = this.uuidv4();
-        this.log = options._log ? true : false;
+        this.log = options.log ? true : false;
         if (options && options.MQTTendpoint) {
             if (options.MQTTendpoint.startsWith('/')) {
                 if (this.log) {
@@ -763,14 +763,17 @@ class Chat21Client {
     }
 
     conversationDetail(conversWith, callback) {
+        console.log("conversationDetail(). searching on user:", this.user_id, " - conversWith:", conversWith)
         this.crossConversationDetail(conversWith, false, callback);
     }
 
     archivedConversationDetail(conversWith, callback) {
+        console.log("archivedConversationDetail(). searching on user:", this.user_id, " - conversWith:", conversWith)
         this.crossConversationDetail(conversWith, true, callback);
     }
 
     crossConversationDetail(conversWith, archived, callback) {
+        console.log("searching on user:", this.user_id, " - conv of conversWith:", conversWith, " - archived:", archived)
         let path = "conversations";
         if (archived) {
             path = "archived_conversations"

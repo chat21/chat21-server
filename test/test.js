@@ -1373,7 +1373,7 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 	});
 
 	describe('TiledeskClient - Webhooks _test 16_', function() {
-		it('test 15 - "message-sent" webhook event, 2 endpoints \
+		it('test 16 - "message-sent" webhook event, 2 endpoints \
 REUSE SHARED CHAT CLIENTS', function(done) {
 			if (!config.LOCAL_STACK) {
 				logger.log("LOCAL_STACK=false, skipping webhooks test 16");
@@ -1454,46 +1454,8 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 				let group_members = {};
 				group_members[user1.userid] = 1;
 				group_members[user2.userid] = 1;
-				// let history_messages = {};
-				// let _chatClient3 = new Chat21Client(
-				// 	{
-				// 		appId: config.APPID,
-				// 		MQTTendpoint: config.MQTT_ENDPOINT,
-				// 		APIendpoint: config.API_ENDPOINT,
-				// 		log: config.CLIENT_API_LOG
-				// 	}
-				// );
 				_chatClient1.connect(user1.userid, user1.token, () => {
 					logger.log("test 16 - _chatClient1 connected.");
-					// _chatClient3.connect(user3.userid, user3.token, () => { // TODO if token is wrong it mustreply with an error!
-					// 	logger.log("test 16 - _chatClient3 connected.");
-					// 	let added_handler3 = _chatClient3.onMessageAdded((message, topic) => {
-					// 		if (message.recipient === group_id) {
-					// 			logger.log("test 16 - Client3 - message added:", JSON.stringify(message));
-					// 			if (
-					// 				message &&
-					// 				message.recipient === group_id &&
-					// 				message.text === MESSAGE1_USER1) {
-					// 				logger.log("test 16 - MESSAGE1_USER1 message received:", message.text);
-					// 				history_messages['MESSAGE1_USER1'] = 1;
-					// 			}
-								
-					// 			if (message &&
-					// 				message.recipient === group_id &&
-					// 				history_messages['MESSAGE1_USER1'] === 1) {
-					// 				logger.log("test 16 - FULL HISTORY RECEIVED.");
-					// 				_chatClient3.removeOnMessageAddedHandler(added_handler3);
-					// 				_chatClient1.close(() => {
-					// 					logger.log("test 16 - _chatClient1 successfully disconnected.");
-					// 					_chatClient3.close(() => {
-					// 						logger.log("test 16 - _chatClient3 successfully disconnected.");
-					// 						logger.log("test 16 -> done()");
-					// 						done();
-					// 					});
-					// 				});
-					// 			}
-					// 		}
-					// 	});
 						logger.log("test 16 - creating group:", group_id);
 						_chatClient1.groupCreate(
 							group_name,
@@ -1538,19 +1500,6 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 						);
 					// });
 				});
-				// chatClient1.sendMessage(
-				// 	SENT_MESSAGE,
-				// 	TYPE_TEXT,
-				// 	user2.userid,
-				// 	user2.fullname,
-				// 	user1.fullname,
-				// 	null,
-				// 	null,
-				// 	CHANNEL_TYPE_DIRECT,
-				// 	() => {
-				// 		logger.log("Message sent:", SENT_MESSAGE);
-				// 	}
-				// );
 			});
 		});
 	});
@@ -1583,14 +1532,16 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 					topic.conversWith === user1.userid) {
 					// chatClient2.removeOnConversationAddedHandler(handler);
 					chatClient2.conversationDetail(topic.conversWith, (err, conv) => {
-						logger.log("conv detail:", conv);
+						logger.log("1. check conv detail on db:", conv);
 						assert(err == null);
 						assert(conv != null);
+						logger.log(">2. check this conv is not archived detail", topic.conversWith);
 						chatClient2.archivedConversationDetail(topic.conversWith, (err, conv) => {
-							logger.log("archived conv detail:", conv);
+							logger.log(".2. check this conv is not archived detail:", conv);
 							assert(err == null);
 							assert(conv == null);
 							chatClient2.archiveConversation(topic.conversWith, (err) => {
+								logger.log("3. conversation archived.");
 								assert(err == null);
 							});
 						});
@@ -1598,15 +1549,16 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 				}
 			});
 			let onArchivedConversationAddedHandler = chatClient2.onArchivedConversationAdded((archived_conv, topic) => {
-				console.log("conv was archived:", archived_conv, topic);
+				console.log("4. conv was archived:", archived_conv, topic);
 				assert(archived_conv != null);
 				assert(archived_conv.last_message_text != null); // checking archived-conversation is metadata-full
+				console.log(">5. getting conv detail (chatClient2)", topic.conversWith, " (after archiving) must be null");
 				chatClient2.conversationDetail(topic.conversWith, (err, conv) => {
-					console.log("conv detail:", conv);
+					console.log("5. getting conv detail (chatClient2)", topic.conversWith, " (after archiving) must be null:", conv);
 					assert(err == null);
 					assert(conv == null);
 					chatClient2.archivedConversationDetail(topic.conversWith, (err, arch_conv_detail) => {
-						console.log("got archived conv detail:", arch_conv_detail);
+						console.log("6. got archived conv detail:", arch_conv_detail);
 						assert(err == null);
 						assert(arch_conv_detail != null);
 						done();

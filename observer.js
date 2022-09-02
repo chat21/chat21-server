@@ -82,31 +82,6 @@ function setWebHookEvents(events) {
   }
 }
 
-// function initWebhooks(config) {
-//   console.log("1")
-//   if (!config) {
-//     config = {}
-//   }
-//   app_id = config.app_id || "tilechat";
-//   exchange = config.exchange || 'amq.topic';
-//   if (config && config.rabbitmq_uri) {
-//     // console.log("rabbitmq_uri found in config", config)
-//     rabbitmq_uri = config.rabbitmq_uri;
-//   }
-//   else if (process.env.RABBITMQ_URI) {
-//     // console.log("rabbimq_uri found in env")
-//     rabbitmq_uri = process.env.RABBITMQ_URI;
-//   }
-//   else {
-//     throw new Error('please configure process.env.RABBITMQ_URI or use parameter config.rabbimq_uri option.');
-//   }
-//   console.log("2")
-//   webhooks = new Webhooks({appId: app_id, RABBITMQ_URI: rabbitmq_uri, exchange: exchange, webhook_endpoints: webhook_endpoints_array, webhook_events: webhook_events_array, queue_name: 'webhooks', logger: logger});
-//   webhooks.enabled = webhook_enabled;
-//   // await webhooks.start();
-//   console.log("3")
-// }
-
 function setActiveQueues(queues) {
   logger.log("active queues setting", queues)
   active_queues = queues;
@@ -208,11 +183,8 @@ function startPublisher() {
 
 function publish(exchange, routingKey, content, callback) {
   logger.debug("[AMQP] publish routingKey:", routingKey);
-  logger.debug("[AMQP] publish content:", content);
-  console.log("routingKey.length:", routingKey.length);
-  logger.log("logger.log should work");
   if (routingKey.length > 255) {
-    logger.error("routingKey invalid length (> 255). Publish canceled.");
+    logger.error("routingKey invalid length (> 255). Publish canceled.", routingKey.length);
     callback(null);
     return;
   }
@@ -373,7 +345,7 @@ function work(msg, callback) {
 // ***** TOPIC HANDLERS ******/
 
 function process_presence(topic, message_string, callback) {
-  logger.debug("got PRESENCE testament", message_string, " on topic", topic)
+  logger.debug("> got PRESENCE testament", message_string, " on topic", topic)
   callback(true)
 }
 
@@ -477,7 +449,7 @@ function process_outgoing(topic, message_string, callback) {
           outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT;
         }
         else if (outgoing_message.attributes && outgoing_message.attributes.hiddenFor && outgoing_message.attributes.hiddenFor === inbox_of) {
-          console.log('sendGroupMessageToMembersTimeline skip message for ' +  outgoing_message.attributes.hiddenFor);
+          logger.debug('sendGroupMessageToMembersTimeline skip message for ' +  outgoing_message.attributes.hiddenFor);
           break;
         }
         else {
@@ -568,36 +540,60 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
       logger.debug("webhooks && webhook_enabled ON, processing webhooks, message:", message);
       webhooks.WHnotifyMessageStatusSentOrDelivered(message_payload, added_topic, (err) => {
         if (err) {
-          logger.error("WHnotifyMessageStatusSentOrDelivered with err:"+ err);
-          callback(false);
+          logger.error("WHnotifyMessageStatusSentOrDelivered with err (noack):"+ err);
         }
         else {
           logger.debug("WHnotifyMessageStatusSentOrDelivered ok");
-          logger.debug("ADDED. NOW PUBLISH TO 'persist' TOPIC: " + persist_topic);
-          publish(exchange, persist_topic, Buffer.from(message_payload), function(err, msg) { // .persist
-            if (err) {
-              logger.error("Error PUBLISH TO 'persist' TOPIC:", err);
-              callback(false);
-              return;
-            }
-            logger.debug("(WEBHOOK ENABLED) SUCCESSFULLY PUBLISHED ON:", persist_topic);
-            callback(true);
-          })
         }
       });
     }
-    else {
-      logger.debug("ADDED. NOW PUBLISH TO 'persist' TOPIC: " + persist_topic);
-      publish(exchange, persist_topic, Buffer.from(message_payload), function(err, msg) { // .persist
-        if (err) {
-          logger.error("Error PUBLISH TO 'persist' TOPIC:", err);
-          callback(false);
-          return;
-        }
-        logger.debug("(NO WEBHOOK) SUCCESSFULLY PUBLISHED ON::", persist_topic);
+    logger.debug("ADDED. NOW PUBLISH TO 'persist' TOPIC: " + persist_topic);
+    publish(exchange, persist_topic, Buffer.from(message_payload), function(err, msg) { // .persist
+      if (err) {
+        logger.error("Error PUBLISH TO 'persist' TOPIC (noack):", err);
+        callback(false);
+      }
+      else {
+        logger.debug("(WEBHOOK ENABLED) SUCCESSFULLY PUBLISHED ON:", persist_topic);
         callback(true);
-      })
-    }
+      }
+    });
+    // if (webhooks && webhook_enabled) {
+    //   logger.debug("webhooks && webhook_enabled ON, processing webhooks, message:", message);
+    //   webhooks.WHnotifyMessageStatusSentOrDelivered(message_payload, added_topic, (err) => {
+    //     if (err) {
+    //       logger.error("WHnotifyMessageStatusSentOrDelivered with err (noack):"+ err);
+    //       callback(false);
+    //     }
+    //     else {
+    //       logger.debug("WHnotifyMessageStatusSentOrDelivered ok");
+    //       logger.debug("ADDED. NOW PUBLISH TO 'persist' TOPIC: " + persist_topic);
+    //       publish(exchange, persist_topic, Buffer.from(message_payload), function(err, msg) { // .persist
+    //         if (err) {
+    //           logger.error("Error PUBLISH TO 'persist' TOPIC (noack):", err);
+    //           callback(false);
+    //         }
+    //         else {
+    //           logger.debug("(WEBHOOK ENABLED) SUCCESSFULLY PUBLISHED ON:", persist_topic);
+    //           callback(true);
+    //         }
+    //       })
+    //     }
+    //   });
+    // }
+    // else {
+    //   logger.debug("ADDED. NOW PUBLISH TO 'persist' TOPIC: " + persist_topic);
+    //   publish(exchange, persist_topic, Buffer.from(message_payload), function(err, msg) { // .persist
+    //     if (err) {
+    //       logger.error("Error PUBLISH TO 'persist' TOPIC (noack):", err);
+    //       callback(false);
+    //     }
+    //     else {
+    //       logger.debug("(NO WEBHOOK) SUCCESSFULLY PUBLISHED ON::", persist_topic);
+    //       callback(true);
+    //     }
+    //   })
+    // }
   })
 }
 
@@ -621,7 +617,7 @@ function process_delivered(topic, message_string, callback) {
     logger.debug("MESSAGE DELIVERED?: "+ ok)
     if (!ok) {
       logger.error("____Error delivering message. NOACKED:", message);
-      logger.log("____DELIVER MESSAGE:", message.message_id, " NOACKED!");
+      logger.log("____DELIVER MESSAGE:", message.message_id, " (noack)!");
       callback(false)
     }
     else {
@@ -667,7 +663,7 @@ function process_persist(topic, message_string, callback) {
       // logger.debug("Updating conversation...")
       chatdb.saveOrUpdateConversation(conversation, (err, doc) => {
         if (err) {
-          logger.error("(chatdb.saveOrUpdateConversation callback) ERROR: ", err)
+          logger.error("(chatdb.saveOrUpdateConversation callback) ERROR (noack): ", err)
           callback(false)
         }
         else {
@@ -687,9 +683,9 @@ function process_update(topic, message_string, callback) {
   logger.debug("UPDATE. TOPIC PARTS:", topic_parts)
   logger.debug("payload:" + message_string)
   if (topic_parts.length < 5) {
-    logger.debug("process_update topic error.")
-    callback(false)
-    return
+    logger.debug("Error GRAVE- process_update topic error - SKIP UPDATE. topic_parts.length < 5.", topic)
+    callback(true);
+    return;
   }
   if (topic_parts[4] === "messages") {
     logger.debug(" MESSAGE UPDATE.")
@@ -704,8 +700,9 @@ function process_update(topic, message_string, callback) {
     
     const patch = JSON.parse(message_string)
     if (!patch.status || patch.status != 200) {
-      callback(true)
-      return
+      logger.debug("Error GRAVE- process_update: (!patch.status || patch.status != 200) - SKIP UPDATE.", topic);
+      callback(true);
+      return;
     }
     // If patched with "status = 200" then:
     // 1. Save message in my timeline with status = 200
@@ -732,7 +729,7 @@ function process_update(topic, message_string, callback) {
     publish(exchange, recipient_message_update_topic, Buffer.from(dest_message_patch_payload), function(err) {
       logger.debug(">>> PUBLISHED!!!! RECIPIENT MESSAGE TOPIC UPDATE" + recipient_message_update_topic + " WITH PATCH " , dest_message_patch)
       if (err) {
-        logger.error("error",err);
+        logger.error("publish error (noack):", err);
         callback(false)
       }
       else {
@@ -760,16 +757,22 @@ function process_update(topic, message_string, callback) {
         // TODO: MOVE TO A PERSIST_UPDATED TOPIC/QUEUE...
         logger.debug(">>> ON DISK... WITH A STATUS ON MY MESSAGE-UPDATE TOPIC", topic, "WITH PATCH", my_message_patch)
         chatdb.saveOrUpdateMessage(my_message_patch, function(err, msg) {
-          logger.debug(">>> MESSAGE ON TOPIC", topic, "UPDATED!")
+          // logger.debug(">>> MESSAGE ON TOPIC", topic, "UPDATED!")
           if (err) {
-            logger.error("error",err);
-            callback(false)
-            return
+            logger.error("error on topic:", topic , " - Error (noack):", err);
+            callback(false);
           }
-          logger.debug(">>> ON DISK... RECIPIENT MESSAGE ON DB WITH", dest_message_patch)
-          chatdb.saveOrUpdateMessage(dest_message_patch, function(err, msg) {
-            callback(true)
-          });
+          else {
+            chatdb.saveOrUpdateMessage(dest_message_patch, function(err, msg) {
+              if (err) {
+                logger.error("error on topic:", topic , " - Error (noack):", err);
+                callback(false);
+              }
+              else {
+                callback(true);
+              }
+            });
+          }
         });
       }
     });
@@ -793,11 +796,11 @@ function process_update(topic, message_string, callback) {
     logger.debug(">>> ON DISK... CONVERSATION TOPIC " + topic + " WITH PATCH " + patch)
     logger.debug("Updating conversation 2.")
     chatdb.saveOrUpdateConversation(patch, function(err, doc) {
-      logger.debug(">>> CONVERSATION ON TOPIC:", topic, "UPDATED!")
+      logger.debug(">>> CONVERSATION ON TOPIC:", topic, "UPDATED?")
       if (err) {
-        logger.error("error",err);
-        callback(false)
-        return
+        logger.error("CONVERSATION ON TOPIC UPDATE error (noack)", err);
+        callback(false);
+        return;
       }
       const patch_payload = JSON.stringify(patch)
       const my_conversation_update_topic = 'apps.tilechat.users.' + me + '.conversations.' + convers_with + '.clientupdated'
@@ -805,12 +808,11 @@ function process_update(topic, message_string, callback) {
       publish(exchange, my_conversation_update_topic, Buffer.from(patch_payload), function(err) {
         logger.debug(">>> PUBLISHED!!!! MY CONVERSATION UPDATE TOPIC " + my_conversation_update_topic + " WITH PATCH " + patch_payload)
         if (err) {
-          logger.error("error",err);
-          callback(false)
-          return
+          logger.error("PUBLISH MY CONVERSATION UPDATE TOPIC error (noack)", err);
+          callback(false);
         }
         else {
-          callback(true)
+          callback(true);
         }
       });
     });
@@ -822,9 +824,9 @@ function process_archive(topic, payload, callback) {
   const topic_parts = topic.split(".")
   logger.debug("ARCHIVE. TOPIC PARTS:" + topic_parts + "payload (ignored): " + payload)
   if (topic_parts.length < 7) {
-    logger.debug("process_archive topic error. topic_parts.length < 7:" + topic)
-    callback(true)
-    return
+    logger.debug("ERROR GRAVE. process_archive topic error. topic_parts.length < 7:" + topic)
+    callback(true);
+    return;
   }
   if (topic_parts[4] === "conversations") {
     logger.debug("CONVERSATION ARCHIVE.")
@@ -857,17 +859,17 @@ function process_archive(topic, payload, callback) {
     chatdb.saveOrUpdateConversation(conversation_archive_patch, function(err, msg) {
       logger.debug(">>> CONVERSATION ON TOPIC:", topic, "ARCHIVED!")
       if (err) {
-        logger.error("error",err);
-        callback(false)
-        return
+        logger.error("CONVERSATION ON TOPIC: error (noack)",err);
+        callback(false);
+        return;
       }
       chatdb.conversationDetail(app_id, me, convers_with, true, (err, convs) => {
         if (err) {
-          logger.error("Error getting conversationDetail()", err);
+          logger.error("Error GRAVE. getting conversationDetail()", err);
           callback(true);
         }
         else if (convs && convs.length < 1) {
-          logger.error("Error getting conversationDetail(): convs[].length < 1");
+          logger.error("Error GRAVE. getting conversationDetail(): convs[].length < 1");
           callback(true);
         }
         else {
@@ -879,7 +881,7 @@ function process_archive(topic, payload, callback) {
           publish(exchange, conversation_deleted_topic, Buffer.from(payload), function(err) {
             logger.debug(">>> PUBLISHED!!!! CONVERSATION ON TOPIC: " + conversation_deleted_topic + " ARCHIVED (DELETED). Payload: " + payload + " buffered:" + Buffer.from(payload))
             if (err) {
-              logger.error("error",err);
+              logger.error("error PUBLISHING CONVERSATION ON TOPIC:", err);
               callback(false);
             }
             else {
@@ -888,12 +890,12 @@ function process_archive(topic, payload, callback) {
               logger.debug(">>> NOW PUBLISHING... CONVERSATION ARCHIVED (ADDED) TOPIC: " + archived_conversation_added_topic)
               // const success_payload = JSON.stringify({"success": true})
               publish(exchange, archived_conversation_added_topic, Buffer.from(payload), function(err) {
-                logger.debug(">>> PUBLISHED!!!! ARCHIVED (DELETED) CONVERSATION ON TOPIC: " + conversation_deleted_topic)
                 if (err) {
-                  logger.error("error",err);
+                  logger.error("error PUBLISHING ARCHIVED (DELETED) CONVERSATION ON TOPIC", err);
                   callback(false);
                 }
                 else {
+                  logger.debug(">>> PUBLISHED ARCHIVED (DELETED) CONVERSATION ON TOPIC: " + conversation_deleted_topic);
                   callback(true);
                 }
               });
@@ -904,95 +906,6 @@ function process_archive(topic, payload, callback) {
     });
   }
 }
-
-/**
- * Adds a member to a group.
- * 1. Sends "{user} added to this group" message to every member of the group, including the joined one
- * 2. Pubblishes old group messages to the newly joined member timeline
- * NOTE: this method doesn't modify the group members neither sends a group.updated message to
- * the clients. Use addMemberToGroupAndNotifyUpdate() to reach these couple of goals.
- * 
- * @param {*} joined_member_id 
- * @param {*} group 
- * @param {*} callback 
- */
-// function joinGroup(joined_member_id, group, callback) {
-//   logger.debug("SENDING 'ADDED TO GROUP' TO EACH MEMBER INCLUDING THE JOINED ONE...", group)
-//   const appid = group.appId
-//   for (let [member_id, value] of Object.entries(group.members)) {
-//       logger.debug("to member:" + member_id)
-//       const now = Date.now()
-//       const message = {
-//           message_id: uuid(),
-//           type: "text",
-//           text: joined_member_id + " added to group",
-//           timestamp: now,
-//           channel_type: "group",
-//           sender_fullname: "System",
-//           sender: "system",
-//           recipient_fullname: group.name,
-//           recipient: group.uid,
-//           status: 100, // MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT,
-//           attributes: {
-//               subtype:"info",
-//               updateconversation : true,
-//               messagelabel: {
-//                   key: "MEMBER_JOINED_GROUP",
-//                   parameters: {
-//                       member_id: joined_member_id
-//                       // fullname: fullname // OPTIONAL
-//                   }
-//               }
-//           }
-//       }
-//       logger.debug("Member joined group message:", message)
-//       let inbox_of = member_id
-//       let convers_with = group.uid
-//       deliverMessage(message, appid, inbox_of, convers_with, (ok) => {
-//         console.log("delivering...")
-//         if (!ok) {
-//           logger.error("error delivering message to joined member", inbox_of)
-//           callback(ok)
-//           return
-//         }
-//         else {
-          
-//           logger.debug("DELIVERED MESSAGE TO: " + inbox_of + " CONVERS_WITH " + convers_with)
-//         }
-//       })
-//   }
-//   // 2. pubblish old group messages to the joined member (in the member/group-conversWith timeline)
-//   const userid = group.uid
-//   const convid = group.uid
-//   chatdb.lastMessages(appid, userid, convid, 1, 200, (err, messages) => {
-//       if (err) {
-//           logger.error("Error", err)
-//           callback(err)
-//       }
-//       else if (!messages) {
-//           logger.debug("No messages in group: " + group.uid)
-//           callback(null)
-//       }
-//       else {
-//           logger.debug("delivering past group messages to:" + joined_member_id + " messages: ", messages)
-//           const inbox_of = joined_member_id
-//           const convers_with = group.uid
-//           messages.forEach(message => {
-//               // TODO: CHECK IN MESSAGE WAS ALREADY DELIVERED. (CLIENT? SERVER?)
-//               logger.debug("Message:", message.text)
-//               deliverMessage(message, appid, inbox_of, convers_with, (err) => {
-//                   if (err) {
-//                       logger.error("error delivering past message to joined member: " + inbox_of, err)
-//                   }
-//                   else {
-//                       logger.debug("DELIVERED PAST MESSAGE TO: " + inbox_of + " CONVERS_WITH : " + convers_with)
-//                   }
-//               })
-//           });
-//           callback(null)
-//       }
-//   })
-// }
 
 function process_update_group(topic, payload, callback) {
   var topic_parts = topic.split(".")
@@ -1008,9 +921,9 @@ function process_update_group(topic, payload, callback) {
   const notify_to = data.notify_to
   // logger.debug("process_update_group DATA.notify_to ", data.notify_to);
   if (!group || !group.uid) {
-    logger.error("Group not found!");
-    callback(true)
-    return
+    logger.error("ERROR GRAVE. Group not found!");
+    callback(true);
+    return;
   }
   deliverGroupUpdated(group, notify_to, function(ok) {
     callback(ok)
@@ -1026,7 +939,7 @@ function deliverGroupUpdated(group, notify_to, callback) {
     const payload = JSON.stringify(group)
     publish(exchange, updated_group_topic, Buffer.from(payload), function(err, msg) {
       if (err) {
-        logger.error("error publish deliverGroupUpdated",err);
+        logger.error("error publish deliverGroupUpdated:",err);
         // callback(false)
         // return
       }

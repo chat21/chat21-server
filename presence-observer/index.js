@@ -116,7 +116,7 @@ class PresenceObserver {
     // ***** TOPIC HANDLERS ******/
     
     process_presence(topic, message_string, callback) {
-        winston.debug("got PRESENCE testament", message_string, " on topic", topic)
+        winston.debug("...got PRESENCE testament", message_string, " on topic", topic)
         callback(true)
     }
 }
