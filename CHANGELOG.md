@@ -1,3 +1,5 @@
+## v0.2.17
+- "ack" management improvements
 
 ## v0.2.16
 - Deployed new version
