@@ -95,6 +95,7 @@ let client_api_log = true;
 if (process.env && process.env.TEST_CLIENT_API_LOG !== 'true') {
 	client_api_log = false;
 }
+console.log("client_api_log:", client_api_log);
 
 // ** ALL-IN-ONE
 // ** RABBITMQ, RUN IT WITH DOCKER
@@ -211,22 +212,22 @@ describe('Main', function() {
 				log: config.CLIENT_API_LOG
 			}
 		);
-		chatClient4 = new Chat21Client(
-			{
-				appId: config.APPID,
-				MQTTendpoint: config.MQTT_ENDPOINT,
-				APIendpoint: config.API_ENDPOINT,
-				log: config.CLIENT_API_LOG
-			}
-		);
+		// chatClient4 = new Chat21Client(
+		// 	{
+		// 		appId: config.APPID,
+		// 		MQTTendpoint: config.MQTT_ENDPOINT,
+		// 		APIendpoint: config.API_ENDPOINT,
+		// 		log: config.CLIENT_API_LOG
+		// 	}
+		// );
 		chatClient1.connect(user1.userid, user1.token, () => {
 			logger.log("chatClient1 Connected...");
 			chatClient2.connect(user2.userid, user2.token, () => {
 				logger.log("chatClient2 Connected...");
 				chatClient3.connect(user3.userid, user3.token, async () => {
 					logger.log("chatClient3 Connected...");
-					chatClient4.connect(user4.userid, user4.token, async () => {
-						logger.log("chatClient4 Connected...");
+					// chatClient4.connect(user4.userid, user4.token, async () => {
+					// 	logger.log("chatClient4 Connected...");
 						// **************************
 						// STARTS ALL STACK:
 						// 0. RABBITMQ (start separately with docker)
@@ -246,7 +247,7 @@ describe('Main', function() {
 									}
 								);
 								logger.log('HTTP server AMQP connection started.');
-								observer.logger.setLog(config.OBSERVER_LOG_LEVEL);
+								observer.logger.setLog(config.OBSERVER_LOG_LEVEL);//(config.OBSERVER_LOG_LEVEL);
 								// const webhook_endpoints = ["http://localhost:8002/postdata","http://localhost:8002/postdata2"];
 								// observer.setWebHookEndpoints();
 								observer.setWebHookEnabled(false);
@@ -281,7 +282,7 @@ describe('Main', function() {
 						else {
 							done();
 						}
-					});
+					// });
 				});
 			});
 		});
@@ -295,8 +296,8 @@ describe('Main', function() {
 				logger.log("after - ...chatClient2 successfully disconnected.");
 				chatClient3.close(async () => {
 					logger.log("after - ...chatClient3 successfully disconnected.");
-					chatClient4.close(async () => {
-						logger.log("after - ...chatClient4 successfully disconnected.");
+					// chatClient4.close(async () => {
+						// logger.log("after - ...chatClient4 successfully disconnected.");
 						if (config.LOCAL_STACK) {
 							http_api_server.close(async () => {
 								logger.log("after - HTTP Server closed.");
@@ -324,7 +325,7 @@ describe('Main', function() {
 							logger.log("after() - end.");
 							done();
 						}
-					});
+					// });
 				});
 			});
 		});
@@ -591,6 +592,140 @@ NEW CHAT CLIENTS', function(done) {
 					}
 				);
 			});
+		});
+	});
+
+	describe('TiledeskClient - Groups _test 5.1_', function() {
+		it('test 5.1 - Send message to a volatile-group. \
+(User1) sends a message to a volatile-group with User2 and User3. Both receive the sent message back. \
+NEW CHAT CLIENTS', function(done) {
+			logger.log("test 5.1 - start.");
+			const group_id = "group-test5_1_" + uuidv4();
+			const group_name = "Test Group " + group_id;
+			const inlineGroup = {
+				members: {
+				}
+			}
+			inlineGroup.members[user2.userid] = 1;
+			inlineGroup.members[user3.userid] = 1;
+			let update_notifications = {};
+			const SENT_MESSAGE = 'test 5.1, Hello volatile-guys';
+			// let _chatClient1 = new Chat21Client(
+			// 	{
+			// 		appId: config.APPID,
+			// 		MQTTendpoint: config.MQTT_ENDPOINT,
+			// 		APIendpoint: config.API_ENDPOINT,
+			// 		log: config.CLIENT_API_LOG
+			// 	}
+			// );
+			// let _chatClient2 = new Chat21Client(
+			// 	{
+			// 		appId: config.APPID,
+			// 		MQTTendpoint: config.MQTT_ENDPOINT,
+			// 		APIendpoint: config.API_ENDPOINT,
+			// 		log: config.CLIENT_API_LOG
+			// 	}
+			// );
+			// let _chatClient3 = new Chat21Client(
+			// 	{
+			// 		appId: config.APPID,
+			// 		MQTTendpoint: config.MQTT_ENDPOINT,
+			// 		APIendpoint: config.API_ENDPOINT,
+			// 		log: true
+			// 	}
+			// );
+			// _chatClient1.connect(user1.userid, user1.token, () => {
+			// 	logger.log("test 5.1 - _chatClient1 connected.");
+			// 	logger.log("ChatCLient1 1", _chatClient1.appid)
+			// 	_chatClient2.connect(user2.userid, user2.token, () => {
+			// 		logger.log("test 5.1 - _chatClient2 connected.");
+			// 		logger.log("ChatCLient1 2", _chatClient1.appid)
+			// 		_chatClient3.connect(user3.userid, user3.token, () => {
+			// 			logger.log("test 5.1 - _chatClient3 connected.");
+			// 			logger.log("ChatCLient1 3", _chatClient1.appid)
+						// done();
+						let handler_message_added_client1 = chatClient1.onMessageAdded((message, topic) => {
+							logger.log("message added USER1:", JSON.stringify(message));
+							if (
+									message &&
+									message.text === SENT_MESSAGE
+									) {
+								logger.log("test 5.1 - removing handler:", handler_message_added_client1);
+								chatClient1.removeOnMessageAddedHandler(handler_message_added_client1);
+								// chatClient1.close(() => {
+									// logger.log("test 5.1 - _chatClient1 successfully disconnected.");
+									update_notifications[user1.userid] = 1;
+									// if (update_notifications[user1.userid] === 1) {
+									// 	logger.log("test 5.1 - chatClient1 - update -> done()");
+									// 	done();
+									// }
+									if (update_notifications[user1.userid] === 1 && update_notifications[user2.userid] === 1
+										&& update_notifications[user3.userid] === 1) {
+										logger.log("test 5.1 - chatClient1 OK -> done()");
+										done();
+									}
+								// });
+							}
+						});
+						let handler_message_added_client2 = chatClient2.onMessageAdded((message, topic) => {
+							logger.log("message added USER2:", JSON.stringify(message));
+							if (
+									message &&
+									message.text === SENT_MESSAGE
+									) {
+								logger.log("test 5.1 - removing handler:", handler_message_added_client2);
+								chatClient2.removeOnMessageAddedHandler(handler_message_added_client2);
+								// _chatClient2.close(() => {
+									logger.log("test 5.1 - _chatClient2 successfully disconnected.");
+									update_notifications[user2.userid] = 1;
+									if (update_notifications[user1.userid] === 1 && update_notifications[user2.userid] === 1
+										&& update_notifications[user3.userid] === 1) {
+										logger.log("test 5.1 - chatClient2 OK -> done()");
+										done();
+									}
+								// });
+							}
+						});
+						let handler_message_added_client3 = chatClient3.onMessageAdded((message, topic) => {
+							logger.log("message added USER3:", JSON.stringify(message));
+							if (
+									message &&
+									message.text === SENT_MESSAGE
+									) {
+								logger.log("test 5.1 - removing handler:", handler_message_added_client3);
+								chatClient3.removeOnMessageAddedHandler(handler_message_added_client3);
+								// _chatClient3.close(() => {
+									logger.log("test 5.1 - _chatClient3 successfully disconnected.");
+									update_notifications[user3.userid] = 1;
+									if (update_notifications[user1.userid] === 1 && update_notifications[user2.userid] === 1
+										&& update_notifications[user3.userid] === 1) {
+										logger.log("test 5.1 - chatClient3 OK -> done()");
+										done();
+									}
+								// });
+							}
+						});
+						logger.log("test 5.1 - Sending message to inline group:", inlineGroup);
+						// _chatClient1.connect(user1.userid, user1.token, () => {
+						const message = {
+							text: SENT_MESSAGE,
+							type: TYPE_TEXT,
+							recipient_fullname: group_name,
+							sender_fullname: user1.fullname,
+							attributes: null,
+							metadata: null,
+							channel_type: 'group',
+							group: inlineGroup
+						};
+						chatClient1.sendMessageRaw(
+							message, group_id, () => {
+								logger.log("test 5.1 - Message sent to inline-group", JSON.stringify(message));
+							}
+						);
+						// });
+			// 		});
+			// 	});
+			// });
 		});
 	});
 
@@ -1372,16 +1507,29 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 		});
 	});
 
+	/** THE PROBLEM WITH THIS TEST IS THAT SIMETIMES...
+	 * 
+	 * TiledeskClient - Webhooks _test 16_
+         test 16 - "message-sent" webhook event, 2 endpoints REUSE SHARED CHAT CLIENTS:
+     Error: done() called multiple times in test <Main TiledeskClient - Webhooks _test 16_ test 16 - "message-sent" webhook event, 2 endpoints REUSE SHARED CHAT CLIENTS> of file /Users/andreasponziello/Projects/tiledesk/chatservermq/test/test.js
+      at _chatClient1.close (test/test.js:1535:7)
+      at client.end (mqttclient/chat21client.js:1020:25)
+      at /Users/andreasponziello/Projects/tiledesk/chatservermq/node_modules/mqtt/lib/client.js:827:11
+      at Store.close (node_modules/mqtt/lib/store.js:124:5)
+      at /Users/andreasponziello/Projects/tiledesk/chatservermq/node_modules/mqtt/lib/client.js:821:26
+      at Store.close (node_modules/mqtt/lib/store.js:124:5)
+      at MqttClient.closeStores (node_modules/mqtt/lib/client.js:820:24)
+      at process._tickCallback (internal/process/next_tick.js:61:11)
+	 */
 	describe('TiledeskClient - Webhooks _test 16_', function() {
-		it('test 16 - "message-sent" webhook event, 2 endpoints \
-REUSE SHARED CHAT CLIENTS', function(done) {
+		it('test 16 - "message-sent" webhook event, 2 endpoints', function(done) {
 			if (!config.LOCAL_STACK) {
 				logger.log("LOCAL_STACK=false, skipping webhooks test 16");
 				done();
 				return;
 			}
 			logger.log("test 16 - start.");
-			let _chatClient1 = new Chat21Client(
+			let _chatClient4 = new Chat21Client(
 				{
 					appId: config.APPID,
 					MQTTendpoint: config.MQTT_ENDPOINT,
@@ -1418,7 +1566,7 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 					logger.log("Adding to delivered history:", req.body.data.text);
 					delivered_in_history_count++;
 				}
-
+				
 				// 1. test 16 WEBHOOK - Delivered endpoint text: Group created  __history? true
 				// 2. test 16 WEBHOOK - Delivered endpoint text: USER1 joined group on creation  __history? true
 				// 3. test 16 WEBHOOK - Delivered endpoint text: USER2 joined group on creation  __history? true
@@ -1428,8 +1576,8 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 					observer.setWebHookEnabled(false);
 					observer.setWebHookEndpoints(null);
 					webhook_app.close();
-					_chatClient1.close(() => {
-						logger.log("test 16 - _chatClient1 successfully disconnected.");
+					_chatClient4.close(() => {
+						logger.log("test 16 - _chatClient4 successfully disconnected.");
 						done();
 					});
 				}
@@ -1452,12 +1600,12 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 				const group_name = "group-join test16";
 				const MESSAGE1_USER1 = "test 16, user1, first message";
 				let group_members = {};
-				group_members[user1.userid] = 1;
+				// group_members[user1.userid] = 1;
 				group_members[user2.userid] = 1;
-				_chatClient1.connect(user1.userid, user1.token, () => {
+				_chatClient4.connect(user4.userid, user4.token, () => {
 					logger.log("test 16 - _chatClient1 connected.");
 						logger.log("test 16 - creating group:", group_id);
-						_chatClient1.groupCreate(
+						_chatClient4.groupCreate(
 							group_name,
 							group_id,
 							group_members,
@@ -1467,12 +1615,12 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 								assert(result.success == true);
 								assert(result.group.name === group_name);
 								logger.log("test 16 - group:", group_id, "created");
-								_chatClient1.sendMessageRaw(
+								_chatClient4.sendMessageRaw(
 									{
 										text: MESSAGE1_USER1,
 										type: TYPE_TEXT,
 										recipient_fullname: group_name,
-										sender_fullname: user1.fullname,
+										sender_fullname: user4.fullname,
 										attributes: null,
 										metadata: null,
 										channel_type: CHANNEL_TYPE_GROUP
@@ -1487,7 +1635,7 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 										logger.log("test 16 - waiting some time to allow the sent message to reach the 'persistent' status...");
 										await new Promise(resolve => setTimeout(resolve, 1000)); // it gives time to join message to reach the "persistent" status
 										logger.log("test 16 - end waiting.");
-										_chatClient1.groupJoin(group_id, user3.userid, (err, json) => {
+										_chatClient4.groupJoin(group_id, user3.userid, (err, json) => {
 											if (err) {
 												logger.log("test 16 - member joinned error:", err);
 											}

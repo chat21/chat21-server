@@ -165,6 +165,7 @@ function startPublisher() {
           if (closeOnErr(err)) return;
           ch.on("error", function (err) {
               logger.error("[AMQP] channel error", err);
+              process.exit(0);
           });
           ch.on("close", function () {
               logger.debug("[AMQP] channel closed");
@@ -216,6 +217,7 @@ function startWorker() {
     if (closeOnErr(err)) return;
     ch.on("error", function (err) {
       logger.error("[AMQP] channel error", err);
+      process.exit(0);
     });
     ch.on("close", function () {
       logger.debug("[AMQP] channel closed");
@@ -407,11 +409,21 @@ function process_outgoing(topic, message_string, callback) {
     });
   }
   else {
-    logger.debug("Group message.");
     const group_id = recipient_id
+    if (outgoing_message.group) {
+      logger.debug("Inline Group message.", outgoing_message);
+      let inline_group = outgoing_message.group;
+      inline_group.uid = group_id;
+      inline_group.members[group_id] = 1
+      inline_group.members[sender_id] = 1
+      console.log("...inline_group:", inline_group);
+      sendMessageToGroupMembers(outgoing_message, inline_group, app_id, (ack) => {
+        callback(ack);
+      });
+      return;
+    }
     // chatdb.getGroup(group_id, function(err, group) { // REDIS?
     getGroup(group_id, function(err, group) {
-      // logger.debug("group found!", group)
       if (!group) { // created only to temporary store group-messages in group-timeline
         // TODO: 1. create group (on-the-fly), 2. remove this code, 3. continue as if the group exists.
         logger.debug("group doesn't exist! Sending anyway to group timeline...");
@@ -421,65 +433,67 @@ function process_outgoing(topic, message_string, callback) {
           members: {
           }
         }
-        group.members[me] = 1
+        group.members[sender_id] = 1
       }
-      // if (!group.members[me]) {
-      //   logger.debug(me + " can't write to this group")
-      //   callback(true)
-      //   return
-      // }
 
       // Adding the group as a "volatile" member, so we easily get a copy of
       // all the group messages in timelineOf: group.uid
       group.members[group.uid] = 1
-      // logger.debug("Writing to group:", group)
-      let count = 0;
-      logger.debug("group members", group.members);
-      let max = Object.keys(group.members).length;
-      let error_encoutered = false;
-      for (let [member_id, value] of Object.entries(group.members)) {
-        const inbox_of = member_id;
-        const convers_with = recipient_id;
-        logger.debug("inbox_of: "+ inbox_of);
-        logger.debug("convers_with: "  + convers_with);
-        logger.debug("sending group outgoing message to member", member_id);
-        // if (inbox_of === outgoing_message.sender) {
-        if (inbox_of === group.uid) { // choosing one member, the group ("volatile" member), for the "status=SENT", used by the "message-sent" webhook
-          logger.debug("inbox_of === outgoing_message.sender. status=SENT system YES?", inbox_of);
-          outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT;
-        }
-        else if (outgoing_message.attributes && outgoing_message.attributes.hiddenFor && outgoing_message.attributes.hiddenFor === inbox_of) {
-          logger.debug('sendGroupMessageToMembersTimeline skip message for ' +  outgoing_message.attributes.hiddenFor);
-          break;
+      sendMessageToGroupMembers(outgoing_message, group, app_id, (ack) => {
+        callback(ack);
+      });
+    })
+  }
+}
+
+function sendMessageToGroupMembers(outgoing_message, group, app_id, callback) {
+  // logger.debug("Writing to group:", group)
+  let count = 0;
+  logger.debug("group members", group.members);
+  let max = Object.keys(group.members).length;
+  let error_encoutered = false;
+  for (let [member_id, value] of Object.entries(group.members)) {
+    const inbox_of = member_id;
+    const convers_with = group.uid;
+    logger.debug("inbox_of: "+ inbox_of);
+    logger.debug("convers_with: "  + convers_with);
+    logger.debug("sending group outgoing message to member", member_id);
+    // if (inbox_of === outgoing_message.sender) {
+    if (inbox_of === group.uid) { // choosing one member, the group ("volatile" member), for the "status=SENT", used by the "message-sent" webhook
+      logger.debug("inbox_of === outgoing_message.sender. status=SENT system YES?", inbox_of);
+      outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT;
+    }
+    else if (outgoing_message.attributes && outgoing_message.attributes.hiddenFor && outgoing_message.attributes.hiddenFor === inbox_of) {
+      logger.debug('sendGroupMessageToMembersTimeline skip message for ' +  outgoing_message.attributes.hiddenFor);
+      break;
+    }
+    else {
+      logger.debug("inbox_of != outgoing_message.sender. status=DELIVERED no system, is:", inbox_of);
+      outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED;
+    }
+    console.log("delivering group message with status...", outgoing_message.status, " to:", inbox_of);
+    deliverMessage(outgoing_message, app_id, inbox_of, convers_with, function(ok) {
+      logger.debug("GROUP MESSAGE DELIVERED?", ok)
+      count++;
+      logger.debug("Sent Counting:", count);
+      logger.debug("Max:", max);
+      if (!ok) {
+        logger.debug("Error sending message to group " + group.uid);
+        error_encoutered = true
+      }
+      if (count == max) {
+        if (error_encoutered) {
+          logger.error("ERROR SENDING MESSAGE TO GROUP!");
+          //callback(false)
         }
         else {
-          logger.debug("inbox_of != outgoing_message.sender. status=DELIVERED no system, is:", inbox_of);
-          outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED;
+          logger.log("ALL OK! MESSAGE SENT TO GROUP! ACK!");
+          //callback(true);
         }
-        logger.debug("delivering group message with status...", outgoing_message.status, " to:", inbox_of);
-        deliverMessage(outgoing_message, app_id, inbox_of, convers_with, function(ok) {
-          logger.debug("GROUP MESSAGE DELIVERED?", ok)
-          count++;
-          logger.debug("Sent Counting:", count);
-          logger.debug("Max:", max);
-          if (!ok) {
-            logger.debug("Error sending message to group " + group.uid);
-            error_encoutered = true
-          }
-          if (count == max) {
-            if (error_encoutered) {
-              logger.error("ERROR SENDING MESSAGE TO GROUP!");
-              callback(false)
-            }
-            else {
-              logger.log("ALL OK! MESSAGE SENT TO GROUP! ACK!");
-              callback(true);
-            }
-          }
-        })
-      } // end for
-    }) // end getGroup
-  }
+      }
+    })
+  } // end for
+  callback(true);
 }
 
 let groups = {};
@@ -755,6 +769,7 @@ function process_update(topic, message_string, callback) {
         //   }
 
         // TODO: MOVE TO A PERSIST_UPDATED TOPIC/QUEUE...
+        // TODO, BETTER: USE _WEBHOOK WITH MESSAGE-STATUS-UPDATED TO SAVE THE MESSAGE
         logger.debug(">>> ON DISK... WITH A STATUS ON MY MESSAGE-UPDATE TOPIC", topic, "WITH PATCH", my_message_patch)
         chatdb.saveOrUpdateMessage(my_message_patch, function(err, msg) {
           // logger.debug(">>> MESSAGE ON TOPIC", topic, "UPDATED!")
@@ -795,6 +810,7 @@ function process_update(topic, message_string, callback) {
     patch.conversWith = convers_with
     logger.debug(">>> ON DISK... CONVERSATION TOPIC " + topic + " WITH PATCH " + patch)
     logger.debug("Updating conversation 2.")
+    // BETTER: ACK, THEN WEBHOOK CONVERSATION-SAVE
     chatdb.saveOrUpdateConversation(patch, function(err, doc) {
       logger.debug(">>> CONVERSATION ON TOPIC:", topic, "UPDATED?")
       if (err) {
@@ -845,6 +861,7 @@ function process_archive(topic, payload, callback) {
     }
     logger.debug("NOTIFY VIA WEBHOOK ON SAVE TOPIC "+ topic)
     if (webhook_enabled) {
+      // BETTER: WEBHOOK CONVERSATION-SAVE WITH archived=true
       webhooks.WHnotifyConversationArchived(conversation_archive_patch, topic, (err) => {
         if (err) {
             logger.error("Webhook notified with err:"+ err)

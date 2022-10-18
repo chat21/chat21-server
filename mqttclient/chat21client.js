@@ -127,7 +127,7 @@ class Chat21Client {
         // callback - function (err)
         // console.log("recipient_id:", recipient_id)
         let dest_topic = `apps/${this.appid}/outgoing/users/${this.user_id}/messages/${recipient_id}/outgoing`
-        // console.log("dest_topic:", dest_topic)
+        console.log("dest_topic:", dest_topic)
         // let outgoing_message = {
         //     text: text,
         //     type: type,
@@ -537,7 +537,9 @@ class Chat21Client {
         this.subscribeToMyConversations()
         // no more then one "on_message" handler, thanks.
         this.on_message_handler = this.client.on('message', (topic, message) => {
-            // console.log("topic:" + topic + "\nmessage payload:" + message)
+            if (this.log) {
+                console.log("topic:" + topic + "\nmessage payload:" + message)
+            }
             const _topic = this.parseTopic(topic)
             if (!_topic) {
                 if (this.log) {

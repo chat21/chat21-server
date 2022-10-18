@@ -1,10 +1,10 @@
 {
   "name": "@chat21/chat21-server",
-  "version": "0.2.17",
+  "version": "0.2.21",
   "description": "Chat21 AMQP/MQTT messages dispatcher",
   "dependencies": {
     "aedes": "^0.40.1",
-    "amqplib": "^0.7.1",
+    "amqplib": "^0.8.0",
     "app-root-path": "^3.0.0",
     "body-parser": "^1.19.0",
     "dotenv": "^8.2.0",

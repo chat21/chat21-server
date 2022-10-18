@@ -21,18 +21,32 @@ const { Console } = require('console');
 
 // const APPID = 'tilechat';
 
+// CONSOLE.NATIVE
 let config = {
     EXPECTED_AVG_DIRECT_MESSAGE_DELAY: 160,
     EXPECTED_AVG_GROUP_MESSAGE_DELAY: 160,
-    REQS_PER_SECOND: 300,
+    REQS_PER_SECOND: 100,
     MAX_SECONDS: 10,
     CONCURRENCY: 1, // 2
     API_SERVER_HOST: 'localhost',
     API_SERVER_PORT: 8004,
-    MQTT_ENDPOINT: 'ws://localhost:15675/ws',
-    API_ENDPOINT: 'http://localhost:8004/api',
+    MQTT_ENDPOINT: 'wss://console.native.tiledesk.com:15675/ws',
+    API_ENDPOINT: 'https://console.native.tiledesk.com/chatapi/api',
     APPID: 'tilechat'
 }
+
+// let config = {
+//     EXPECTED_AVG_DIRECT_MESSAGE_DELAY: 160,
+//     EXPECTED_AVG_GROUP_MESSAGE_DELAY: 160,
+//     REQS_PER_SECOND: 100,
+//     MAX_SECONDS: 10,
+//     CONCURRENCY: 1, // 2
+//     //API_SERVER_HOST: 'localhost',
+//     API_SERVER_PORT: 8004,
+//     MQTT_ENDPOINT: 'ws://localhost:15675/ws',
+//     API_ENDPOINT: 'http://localhost:8004/api',
+//     APPID: 'tilechat'
+// }
 
 const user1 = {
 	userid: 'USER1',
@@ -54,7 +68,8 @@ let chatClient1 = new Chat21Client(
 {
     appId: config.APPID,
     MQTTendpoint: config.MQTT_ENDPOINT,
-    APIendpoint: config.API_ENDPOINT
+    APIendpoint: config.API_ENDPOINT,
+    log: true
 });
 
 let chatClient2 = new Chat21Client(
@@ -86,18 +101,22 @@ let group_name; // got in before()
 describe("Performance Test", function() {
     before(function(done) {
         chatClient1.connect(user1.userid, user1.token, () => {
-            // console.log("chatClient1 Connected...");
+            console.log("chatClient1 Connected...");
             chatClient2.connect(user2.userid, user2.token, async () => {
-                // console.log("chatClient2 Connected...");
+                console.log("chatClient2 Connected...");
                 group_id = "group-" + uuidv4().replace("-", "");
                 group_name = "benchmarks group " + group_id;
                 const group_members = {}
                 group_members[user2.userid] = 1;
+                let total_ = 0
+                const start_ = Date.now();
                 chatClient1.groupCreate(
                     group_name,
                     group_id,
                     group_members,
                     (err, result) => {
+                        total_ = Date.now() - start_
+                        console.log("TOTAL GROUP CREATION TIME", total_)
                         assert(err == null);
                         assert(result != null);
                         assert(result.success == true);
@@ -145,13 +164,13 @@ describe("Performance Test", function() {
             let total_iterations = config.REQS_PER_SECOND * config.MAX_SECONDS;
             let test_start_time = Date.now();
             let current = 0;
-            console.log("Direct - message average latency is expected to be <", config.EXPECTED_AVG_DIRECT_MESSAGE_DELAY + "ms");
-            console.log("Direct - MESSAGES/SEC =", config.REQS_PER_SECOND * config.CONCURRENCY);
-            console.log("Direct - MESSAGES/SEC/VU =", config.REQS_PER_SECOND);
-            console.log("Direct - TEST DURATION (s) =", config.MAX_SECONDS);
-            console.log("Direct - CONCURRENCY (#VUs) =", config.CONCURRENCY);
-            console.log("Direct - DELAY BETWEEN MESSAGES (ms) =", delay);
-            console.log("Direct - TOTAL ITERATIONS =", total_iterations);
+            console.log("Direct - Expected message average latency to be <", config.EXPECTED_AVG_DIRECT_MESSAGE_DELAY + "ms");
+            console.log("Direct - Expected MESSAGES/SEC =", config.REQS_PER_SECOND * config.CONCURRENCY);
+            console.log("Direct - Expected MESSAGES/SEC/VU =", config.REQS_PER_SECOND);
+            console.log("Direct - Expected TEST DURATION (s) =", config.MAX_SECONDS);
+            console.log("Direct - Expected CONCURRENCY (#VUs) =", config.CONCURRENCY);
+            console.log("Direct - Expected DELAY BETWEEN MESSAGES (ms) =", delay);
+            console.log("Direct - Expected TOTAL ITERATIONS =", total_iterations);
             console.log("Direct - Running benchmark...");
             
             for (let i = 0; i < total_iterations; i++) {
@@ -175,7 +194,7 @@ describe("Performance Test", function() {
 
             function endCallback(latency) {
                 console.log("\n\n********* Direct - Benchmark results *********");
-                console.log("Direct - Final latency:", latency.meanLatencyMs);
+                console.log("Direct - Message mean latency:", latency.meanLatencyMs);
                 let test_duration = Math.round(current / 1000)
                 console.log("Direct - Test duration:", test_duration + " seconds" + " (" + current + ") ms");
                 let mesg_sec = Math.round(latency.totalMessages / test_duration)
@@ -205,13 +224,13 @@ describe("Performance Test", function() {
             let total_iterations = config.REQS_PER_SECOND * config.MAX_SECONDS;
             let test_start_time = Date.now();
             let current = 0;
-            console.log("Group - message average latency is expected to be <", config.EXPECTED_AVG_DIRECT_MESSAGE_DELAY + "ms");
-            console.log("Group - CONCURRENCY (#VIRTUAL USERs aka VUs) =", config.CONCURRENCY);
-            console.log("Group - MESSAGES/SEC =", config.REQS_PER_SECOND * config.CONCURRENCY);
-            console.log("Group - MESSAGES/SEC/VU =", config.REQS_PER_SECOND);
-            console.log("Group - TEST DURATION (s) =", config.MAX_SECONDS);
-            console.log("Group - DELAY BETWEEN MESSAGES (ms) =", delay);
-            console.log("Group - TOTAL ITERATIONS =", total_iterations);
+            console.log("Group - Expected message average latency to be <", config.EXPECTED_AVG_DIRECT_MESSAGE_DELAY + "ms");
+            console.log("Group - Expected CONCURRENCY (#VIRTUAL USERs aka VUs) =", config.CONCURRENCY);
+            console.log("Group - Expected MESSAGES/SEC =", config.REQS_PER_SECOND * config.CONCURRENCY);
+            console.log("Group - Expected MESSAGES/SEC/VU =", config.REQS_PER_SECOND);
+            console.log("Group - Expected TEST DURATION (s) =", config.MAX_SECONDS);
+            console.log("Group - Expected DELAY BETWEEN MESSAGES (ms) =", delay);
+            console.log("Group - Expected TOTAL ITERATIONS =", total_iterations);
             console.log("Group - Running benchmark...");
             for (let i = 0; i < total_iterations; i++) {
                 // console.log("GROUP i:", i)

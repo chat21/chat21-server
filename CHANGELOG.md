@@ -1,3 +1,23 @@
+
+**npm @chat21/chat21-server@0.2.20**
+
+available on:
+ ▶️ https://www.npmjs.com/package/@chat21/chat21-server
+
+## v0.2.21 - online
+- amqplib ^0.7.1 => ^0.8.0
+- node 12 => 16.17.1
+
+## v0.2.20
+- added process.exit(0) on "[AMQP] channel error". It lets the server to silently restart on blocking AMQP errors.
+
+## v0.2.19
+- ack in sendMessageToGroupMembers() sent immediately.
+- added group_id as memebr of inlineGroup.
+
+## v0.2.18
+- Added inlineGroup management. You can create on the fly group just sending a message with the "group.members" attribute.
+
 ## v0.2.17
 - "ack" management improvements
 
@@ -53,10 +73,17 @@ to only enable "messages" queue.
 ## v0.1.13 npm online
 
 - bugfix:
-this: if (inbox_of === outgoing_message.sender) {
-became: if (inbox_of === group.uid) { // choosing one member, the group ("volatile" member), for the "status=SENT", used by the "message-sent" webhook
+this:
+if (inbox_of === outgoing_message.sender) {
+became:
+if (inbox_of === group.uid) {
+  logger.debug("inbox_of === outgoing_message.sender. status=SENT system YES?", inbox_of);
+  outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT;
+}
+// choosing one member, the group ("volatile" member), for the "status=SENT", used by the "message-sent" webhook
+// achived changing the delivered status to SENT "on-the-fly" when I deliver the message to the group id. This
+will trigger the webhookSentOrDelivered to "Sent" only
 
 If "system" sends info messages and he is not member of the group, webhooks are never called.
 The "message-sent" webhook is called only once: when, iterating all the members, the selected one is the same as the group.
-This because the "message-sent" must be called only once per message. The "sender" can't be used, because the "sender" not always
-is a group's member (ex. info messages by system while system is not always a member of the group).
+This because the "message-sent" must be called only once per message. The "sender" can't be used, because the "sender" not always is a group's member (ex. info messages by system while system is not always a member of the group).
