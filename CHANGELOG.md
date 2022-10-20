@@ -1,8 +1,11 @@
 
-**npm @chat21/chat21-server@0.2.20**
+**npm @chat21/chat21-server@0.2.22**
 
 available on:
  ▶️ https://www.npmjs.com/package/@chat21/chat21-server
+
+## v0.2.21 - online
+- Docker image update:16
 
 ## v0.2.21 - online
 - amqplib ^0.7.1 => ^0.8.0

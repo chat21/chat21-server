@@ -532,7 +532,7 @@ function isMessageGroup(message) {
 
 // Places te message in the inbox of the recipient
 function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
-  logger.debug(">DELIVERING:", message, "inbox_of:", inbox_of, "convers_with:", convers_with_id)
+  logger.debug(">DELIVERING:", JSON.stringify(message), "inbox_of:", inbox_of, "convers_with:", convers_with_id)
   // internal flow
   const persist_topic = `apps.observer.${app_id}.users.${inbox_of}.messages.${convers_with_id}.persist`
   // mqtt (client) flow

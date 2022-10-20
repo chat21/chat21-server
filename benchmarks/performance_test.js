@@ -30,8 +30,10 @@ let config = {
     CONCURRENCY: 1, // 2
     API_SERVER_HOST: 'localhost',
     API_SERVER_PORT: 8004,
-    MQTT_ENDPOINT: 'wss://console.native.tiledesk.com:15675/ws',
-    API_ENDPOINT: 'https://console.native.tiledesk.com/chatapi/api',
+    // MQTT_ENDPOINT: 'wss://console.native.tiledesk.com/ws',
+    // API_ENDPOINT: 'https://console.native.tiledesk.com/chatapi/api',
+    MQTT_ENDPOINT: 'ws://localhost:15675/ws',
+    API_ENDPOINT: 'http://localhost:8004/api',
     APPID: 'tilechat'
 }
 
@@ -69,7 +71,7 @@ let chatClient1 = new Chat21Client(
     appId: config.APPID,
     MQTTendpoint: config.MQTT_ENDPOINT,
     APIendpoint: config.API_ENDPOINT,
-    log: true
+    log: false
 });
 
 let chatClient2 = new Chat21Client(
