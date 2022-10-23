@@ -329,7 +329,7 @@ class Webhooks {
     
     const endpoints = message['temp_webhook_endpoints'];
     delete message['temp_webhook_endpoints'];
-    logger.log("Event JSON:", json);
+    logger.log("Event JSON:" + JSON.stringify(json));
     endpoints.forEach((endpoint) => {
       logger.debug("Sending notification to webhook (message_deliver) on webhook_endpoint:", endpoint);
       // const message_id = message.message_id;
@@ -510,7 +510,7 @@ class Webhooks {
       // });
       // options.httpsAgent = httpsAgent;
     }
-    logger.debug("Using request options:", options);
+    logger.debug("Using request options:" + JSON.stringify(options));
     try {
       const req = protocol.request(options, (response) => {
         logger.debug("statusCode: "+  response.statusCode + " for webhook_endpoint: " + endpoint);
