@@ -1,8 +1,14 @@
 
-**npm @chat21/chat21-server@0.2.23**
+**npm @chat21/chat21-server@0.2.24**
 
 available on:
  ▶️ https://www.npmjs.com/package/@chat21/chat21-server
+
+## v0.2.24 - online
+- updated dev dependency: "@chat21/chat21-http-server": "^0.2.15",
+- start_all.sh logging from ERROR to INFO
+- logging fixes
+- ver updtd "version": "0.2.24"
 
 ## v0.2.23 - online
 - log updates
