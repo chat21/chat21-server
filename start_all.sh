@@ -1,1 +1,1 @@
-LOG_LEVEL=ERROR node chatservermq.js ALL
+LOG_LEVEL=INFO node chatservermq.js ALL

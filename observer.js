@@ -975,7 +975,6 @@ function closeOnErr(err) {
 }
 
 async function startServer(config) {
-  logger.info("Starting observer....");
   if (!config) {
     config = {}
   }
@@ -1023,7 +1022,7 @@ async function startServer(config) {
   db = client.db();
   logger.debug("Mongodb connected.");
   chatdb = new ChatDB({database: db})
-  logger.info("Starting webhooks..., logger", logger);
+  logger.info("Starting webhooks...");
   try {
     webhooks = new Webhooks({appId: app_id, RABBITMQ_URI: rabbitmq_uri, exchange: exchange, webhook_endpoints: webhook_endpoints_array, webhook_events: webhook_events_array, queue_name: 'webhooks', logger: logger});
     webhooks.enabled = webhook_enabled;
