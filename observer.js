@@ -347,12 +347,13 @@ function work(msg, callback) {
 // ***** TOPIC HANDLERS ******/
 
 function process_presence(topic, message_string, callback) {
-  logger.debug("> got PRESENCE testament", message_string, " on topic", topic)
-  callback(true)
+  logger.debug("> got PRESENCE testament", message_string, " on topic", topic);
+  callback(true);
 }
 
 function process_outgoing(topic, message_string, callback) {
-  logger.debug("***** TOPIC outgoing: " + topic +  " MESSAGE PAYLOAD: " + message_string)
+  callback(true);
+  logger.debug("***** TOPIC outgoing: " + topic +  " MESSAGE PAYLOAD: " + message_string);
   var topic_parts = topic.split(".")
   // /apps/tilechat/outgoing/users/(ME)SENDER_ID/messages/RECIPIENT_ID/outgoing
   const app_id = topic_parts[1]
@@ -360,13 +361,13 @@ function process_outgoing(topic, message_string, callback) {
   const sender_id = topic_parts[4]
   // const recipient_id = topic_parts[5]
   const recipient_id = topic_parts[6];
-  const me = sender_id
+  //const me = sender_id
 
-  let message = JSON.parse(message_string)
+  let outgoing_message = JSON.parse(message_string)
   let messageId = uuidv4()
-  let outgoing_message = message
+  //let outgoing_message = message
   outgoing_message.message_id = messageId
-  outgoing_message.sender = me
+  outgoing_message.sender = sender_id
   outgoing_message.recipient = recipient_id
   outgoing_message.app_id = app_id
   if (!outgoing_message.timestamp) {
@@ -385,26 +386,28 @@ function process_outgoing(topic, message_string, callback) {
     logger.debug("Direct message.");
     inbox_of = sender_id;
     convers_with = recipient_id;
-    outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT
-    deliverMessage(outgoing_message, app_id, inbox_of, convers_with, function(ok) {
+    let sent_message = {...outgoing_message};
+    sent_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT // =100
+    deliverMessage(sent_message, app_id, inbox_of, convers_with, function(ok) {
       logger.debug("delivered to sender. OK?", ok);
       if (ok) {
-        outgoing_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED // =150
+        let delivered_message = {...outgoing_message};
+        delivered_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED // =150
         inbox_of = recipient_id;
         convers_with = sender_id;
-        deliverMessage(outgoing_message, app_id, inbox_of, convers_with, function(ok) {
+        deliverMessage(delivered_message, app_id, inbox_of, convers_with, function(ok) {
           logger.debug("delivered to recipient. OK?", ok);
           if (ok) {
-            callback(true);
+            //callback(true);
           }
           else {
-            callback(false);
+            //callback(false);
           }
         });
       }
       else {
         logger.debug("Error delivering: ", outgoing_message)
-        callback(false);
+        //callback(false);
       }
     });
   }
@@ -418,7 +421,7 @@ function process_outgoing(topic, message_string, callback) {
       inline_group.members[sender_id] = 1
       logger.debug("...inline_group:", inline_group);
       sendMessageToGroupMembers(outgoing_message, inline_group, app_id, (ack) => {
-        callback(ack);
+        //callback(ack);
       });
       return;
     }
@@ -442,7 +445,7 @@ function process_outgoing(topic, message_string, callback) {
       group.members[group.uid] = 1
       sendMessageToGroupMembers(outgoing_message, group, app_id, (ack) => {
         logger.debug("Message sent to group:" + JSON.stringify(group));
-        callback(ack);
+        //callback(ack);
       });
     })
   }
@@ -857,7 +860,7 @@ function process_archive(topic, payload, callback) {
     logger.debug("archiving conversation:" + convers_with + " for user " + user_id + " payload: "+ payload)
     const me = user_id
     conversation_archive_patch = {
-      "timelineOf": me,
+      "timelineOf": user_id,
       "conversWith": convers_with,
       "archived": true
     }
@@ -879,10 +882,10 @@ function process_archive(topic, payload, callback) {
       logger.debug(">>> CONVERSATION ON TOPIC:", topic, "ARCHIVED!")
       if (err) {
         logger.error("CONVERSATION ON TOPIC: error (noack)",err);
-        callback(false);
+        callback(true);
         return;
       }
-      chatdb.conversationDetail(app_id, me, convers_with, true, (err, convs) => {
+      chatdb.conversationDetail(app_id, user_id, convers_with, true, (err, convs) => {
         if (err) {
           logger.error("Error GRAVE. getting conversationDetail()", err);
           callback(true);
@@ -901,7 +904,7 @@ function process_archive(topic, payload, callback) {
             logger.debug(">>> PUBLISHED!!!! CONVERSATION ON TOPIC: " + conversation_deleted_topic + " ARCHIVED (DELETED). Payload: " + payload + " buffered:" + Buffer.from(payload))
             if (err) {
               logger.error("error PUBLISHING CONVERSATION ON TOPIC:", err);
-              callback(false);
+              callback(true);
             }
             else {
               // now publish new archived conversation added
@@ -911,7 +914,7 @@ function process_archive(topic, payload, callback) {
               publish(exchange, archived_conversation_added_topic, Buffer.from(payload), function(err) {
                 if (err) {
                   logger.error("error PUBLISHING ARCHIVED (DELETED) CONVERSATION ON TOPIC", err);
-                  callback(false);
+                  callback(true);
                 }
                 else {
                   logger.debug(">>> PUBLISHED ARCHIVED (DELETED) CONVERSATION ON TOPIC: " + conversation_deleted_topic);
@@ -998,7 +1001,7 @@ async function startServer(config) {
   topic_update = `apps.${app_id}.users.#.update`;
   topic_archive = `apps.${app_id}.users.#.archive`;
   topic_presence = `apps.${app_id}.users.*.presence.*`;
-// FOR OBSERVER TOPICS
+  // FOR OBSERVER TOPICS
   topic_persist = `apps.observer.${app_id}.users.*.messages.*.persist`;
   topic_delivered = `apps.observer.${app_id}.users.*.messages.*.delivered`;
   // topic_create_group = `apps.observer.${app_id}.groups.create`
