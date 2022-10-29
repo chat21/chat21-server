@@ -1,7 +1,7 @@
 /*
     Chat21Client
 
-    v0.1.12
+    v0.1.11
 
     @Author Andrea Sponziello
     (c) Tiledesk 2020
@@ -75,7 +75,7 @@ class Chat21Client {
         this.connected = false
     }
 
-    subscribeToMyConversations(subscribedCallback) { // MESSAGES ETC.
+    subscribeToMyConversations() { // MESSAGES ETC.
         // WILDCARS:
         // MQTT: https://www.hivemq.com/blog/mqtt-essentials-part-5-mqtt-topics-best-practices/
         // RABBITMQ: https://www.cloudamqp.com/blog/2015-09-03-part4-rabbitmq-for-beginners-exchanges-routing-keys-bindings.html#topic-exchange
@@ -84,13 +84,9 @@ class Chat21Client {
             console.log("subscribing to:", this.user_id, "topic", this.topic_inbox);
         }
         this.client.subscribe(this.topic_inbox, (err)  => {
-            if (err) {
-                console.error("An error occurred while subscribing user", this.user_id, "on topic:", this.topic_inbox, "Error:", err);
-            }
             if (this.log) {
                 console.log("subscribed to:", this.topic_inbox, " with err", err)
             }
-            subscribedCallback();
         });
     }
 
@@ -533,178 +529,174 @@ class Chat21Client {
         this.onGroupUpdatedCallbacks.delete(handler);
     }
 
-    start(subscribedCallback) {
+    start() {
         if (this.on_message_handler) {
             console.log("this.on_message_handler already subscribed. Reconnected num", this.reconnections)
-            callbsubscribedCallbackack();
             return
         }
-        this.subscribeToMyConversations(() => {
-            // no more than one "on_message" handler, thanks.
-            this.on_message_handler = this.client.on('message', (topic, message) => {
+        this.subscribeToMyConversations()
+        // no more then one "on_message" handler, thanks.
+        this.on_message_handler = this.client.on('message', (topic, message) => {
+            if (this.log) {
+                console.log("topic:" + topic + "\nmessage payload:" + message)
+            }
+            const _topic = this.parseTopic(topic)
+            if (!_topic) {
                 if (this.log) {
-                    console.log("topic:" + topic + "\nmessage payload:" + message)
+                    console.log("Invalid message topic:", topic);
                 }
-                const _topic = this.parseTopic(topic)
-                if (!_topic) {
-                    if (this.log) {
-                        console.log("Invalid message topic:", topic);
-                    }
-                    return;
-                }
-                const conversWith = _topic.conversWith
-                try {
-                    const message_json = JSON.parse(message.toString())
-                    
+                return;
+            }
+            const conversWith = _topic.conversWith
+            try {
+                const message_json = JSON.parse(message.toString())
+                
 
-                    // TEMPORARILY DISABLED, ADDED-CONVERSATIONS ARE OBSERVED BY NEW MESSAGES.
-                    // MOVED TO: this.onMessageAddedCallbacks
+                // TEMPORARILY DISABLED, ADDED-CONVERSATIONS ARE OBSERVED BY NEW MESSAGES.
+                // MOVED TO: this.onMessageAddedCallbacks
+                // if (this.onConversationAddedCallbacks) {
+                //     if (topic.includes("/conversations/") && topic.endsWith(_CLIENTADDED)) {
+                //         // map.forEach((value, key, map) =>)
+                //         this.onConversationAddedCallbacks.forEach((callback, handler, map) => {
+                //             callback(message_json, _topic)
+                //         });
+                //     }
+                // }
+
+                if (this.onConversationUpdatedCallbacks) {
+                    // example topic: apps.tilechat.users.ME.conversations.CONVERS-WITH.clientdeleted
+                    if (topic.includes("/conversations/") && topic.endsWith(_CLIENTUPDATED)) {
+                        if (this.log) {
+                            console.log("conversation updated! /conversations/, topic:", topic)
+                        }
+                        // map.forEach((value, key, map) =>)
+                        this.onConversationUpdatedCallbacks.forEach((callback, handler, map) => {
+                            callback(JSON.parse(message.toString()), _topic)
+                        });
+                    }
+                }
+
+                if (this.onConversationDeletedCallbacks) {
+                    if (topic.includes("/conversations/") && topic.endsWith(_CLIENTDELETED)) {
+                        // map.forEach((value, key, map) =>)
+                        if (this.log) {
+                            console.log("conversation deleted! /conversations/, topic:", topic, message.toString() );
+                        }
+                        this.onConversationDeletedCallbacks.forEach((callback, handler, map) => {
+                            callback(JSON.parse(message.toString()), _topic)
+                        });
+                    }
+                }
+
+                if (this.onArchivedConversationAddedCallbacks) {
+                    if (topic.includes("/archived_conversations/") && topic.endsWith(_CLIENTADDED)) {
+                        // map.forEach((value, key, map) =>)
+                        this.onArchivedConversationAddedCallbacks.forEach((callback, handler, map) => {
+                            callback(JSON.parse(message.toString()), _topic)
+                        });
+                    }
+                }
+
+                if (this.onArchivedConversationDeletedCallbacks) {
+                    if (topic.includes("/archived_conversations/") && topic.endsWith(_CLIENTDELETED)) {
+                        // map.forEach((value, key, map) =>)
+                        this.onArchivedConversationDeletedCallbacks.forEach((callback, handler, map) => {
+                            callback(JSON.parse(message.toString()), _topic)
+                        });
+                    }
+                }
+
+                // *********************************************************
+                // This snippet is important to get all messages and notify
+                // conversation > added (to create a conversation entry)
+                // *********************************************************
+                // if (this.onMessageAddedCallbacks) {
+                //     console.log("ttttttttt")
+                if (topic.includes("/messages/") && topic.endsWith(_CLIENTADDED)) {
+                    if (this.onMessageAddedCallbacks) {
+                        this.onMessageAddedCallbacks.forEach((callback, handler, map) => {
+                            callback(JSON.parse(message.toString()), _topic)
+                        });
+                    }
+                    // Observing conversations added from messages
+                    // console.log("Observing conversations added from messages", message_json);
                     // if (this.onConversationAddedCallbacks) {
-                    //     if (topic.includes("/conversations/") && topic.endsWith(_CLIENTADDED)) {
-                    //         // map.forEach((value, key, map) =>)
-                    //         this.onConversationAddedCallbacks.forEach((callback, handler, map) => {
-                    //             callback(message_json, _topic)
-                    //         });
-                    //     }
+                    // console.log("callbacks ok........");
+                    let update_conversation = true;
+                    if (message_json.attributes && message_json.attributes.updateconversation == false) {
+                        update_conversation = false
+                    }
+                    // console.log("update_conversation........", update_conversation);
+                    if (update_conversation && this.onConversationAddedCallbacks) {
+                        this.onConversationAddedCallbacks.forEach((callback, handler, map) => {
+                            message_json.is_new = true;
+                            const message_for_conv_string = JSON.stringify(message_json);
+                            callback(JSON.parse(message_for_conv_string), _topic)
+                        });
+                    }
                     // }
+                }
+                // }
 
-                    if (this.onConversationUpdatedCallbacks) {
-                        // example topic: apps.tilechat.users.ME.conversations.CONVERS-WITH.clientdeleted
-                        if (topic.includes("/conversations/") && topic.endsWith(_CLIENTUPDATED)) {
-                            if (this.log) {
-                                console.log("conversation updated! /conversations/, topic:", topic)
-                            }
-                            // map.forEach((value, key, map) =>)
-                            this.onConversationUpdatedCallbacks.forEach((callback, handler, map) => {
-                                callback(JSON.parse(message.toString()), _topic)
-                            });
-                        }
+                if (this.onMessageUpdatedCallbacks) {
+                    if (topic.includes("/messages/") && topic.endsWith(_CLIENTUPDATED)) {
+                        this.onMessageUpdatedCallbacks.forEach((callback, handler, map) => {
+                            callback(JSON.parse(message.toString()), _topic)
+                        });
                     }
+                }
 
-                    if (this.onConversationDeletedCallbacks) {
-                        if (topic.includes("/conversations/") && topic.endsWith(_CLIENTDELETED)) {
-                            // map.forEach((value, key, map) =>)
-                            if (this.log) {
-                                console.log("conversation deleted! /conversations/, topic:", topic, message.toString() );
-                            }
-                            this.onConversationDeletedCallbacks.forEach((callback, handler, map) => {
-                                callback(JSON.parse(message.toString()), _topic)
-                            });
-                        }
+                if (this.onGroupUpdatedCallbacks) {
+                    if (topic.includes("/groups/") && topic.endsWith(_CLIENTUPDATED)) {
+                        this.onGroupUpdatedCallbacks.forEach((callback, handler, map) => {
+                            callback(JSON.parse(message.toString()), _topic)
+                        });
                     }
+                }
 
-                    if (this.onArchivedConversationAddedCallbacks) {
-                        if (topic.includes("/archived_conversations/") && topic.endsWith(_CLIENTADDED)) {
-                            // map.forEach((value, key, map) =>)
-                            this.onArchivedConversationAddedCallbacks.forEach((callback, handler, map) => {
-                                callback(JSON.parse(message.toString()), _topic)
-                            });
-                        }
-                    }
-
-                    if (this.onArchivedConversationDeletedCallbacks) {
-                        if (topic.includes("/archived_conversations/") && topic.endsWith(_CLIENTDELETED)) {
-                            // map.forEach((value, key, map) =>)
-                            this.onArchivedConversationDeletedCallbacks.forEach((callback, handler, map) => {
-                                callback(JSON.parse(message.toString()), _topic)
-                            });
-                        }
-                    }
-
-                    // *********************************************************
-                    // This snippet is important to get all messages and notify
-                    // conversation > added (to create a conversation entry)
-                    // *********************************************************
-                    // if (this.onMessageAddedCallbacks) {
-                    //     console.log("ttttttttt")
+                // // ******* NEW!!
+                this.callbackHandlers.forEach((value, key, map) => {
+                    const callback_obj = value
+                    // callback_obj = {
+                    //     "type": "onMessageUpdatedForConversation",
+                    //     "conversWith": conversWith,
+                    //     "callback": callback
+                    // }
+                    const type = callback_obj.type
                     if (topic.includes("/messages/") && topic.endsWith(_CLIENTADDED)) {
-                        if (this.onMessageAddedCallbacks) {
-                            this.onMessageAddedCallbacks.forEach((callback, handler, map) => {
-                                callback(JSON.parse(message.toString()), _topic)
-                            });
-                        }
-                        // Observing conversations added from messages
-                        // console.log("Observing conversations added from messages", message_json);
-                        // if (this.onConversationAddedCallbacks) {
-                        // console.log("callbacks ok........");
-                        let update_conversation = true;
-                        if (message_json.attributes && message_json.attributes.updateconversation == false) {
-                            update_conversation = false
-                        }
-                        // console.log("update_conversation........", update_conversation);
-                        if (update_conversation && this.onConversationAddedCallbacks) {
-                            this.onConversationAddedCallbacks.forEach((callback, handler, map) => {
-                                message_json.is_new = true;
-                                const message_for_conv_string = JSON.stringify(message_json);
-                                callback(JSON.parse(message_for_conv_string), _topic)
-                            });
-                        }
-                        // }
-                    }
-                    // }
-
-                    if (this.onMessageUpdatedCallbacks) {
-                        if (topic.includes("/messages/") && topic.endsWith(_CLIENTUPDATED)) {
-                            this.onMessageUpdatedCallbacks.forEach((callback, handler, map) => {
-                                callback(JSON.parse(message.toString()), _topic)
-                            });
-                        }
-                    }
-
-                    if (this.onGroupUpdatedCallbacks) {
-                        if (topic.includes("/groups/") && topic.endsWith(_CLIENTUPDATED)) {
-                            this.onGroupUpdatedCallbacks.forEach((callback, handler, map) => {
-                                callback(JSON.parse(message.toString()), _topic)
-                            });
-                        }
-                    }
-
-                    // // ******* NEW!!
-                    this.callbackHandlers.forEach((value, key, map) => {
-                        const callback_obj = value
-                        // callback_obj = {
-                        //     "type": "onMessageUpdatedForConversation",
-                        //     "conversWith": conversWith,
-                        //     "callback": callback
-                        // }
-                        const type = callback_obj.type
-                        if (topic.includes("/messages/") && topic.endsWith(_CLIENTADDED)) {
-                            if (this.log) { console.log("/messages/_CLIENTADDED") }
-                            if (type === CALLBACK_TYPE_ON_MESSAGE_ADDED_FOR_CONVERSATION) {
-                                if (conversWith === callback_obj.conversWith) {
-                                    if (this.log) { console.log("/messages/_CLIENTADDED on: ", conversWith)}
-                                    callback_obj.callback(JSON.parse(message.toString()), _topic)
-                                }
+                        if (this.log) { console.log("/messages/_CLIENTADDED") }
+                        if (type === CALLBACK_TYPE_ON_MESSAGE_ADDED_FOR_CONVERSATION) {
+                            if (conversWith === callback_obj.conversWith) {
+                                if (this.log) { console.log("/messages/_CLIENTADDED on: ", conversWith)}
+                                callback_obj.callback(JSON.parse(message.toString()), _topic)
                             }
                         }
-                        if (topic.includes("/messages/") && topic.endsWith(_CLIENTUPDATED)) {
-                            if (this.log) {console.log("/messages/_CLIENTUPDATED")}
-                            if (type === CALLBACK_TYPE_ON_MESSAGE_UPDATED_FOR_CONVERSATION) {
-                                if (conversWith === callback_obj.conversWith) {
-                                    console.log("/messages/_CLIENTUPDATED on: ", conversWith)
-                                    callback_obj.callback(JSON.parse(message.toString()), _topic)
-                                }
+                    }
+                    if (topic.includes("/messages/") && topic.endsWith(_CLIENTUPDATED)) {
+                        if (this.log) {console.log("/messages/_CLIENTUPDATED")}
+                        if (type === CALLBACK_TYPE_ON_MESSAGE_UPDATED_FOR_CONVERSATION) {
+                            if (conversWith === callback_obj.conversWith) {
+                                console.log("/messages/_CLIENTUPDATED on: ", conversWith)
+                                callback_obj.callback(JSON.parse(message.toString()), _topic)
                             }
                         }
-                    })
-                    
-                    // if (topic.includes("/messages/") && topic.endsWith(_CLIENTUPDATED)) {
-                    //     this.onMessageUpdatedInConversationCallbacks.forEach((obj, handler, map) => {
-                    //         if (conversWith === obj.conversWith) {
-                    //             callback(message_json, _topic)
-                    //         }
-                    //     });
-                    // }
-                    
+                    }
+                })
+                
+                // if (topic.includes("/messages/") && topic.endsWith(_CLIENTUPDATED)) {
+                //     this.onMessageUpdatedInConversationCallbacks.forEach((obj, handler, map) => {
+                //         if (conversWith === obj.conversWith) {
+                //             callback(message_json, _topic)
+                //         }
+                //     });
+                // }
+                
 
-                }
-                catch (err) {
-                    console.error("ERROR:", err)
-                }
-            })
-            subscribedCallback();
+            }
+            catch (err) {
+                console.error("ERROR:", err)
+            }
         })
-        
         // console.log("HANDLER_:", this.on_message_handler)
     }
 
@@ -981,9 +973,8 @@ class Chat21Client {
                 if (!this.connected) {
                     if (this.log) {console.log("Chat client first connection for:" + user_id)}
                     this.connected = true
-                    this.start( () => {
-                        callback();
-                    });
+                    this.start()
+                    callback()
                 }
             }
         );
