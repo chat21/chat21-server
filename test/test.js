@@ -43,6 +43,38 @@ const user4 =  {
   token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlMGM2Y2ZiOC1mODQwLTQxZTYtOWM2OS1mOWE5OTM2OTA3ODkiLCJzdWIiOiJVU0VSNCIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjQuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVI0LioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSNC4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVI0IiwiY2lkIjoiVVNFUjQiLCJhenAiOiJVU0VSNCIsInVzZXJfaWQiOiJVU0VSNCIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjM5MjE0NDE4LCJleHAiOjE5NTAyNTQ0MTgsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVI0Il0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.7bDSCmMYSB8fCFFNuFim846KB_owkIl9oHX32N3j-rs'
 }
 
+const user5 =  { userid: 'USER5',
+fullname: 'User 5',
+firstname: 'User',
+lastname: 'Fifth',
+token:
+ 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxMmRkZGNhMi02YmY0LTRmY2UtOGE1OS1hOTY1YmQ3ODMzZTkiLCJzdWIiOiJVU0VSNSIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjUuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVI1LioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSNS4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVI1IiwiY2lkIjoiVVNFUjUiLCJhenAiOiJVU0VSNSIsInVzZXJfaWQiOiJVU0VSNSIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjY2OTg3NTM2LCJleHAiOjE5NzgwMjc1MzYsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVI1Il0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.FZmbVPqdW2pZfTpyJ9y2HqD3GZIOri2kWD5F6SKepEk' }
+
+ const user6 =  { userid: 'USER6',
+ fullname: 'User 6',
+ firstname: 'User',
+ lastname: '6th',
+ token:
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMTFjNjM2MC02NDI5LTQyNzYtYjg0Zi1iNjEzMjQ5OTU5YWUiLCJzdWIiOiJVU0VSNiIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjYuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVI2LioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSNi4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVI2IiwiY2lkIjoiVVNFUjYiLCJhenAiOiJVU0VSNiIsInVzZXJfaWQiOiJVU0VSNiIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjY2OTg3NTk5LCJleHAiOjE5NzgwMjc1OTksImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVI2Il0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.tU5qeQvGnrHGvaK3rvUjBG-tAIzKHznsXTQTSGjFgrY' }
+const user7 =  { userid: 'USER7',
+ fullname: 'User 7',
+ firstname: 'User',
+ lastname: '7th',
+ token:
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlYzc0YmE4OS04MTRlLTRhMjYtYWRkMy05YTYyN2YwZThiMjMiLCJzdWIiOiJVU0VSNyIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjcuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVI3LioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSNy4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVI3IiwiY2lkIjoiVVNFUjciLCJhenAiOiJVU0VSNyIsInVzZXJfaWQiOiJVU0VSNyIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjY2OTg3NTk5LCJleHAiOjE5NzgwMjc1OTksImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVI3Il0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.AFiUXZTLlaiGdY9f1qjxwpIZrnLwYwN9htQmHmPW09Y' }
+  const user8 =  { userid: 'USER8',
+  fullname: 'User 8',
+  firstname: 'User',
+  lastname: '8th',
+  token:
+   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyNjE3ZTEzMi1jNWUyLTQ1MWYtYTY5YS0wNWY2YjI3ZmQyM2IiLCJzdWIiOiJVU0VSOCIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjguKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVI4LioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSOC4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVI4IiwiY2lkIjoiVVNFUjgiLCJhenAiOiJVU0VSOCIsInVzZXJfaWQiOiJVU0VSOCIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjY3MDYzNTMwLCJleHAiOjE5NzgxMDM1MzAsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVI4Il0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.DH3HtelGdIk6qlAGFVbzUgj-mJz_AFB2KXYC53KOcvg' }
+const user9 =  { userid: 'USER9',
+  fullname: 'User 9',
+  firstname: 'User',
+  lastname: '9th',
+  token:
+   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI5NTY1Yjg5Mi1hMDI0LTRiNjAtOWY5Ny0xNDljNTUwYzMyNGQiLCJzdWIiOiJVU0VSOSIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjkuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVI5LioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSOS4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVI5IiwiY2lkIjoiVVNFUjkiLCJhenAiOiJVU0VSOSIsInVzZXJfaWQiOiJVU0VSOSIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjY3MDYzNTMwLCJleHAiOjE5NzgxMDM1MzAsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVI5Il0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.472NDDTcr9gOWP5-pS8FrrLr0XV_hMnzJJ3hAZ7AOT0' }
+
 // const user1 = {
 // 	userid: 'USER1',
 // 	fullname: 'User 1',
@@ -1658,74 +1690,173 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 
 	describe('TiledeskClient - Direct _test 17_', function() {
 		it('\
-User1 sends a direct message and User2 receives the conversation update by callback \
-User 2 checks conversationDetail. Got the conversation \
-User 2 checks archivedConversationDetail. Not available \
-User 2 archives the conversation \
-User 2 receives the conversation-archived event \
-User 2 checks archivedConversationDetail. Got the conversation \
-User 2 checks conversationDetail. Not available \
-REUSE SHARED CHAT CLIENTS', function(done) {
+User6 sends a direct message and User7 receives the conversation update by callback \
+User 7 checks conversationDetail. Got the conversation', function(done) {
 			logger.log("test 17 - start.");
-			let SENT_MESSAGE = 'FIRST MESSAGE 17';
-			let onConversationAddedHandler = chatClient2.onConversationAdded((conv, topic) => {
-				logger.log("test 17 - conversation added:", conv);
-				logger.log("test 17 - conversation topic:", topic);
-				if (
-					conv &&
-					conv.text &&
-					!conv.attributes &&
-					conv.text === SENT_MESSAGE &&
-					conv.sender === user1.userid &&
-					topic.conversWith === user1.userid) {
-					// chatClient2.removeOnConversationAddedHandler(handler);
-					chatClient2.conversationDetail(topic.conversWith, (err, conv) => {
-						logger.log("1. check conv detail on db:", conv);
-						assert(err == null);
-						assert(conv != null);
-						logger.log(">2. check this conv is not archived detail", topic.conversWith);
-						chatClient2.archivedConversationDetail(topic.conversWith, (err, conv) => {
-							logger.log(".2. check this conv is not archived detail:", conv);
-							assert(err == null);
-							assert(conv == null);
-							chatClient2.archiveConversation(topic.conversWith, (err) => {
-								logger.log("3. conversation archived.");
-								assert(err == null);
-							});
-						});
-					});
-				}
+			let chatClient6 = new Chat21Client(
+			{
+				appId: config.APPID,
+				MQTTendpoint: config.MQTT_ENDPOINT,
+				APIendpoint: config.API_ENDPOINT,
+				log: config.CLIENT_API_LOG
 			});
-			let onArchivedConversationAddedHandler = chatClient2.onArchivedConversationAdded((archived_conv, topic) => {
-				console.log("4. conv was archived:", archived_conv, topic);
-				assert(archived_conv != null);
-				assert(archived_conv.last_message_text != null); // checking archived-conversation is metadata-full
-				console.log(">5. getting conv detail (chatClient2)", topic.conversWith, " (after archiving) must be null");
-				chatClient2.conversationDetail(topic.conversWith, (err, conv) => {
-					console.log("5. getting conv detail (chatClient2)", topic.conversWith, " (after archiving) must be null:", conv);
-					assert(err == null);
-					assert(conv == null);
-					chatClient2.archivedConversationDetail(topic.conversWith, (err, arch_conv_detail) => {
-						console.log("6. got archived conv detail:", arch_conv_detail);
-						assert(err == null);
-						assert(arch_conv_detail != null);
-						done();
+			let chatClient7 = new Chat21Client(
+				{
+					appId: config.APPID,
+					MQTTendpoint: config.MQTT_ENDPOINT,
+					APIendpoint: config.API_ENDPOINT,
+					log: config.CLIENT_API_LOG
+			});
+			let SENT_MESSAGE = 'FIRST MESSAGE 17';
+			logger.log("(Test 17) connecting user6...");
+			chatClient6.connect(user6.userid, user6.token, () => {
+				logger.log("chatClient6 Connected.");
+				chatClient7.connect(user7.userid, user7.token, () => {
+					logger.log("chatClient7 Connected.");
+					let onConversationAddedHandler = chatClient7.onConversationAdded((conv, topic) => {
+						logger.log("test 17 - conversation added:", conv);
+						logger.log("test 17 - conversation topic:", topic);
+						if (
+							conv &&
+							conv.text &&
+							!conv.attributes &&
+							conv.text === SENT_MESSAGE &&
+							conv.sender === user6.userid && // user6 sent the message to user7
+							topic.conversWith === user6.userid) { // user7 is conversing with user6 (and recevice his conversation message-update)
+								logger.log("test 17 - Done!");
+								done();
+
+							// WARING! DON'T CHECK THIS. PERSISTENCE IS ON ANOTHER QUEUE!
+							// YOU CAN'T SYNCHRONOULSY GET THE PERSISTED COPY OF ANY
+							// MESSAGE/CONVERSATION SAVED!
+
+							// chatClient7.conversationDetail(topic.conversWith, (err, conv) => {
+							// 	logger.log("1. must find the conv detail on db:", conv);
+							// 	assert(err == null);
+							// 	assert(conv != null);
+							// 	done();
+							// });
+						}
 					});
+					chatClient6.sendMessageRaw(
+						{
+							text: SENT_MESSAGE,
+							recipient_fullname: user7.fullname,
+							sender_fullname: user6.fullname,
+							channel_type: "direct"
+						}, user7.userid, // recipient id
+						() => {
+							logger.log("(Test 17) Message sent:", SENT_MESSAGE);
+						}
+					);
 				});
 			});
-			chatClient1.sendMessage(
-				SENT_MESSAGE,
-				TYPE_TEXT,
-				user2.userid,
-				user2.fullname,
-				user1.fullname,
-				null,
-				null,
-				CHANNEL_TYPE_DIRECT,
-				() => {
-					logger.log("Message sent:", SENT_MESSAGE);
-				}
-			);
+		});
+	});
+
+	describe('TiledeskClient - Direct _test 18_', function() {
+		it('\
+User8 sends a direct message and User9 receives the conversation update by callback \
+User9 checks conversationDetail. Got the conversation \
+User9 checks archivedConversationDetail. Not available \
+User9 archives the conversation \
+User9 receives the conversation-archived event \
+User9 checks archivedConversationDetail. Got the conversation \
+User9 checks conversationDetail. Not available \
+REUSE SHARED CHAT CLIENTS', function(done) {
+	// 6 => 8 7 => 9
+			logger.log("test 18 - start.");
+			let chatClient8 = new Chat21Client(
+			{
+				appId: config.APPID,
+				MQTTendpoint: config.MQTT_ENDPOINT,
+				APIendpoint: config.API_ENDPOINT,
+				log: config.CLIENT_API_LOG
+			});
+			let chatClient9 = new Chat21Client(
+				{
+					appId: config.APPID,
+					MQTTendpoint: config.MQTT_ENDPOINT,
+					APIendpoint: config.API_ENDPOINT,
+					log: config.CLIENT_API_LOG
+			});
+			let SENT_MESSAGE = 'FIRST MESSAGE 18';
+			logger.log("(Test 18) connecting user8...");
+			chatClient8.connect(user8.userid, user8.token, () => {
+				logger.log("chatClient8 Connected.");
+				chatClient9.connect(user9.userid, user9.token, () => {
+					logger.log("chatClient9 Connected.");
+					let onConversationAddedHandler = chatClient9.onConversationAdded((conv, topic) => {
+						logger.log("test 18 - conversation added:", conv);
+						logger.log("test 18 - conversation topic:", topic);
+						if (
+							conv &&
+							conv.text &&
+							!conv.attributes &&
+							conv.text === SENT_MESSAGE &&
+							conv.sender === user8.userid && // user8 sent the message to user9
+							topic.conversWith === user8.userid) { // user9 is conversing with user8 (and receives his conversation message-update)
+								logger.log("test 18 - got new conversation");
+							// WARING! DON'T CHECK THIS. PERSISTENCE IS ON ANOTHER QUEUE!
+							// YOU CAN'T SYNCHRONOULSY GET THE PERSISTED COPY OF ANY
+							// MESSAGE/CONVERSATION SAVED!
+
+							// chatClient7.conversationDetail(topic.conversWith, (err, conv) => {
+							// 	logger.log("1. check conv detail on db:", conv);
+							// 	assert(err == null);
+							// 	assert(conv != null);
+							// 	logger.log(">2. check this conv is not archived detail", topic.conversWith);
+							// 	chatClient7.archivedConversationDetail(topic.conversWith, (err, conv) => {
+							// 		logger.log(".2. check this conv is not archived detail:", conv);
+							// 		assert(err == null);
+							// 		assert(conv == null);
+							setTimeout(() => {
+								chatClient9.archiveConversation(topic.conversWith, (err) => {
+									logger.log("3. conversation archived.");
+									assert(err == null);
+								});
+							}, 1000);
+							
+							// 	});
+							// });
+						}
+					});
+					let onArchivedConversationAddedHandler = chatClient9.onArchivedConversationAdded((archived_conv, topic) => {
+						console.log("4. conv was archived:", archived_conv, topic);
+						assert(archived_conv != null);
+						assert(archived_conv.last_message_text != null); // checking archived-conversation is metadata-full
+						done();
+
+						// WARING! DON'T CHECK THIS. PERSISTENCE IS ON ANOTHER QUEUE!
+						// YOU CAN'T SYNCHRONOULSY GET THE PERSISTED COPY OF ANY
+						// MESSAGE/CONVERSATION SAVED!
+
+						// console.log(">5. getting conv detail (chatClient2)", topic.conversWith, " (after archiving) must be null");
+						// chatClient7.conversationDetail(topic.conversWith, (err, conv) => {
+						// 	console.log("5. getting conv detail (chatClient2)", topic.conversWith, " (after archiving) must be null:", conv);
+						// 	assert(err == null);
+						// 	assert(conv == null);
+						// 	chatClient7.archivedConversationDetail(topic.conversWith, (err, arch_conv_detail) => {
+						// 		console.log("6. got archived conv detail:", arch_conv_detail);
+						// 		assert(err == null);
+						// 		assert(arch_conv_detail != null);
+						// 		done();
+						// 	});
+						// });
+					});
+					chatClient8.sendMessageRaw(
+						{
+							text: SENT_MESSAGE,
+							recipient_fullname: user9.fullname,
+							sender_fullname: user8.fullname,
+							channel_type: "direct"
+						}, user9.userid, // recipient id
+						() => {
+							logger.log("Message sent:", SENT_MESSAGE);
+						}
+					);
+				});
+			});
 		});
 	});
 });
