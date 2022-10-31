@@ -1,7 +1,7 @@
 Chat21Client.js CHANGELOG
 
 ### v0.1.12
-- "connect" event now replies with a callback only after full subscribing succeded!
+- "connect()" event now replies with a callback only after full subscribing has succeded!
 
 ### v0.1.11
 - crossConversationDetail improved with xmlhttprequest + nodejs request support

@@ -519,12 +519,12 @@ function getGroup(group_id, callback) {
 }
 
 function isMessageGroup(message) {
-  // logger.debug("checking is group", message);
-  if (message.channel_type === 'group') {
-    // logger.log("is group!")
+  if (!message) {
+    return false;
+  }
+  if ((message.channel_type && message.channel_type === 'group') || (message.recipient && message.recipient.includes("group-")) ) {
     return true
   }
-  // logger.log("not a group")
   return false
 }
 
