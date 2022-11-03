@@ -1,5 +1,8 @@
 Chat21Client.js CHANGELOG
 
+### v0.1.12.1
+- some console.log() hidden
+
 ### v0.1.12
 - "connect()" event now replies with a callback only after full subscribing has succeded!
 - options._log => options.log

@@ -1,7 +1,7 @@
 /*
     Chat21Client
 
-    v0.1.12
+    v0.1.12.1
 
     @Author Andrea Sponziello
     (c) Tiledesk 2020
