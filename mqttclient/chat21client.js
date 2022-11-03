@@ -131,7 +131,9 @@ class Chat21Client {
         // callback - function (err)
         // console.log("recipient_id:", recipient_id)
         let dest_topic = `apps/${this.appid}/outgoing/users/${this.user_id}/messages/${recipient_id}/outgoing`
-        console.log("dest_topic:", dest_topic)
+        if (this.log) {
+            console.log("dest_topic:", dest_topic)
+        }
         // let outgoing_message = {
         //     text: text,
         //     type: type,
@@ -535,7 +537,9 @@ class Chat21Client {
 
     start(subscribedCallback) {
         if (this.on_message_handler) {
-            console.log("this.on_message_handler already subscribed. Reconnected num", this.reconnections)
+            if (this.log) {
+                console.log("this.on_message_handler already subscribed. Reconnected num", this.reconnections)
+            }
             callbsubscribedCallbackack();
             return
         }
@@ -681,7 +685,7 @@ class Chat21Client {
                             if (this.log) {console.log("/messages/_CLIENTUPDATED")}
                             if (type === CALLBACK_TYPE_ON_MESSAGE_UPDATED_FOR_CONVERSATION) {
                                 if (conversWith === callback_obj.conversWith) {
-                                    console.log("/messages/_CLIENTUPDATED on: ", conversWith)
+                                    if (this.log) {console.log("/messages/_CLIENTUPDATED on: ", conversWith);}
                                     callback_obj.callback(JSON.parse(message.toString()), _topic)
                                 }
                             }
@@ -773,17 +777,23 @@ class Chat21Client {
     }
 
     conversationDetail(conversWith, callback) {
-        console.log("conversationDetail(). searching on user:", this.user_id, " - conversWith:", conversWith)
+        if (this.log) {
+            console.log("conversationDetail(). searching on user:", this.user_id, " - conversWith:", conversWith)
+        }
         this.crossConversationDetail(conversWith, false, callback);
     }
 
     archivedConversationDetail(conversWith, callback) {
-        console.log("archivedConversationDetail(). searching on user:", this.user_id, " - conversWith:", conversWith)
+        if (this.log) {
+            console.log("archivedConversationDetail(). searching on user:", this.user_id, " - conversWith:", conversWith)
+        }
         this.crossConversationDetail(conversWith, true, callback);
     }
 
     crossConversationDetail(conversWith, archived, callback) {
-        console.log("searching on user:", this.user_id, " - conv of conversWith:", conversWith, " - archived:", archived)
+        if (this.log) {
+            console.log("searching on user:", this.user_id, " - conv of conversWith:", conversWith, " - archived:", archived)
+        }
         let path = "conversations";
         if (archived) {
             path = "archived_conversations"
@@ -791,8 +801,10 @@ class Chat21Client {
         // ex.: http://localhost:8004/tilechat/04-ANDREASPONZIELLO/conversations/CONVERS_WITH
         //const URL = `${this.APIendpoint}/${this.appid}/${this.user_id}/conversations/${conversWith}`
         const URL = `${this.APIendpoint}/${this.appid}/${this.user_id}/${path}/${conversWith}`
-        console.log("getting conversation detail:", URL)
-        console.log("conversWith:", conversWith)
+        if (this.log) {
+            console.log("getting conversation detail:", URL);
+            console.log("conversWith:", conversWith);
+        }
         
         let options = {
             url: URL,
@@ -803,7 +815,9 @@ class Chat21Client {
             method: 'GET'
         }
         Chat21Client.myrequest(options, (err, response, json) => {
-            console.log("JSON...", json)
+            if (this.log) {
+                console.log("JSON...", json);
+            }
             if (json && json.result && Array.isArray(json.result) && json.result.length ==1) {
                 callback(null, json.result[0]);
             }
