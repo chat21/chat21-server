@@ -1,8 +1,12 @@
 
-**npm @chat21/chat21-server@0.2.24**
+**npm @chat21/chat21-server@0.2.25**
 
 available on:
  ▶️ https://www.npmjs.com/package/@chat21/chat21-server
+
+## v0.2.25 - online
+- all negative acks removed. All callback(false) => callback(true) to avoid queue blocks
+- minor fixes
 
 ## v0.2.24 - online
 - updated dev dependency: "@chat21/chat21-http-server": "^0.2.15",

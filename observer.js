@@ -382,16 +382,16 @@ function process_outgoing(topic, message_string, callback) {
   let inbox_of;
   let convers_with;
 
-  if (!isMessageGroup(outgoing_message)) {
+  if (!isGroupMessage(outgoing_message)) {
     logger.debug("Direct message.");
     inbox_of = sender_id;
     convers_with = recipient_id;
     let sent_message = {...outgoing_message};
+    let delivered_message = {...outgoing_message};
     sent_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT // =100
     deliverMessage(sent_message, app_id, inbox_of, convers_with, function(ok) {
       logger.debug("delivered to sender. OK?", ok);
       if (ok) {
-        let delivered_message = {...outgoing_message};
         delivered_message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED // =150
         inbox_of = recipient_id;
         convers_with = sender_id;
@@ -518,7 +518,7 @@ function getGroup(group_id, callback) {
   // }
 }
 
-function isMessageGroup(message) {
+function isGroupMessage(message) {
   if (!message) {
     return false;
   }
@@ -551,7 +551,7 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
   publish(exchange, added_topic, Buffer.from(message_payload), function(err, msg) { // .clientadded
     if (err) {
       logger.error("Error on topic: ", added_topic, " Err:", err);
-      callback(false);
+      callback(true);
       return;
     }
     logger.debug("NOTIFY VIA WHnotifyMessageStatusDelivered, topic: " + added_topic);
@@ -570,7 +570,7 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
     publish(exchange, persist_topic, Buffer.from(message_payload), function(err, msg) { // .persist
       if (err) {
         logger.error("Error PUBLISH TO 'persist' TOPIC (noack):", err);
-        callback(false);
+        callback(true);
       }
       else {
         logger.debug("(WEBHOOK ENABLED) SUCCESSFULLY PUBLISHED ON:", persist_topic);
@@ -637,11 +637,11 @@ function process_delivered(topic, message_string, callback) {
     if (!ok) {
       logger.error("____Error delivering message. NOACKED:", message);
       logger.log("____DELIVER MESSAGE:", message.message_id, " (noack)!");
-      callback(false)
+      callback(true);
     }
     else {
       logger.log("____DELIVER MESSAGE ", message.message_id, " ACKED");
-      callback(true)
+      callback(true);
     }
   });
 }
@@ -683,10 +683,10 @@ function process_persist(topic, message_string, callback) {
       chatdb.saveOrUpdateConversation(conversation, (err, doc) => {
         if (err) {
           logger.error("(chatdb.saveOrUpdateConversation callback) ERROR (noack): ", err)
-          callback(false)
+          callback(true);
         }
         else {
-          callback(true)
+          callback(true);
         }
       });
     }
@@ -749,7 +749,7 @@ function process_update(topic, message_string, callback) {
       logger.debug(">>> PUBLISHED!!!! RECIPIENT MESSAGE TOPIC UPDATE" + recipient_message_update_topic + " WITH PATCH: " + JSON.stringify(dest_message_patch))
       if (err) {
         logger.error("publish error (noack):", err);
-        callback(false);
+        callback(true);
       }
       else {
         logger.log("webhook_enabled?????", webhook_enabled);
@@ -780,13 +780,13 @@ function process_update(topic, message_string, callback) {
           // logger.debug(">>> MESSAGE ON TOPIC", topic, "UPDATED!")
           if (err) {
             logger.error("error on topic:", topic , " - Error (noack):", err);
-            callback(false);
+            callback(true);
           }
           else {
             chatdb.saveOrUpdateMessage(dest_message_patch, function(err, msg) {
               if (err) {
                 logger.error("error on topic:", topic , " - Error (noack):", err);
-                callback(false);
+                callback(true);
               }
               else {
                 callback(true);
@@ -820,7 +820,7 @@ function process_update(topic, message_string, callback) {
       logger.debug(">>> CONVERSATION ON TOPIC:", topic, "UPDATED?")
       if (err) {
         logger.error("CONVERSATION ON TOPIC UPDATE error (noack)", err);
-        callback(false);
+        callback(true);
         return;
       }
       const patch_payload = JSON.stringify(patch)
@@ -830,7 +830,7 @@ function process_update(topic, message_string, callback) {
         logger.debug(">>> PUBLISHED!!!! MY CONVERSATION UPDATE TOPIC " + my_conversation_update_topic + " WITH PATCH " + patch_payload)
         if (err) {
           logger.error("PUBLISH MY CONVERSATION UPDATE TOPIC error (noack)", err);
-          callback(false);
+          callback(true);
         }
         else {
           callback(true);
