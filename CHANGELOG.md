@@ -4,6 +4,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@chat21/chat21-server
 
+## v0.2.26 - online
+- removed if (savedMessage.attributes && savedMessage.attributes.updateconversation == false) {update_conversation = false}. Now conversations are always updated. Same modification also on chat21client.js
+
 ## v0.2.25 - online
 - all negative acks removed. All callback(false) => callback(true) to avoid queue blocks
 - minor fixes
