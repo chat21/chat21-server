@@ -1,8 +1,11 @@
 
-**npm @chat21/chat21-server@0.2.25**
+**npm @chat21/chat21-server@0.2.27**
 
 available on:
  ▶️ https://www.npmjs.com/package/@chat21/chat21-server
+
+## v0.2.27 - online
+- introduced unique index on conversations collection to fix the duplication of conversations. Added UNIQUE_CONVERSATIONS_INDEX=1 in .env to enable the "unique" index. Please follow the instructions 'enable the "unique" index' at the end of CHANGELOG to correctly enable this feature.
 
 ## v0.2.26 - online
 - removed if (savedMessage.attributes && savedMessage.attributes.updateconversation == false) {update_conversation = false}. Now conversations are always updated. Same modification also on chat21client.js
@@ -106,3 +109,34 @@ will trigger the webhookSentOrDelivered to "Sent" only
 If "system" sends info messages and he is not member of the group, webhooks are never called.
 The "message-sent" webhook is called only once: when, iterating all the members, the selected one is the same as the group.
 This because the "message-sent" must be called only once per message. The "sender" can't be used, because the "sender" not always is a group's member (ex. info messages by system while system is not always a member of the group).
+
+# Enable the "unique" index
+
+UNIQUE INDEX FOR CONVERSATIONS
+
+The "Query" to get all the duplicated conversations:
+
+db.getCollection('conversations').aggregate([
+    { 
+        "$group": { 
+            "_id": { "timelineOf": "$timelineOf", "conversWith": "$conversWith" }, 
+            "uniqueIds": { "$addToSet": "$_id" },
+            "count": { "$sum": 1 } 
+        }
+    }, 
+    { "$match": { "count": { "$gt": 1 } } }
+])
+
+From uniqueIds get one of the two Object('id')
+
+Delete one of the two with the following query:
+
+db.getCollection('conversations').deleteOne({ "_id": ObjectId("636e7c11035d0b0599563f87") } )
+
+After you deleted all the duplicated conversations based on the unique index you can run the server with the following option in *.env*:
+
+*UNIQUE_CONVERSATIONS_INDEX=1*
+
+The unique index is created and you will no more have duplicated conversations.
+
+Well done.

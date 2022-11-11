@@ -26,12 +26,24 @@ class ChatDB {
     this.messages_collection = 'messages'
     this.groups_collection = 'groups'
     this.conversations_collection = 'conversations'
+    // CONVERSATIONS INDEX
+    if (options.UNIQUE_CONVERSATIONS_INDEX) {
+      console.log("Setting up unique conversations index: { 'timelineOf':1, 'conversWith': 1 }, { unique: 1}");
+      this.db.collection(this.conversations_collection).createIndex(
+        { 'timelineOf':1, 'conversWith': 1 }, { unique: 1}
+      );
+    }
+    else {
+      console.log("Setting up simple conversations index: { 'timelineOf':1, 'conversWith': 1 }");
+      this.db.collection(this.conversations_collection).createIndex(
+        { 'timelineOf':1, 'conversWith': 1 }
+      );
+    }
+    // OTHER INDEXES
     this.db.collection(this.messages_collection).createIndex(
       { 'timelineOf':1, 'message_id': 1 }
     );
-    this.db.collection(this.conversations_collection).createIndex(
-      { 'timelineOf':1, 'conversWith': 1 }
-    );
+    
     this.db.collection(this.groups_collection).createIndex(
       { 'uid':1 }
     );
