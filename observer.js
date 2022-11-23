@@ -663,10 +663,10 @@ function process_persist(topic, message_string, callback) {
   savedMessage.conversWith = convers_with
 
   let update_conversation = true
-  // temporarily ignoring the updateconversation = false option
-  // if (savedMessage.attributes && savedMessage.attributes.updateconversation == false) {
-  //   update_conversation = false
-  // }
+  // NO MORE: temporarily ignoring the updateconversation = false option
+  if (savedMessage.attributes && savedMessage.attributes.updateconversation == false) {
+    update_conversation = false
+  }
   // logger.debug("updateconversation = " + update_conversation)
   chatdb.saveOrUpdateMessage(savedMessage, function(err, msg) {
     // logger.debug("Message saved", savedMessage)

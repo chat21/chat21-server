@@ -1,10 +1,13 @@
 
-**npm @chat21/chat21-server@0.2.30**
+**npm @chat21/chat21-server@0.2.32**
 
 available on:
  ▶️ https://www.npmjs.com/package/@chat21/chat21-server
 
-## v0.2.30 - online
+## v0.2.32 - online
+- RESTORED if (savedMessage.attributes && savedMessage.attributes.updateconversation == false) {update_conversation = false}. See v0.2.26
+
+## v0.2.31 - online
 - always setting/forcing creation of index { 'timelineOf': 1, 'conversWith': 1 }, { unique: 1 } on "conversations" collection
 - removed env options: UNIQUE_CONVERSATIONS_INDEX and UNIQUE_AND_DROP_DUPS_CONVERSATIONS_INDEX
 

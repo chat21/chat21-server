@@ -1,7 +1,7 @@
 /*
     Chat21Client
 
-    v0.1.12.3
+    v0.1.12.2
 
     @Author Andrea Sponziello
     (c) Tiledesk 2020
@@ -631,10 +631,10 @@ class Chat21Client {
                         // console.log("Observing conversations added from messages", message_json);
                         // if (this.onConversationAddedCallbacks) {
                         let update_conversation = true;
-                        
-                        if (message_json.attributes && message_json.attributes.updateconversation == false) {
-                            update_conversation = false
-                        }
+                        // temporarily ignoring the updateconversation = false option
+                        // if (message_json.attributes && message_json.attributes.updateconversation == false) {
+                        //     update_conversation = false
+                        // }
                         if (update_conversation && this.onConversationAddedCallbacks) {
                             this.onConversationAddedCallbacks.forEach((callback, handler, map) => {
                                 message_json.is_new = true;

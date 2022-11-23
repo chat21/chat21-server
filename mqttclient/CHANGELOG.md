@@ -1,5 +1,8 @@
 Chat21Client.js CHANGELOG
 
+### v0.1.12.3
+- - RESTORED if (savedMessage.attributes && savedMessage.attributes.updateconversation == false) {update_conversation = false}. See v0.1.12.2
+
 ### v0.1.12.2
 - - removed if (savedMessage.attributes && savedMessage.attributes.updateconversation == false) {update_conversation = false}. Now conversations are always updated. Same modification also on observer.js
 
