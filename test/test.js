@@ -1539,20 +1539,6 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 		});
 	});
 
-	/** THE PROBLEM WITH THIS TEST IS THAT SIMETIMES...
-	 * 
-	 * TiledeskClient - Webhooks _test 16_
-         test 16 - "message-sent" webhook event, 2 endpoints REUSE SHARED CHAT CLIENTS:
-     Error: done() called multiple times in test <Main TiledeskClient - Webhooks _test 16_ test 16 - "message-sent" webhook event, 2 endpoints REUSE SHARED CHAT CLIENTS> of file /Users/andreasponziello/Projects/tiledesk/chatservermq/test/test.js
-      at _chatClient1.close (test/test.js:1535:7)
-      at client.end (mqttclient/chat21client.js:1020:25)
-      at /Users/andreasponziello/Projects/tiledesk/chatservermq/node_modules/mqtt/lib/client.js:827:11
-      at Store.close (node_modules/mqtt/lib/store.js:124:5)
-      at /Users/andreasponziello/Projects/tiledesk/chatservermq/node_modules/mqtt/lib/client.js:821:26
-      at Store.close (node_modules/mqtt/lib/store.js:124:5)
-      at MqttClient.closeStores (node_modules/mqtt/lib/client.js:820:24)
-      at process._tickCallback (internal/process/next_tick.js:61:11)
-	 */
 	describe('TiledeskClient - Webhooks _test 16_', function() {
 		it('test 16 - "message-sent" webhook event, 2 endpoints', function(done) {
 			if (!config.LOCAL_STACK) {

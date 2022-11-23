@@ -1,11 +1,18 @@
 
-**npm @chat21/chat21-server@0.2.27**
+**npm @chat21/chat21-server@0.2.30**
 
 available on:
  ▶️ https://www.npmjs.com/package/@chat21/chat21-server
 
+## v0.2.30 - online
+- always setting/forcing creation of index { 'timelineOf': 1, 'conversWith': 1 }, { unique: 1 } on "conversations" collection
+- removed env options: UNIQUE_CONVERSATIONS_INDEX and UNIQUE_AND_DROP_DUPS_CONVERSATIONS_INDEX
+
+## v0.2.28 - online
+- introduced UNIQUE_AND_DROP_DUPS_CONVERSATIONS_INDEX=1 in .env to enable the "unique" index forcing removing duplicates. Please follow the instructions 'enable the "unique" index' at the end of CHANGELOG.md to correctly enable this feature.
+
 ## v0.2.27 - online
-- introduced unique index on conversations collection to fix the duplication of conversations. Added UNIQUE_CONVERSATIONS_INDEX=1 in .env to enable the "unique" index. Please follow the instructions 'enable the "unique" index' at the end of CHANGELOG to correctly enable this feature.
+- introduced unique index on conversations collection to fix the duplication of conversations. Added UNIQUE_CONVERSATIONS_INDEX=1 in .env to enable the "unique" index. Please follow the instructions 'enable the "unique" index' at the end of CHANGELOG.md to correctly enable this feature.
 
 ## v0.2.26 - online
 - removed if (savedMessage.attributes && savedMessage.attributes.updateconversation == false) {update_conversation = false}. Now conversations are always updated. Same modification also on chat21client.js
@@ -129,7 +136,7 @@ db.getCollection('conversations').aggregate([
 
 From uniqueIds get one of the two Object('id')
 
-Delete one of the two with the following query:
+Delete one of the N duoplicates with the following query:
 
 db.getCollection('conversations').deleteOne({ "_id": ObjectId("636e7c11035d0b0599563f87") } )
 
@@ -138,5 +145,9 @@ After you deleted all the duplicated conversations based on the unique index you
 *UNIQUE_CONVERSATIONS_INDEX=1*
 
 The unique index is created and you will no more have duplicated conversations.
+
+*UNIQUE_AND_DROP_DUPS_CONVERSATIONS_INDEX=1*
+
+Will also automatically remove duplicates (with the simple rule: keep the first, delete all the others)
 
 Well done.

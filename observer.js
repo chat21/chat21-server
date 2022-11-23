@@ -1026,42 +1026,63 @@ async function startServer(config) {
   db = client.db();
   logger.debug("Mongodb connected.");
 
-  if (process.env.UNIQUE_CONVERSATIONS_INDEX) {
-    console.log("Updating unique index for conversations collection...");
-    const indexes = await db.collection('conversations').indexes()
-    console.log("Current indexes on 'conversations' collection:", indexes);
-    let index_to_drop = null;
-    const index_to_drop_name = 'timelineOf_1_conversWith_1'
-    for (count = 0; count < indexes.length; count++) {
-      let index = indexes[count]
-      //console.log("index[" + count + "]:", index)
-      if (index["name"] === index_to_drop_name) {
-        console.log("Index to drop found:", index)
-        index_to_drop = index
-        break;
-      }
-    }
-    if (index_to_drop) {
-      console.log("Dropping index:", index_to_drop)
-      indexObj = {}
-      indexObj[index_to_drop] = 1
-      await db.collection('conversations').dropIndex(index_to_drop.key);
-      console.log("Index dropped:", index_to_drop)
-    }
-    else {
-      console.log("No index to drop found (" + index_to_drop_name + ")");
-    }
-    // // then
-  // db.collection('conversations').updateMany(
-  //   { "uniqueKey": null },
-  //   {"$set": {"uniqueKey": { "$concat": ["$timelineOf", "-", "$conversWith"]}}}
-  // );
-  // console.log("uniqueKey created.");
-  }
+  // const index_to_drop_name = 'timelineOf_1_conversWith_1'
+  // if (process.env.UNIQUE_CONVERSATIONS_INDEX) {
+  //   console.log("Updating unique index for conversations collection...");
+  //   const indexes = await db.collection('conversations').indexes()
+  //   console.log("Current indexes on 'conversations' collection:", indexes);
+  //   let index_to_drop = null;
+  //   for (count = 0; count < indexes.length; count++) {
+  //     let index = indexes[count]
+  //     //console.log("index[" + count + "]:", index)
+  //     if (index["name"] === index_to_drop_name) {
+  //       console.log("Index to drop found:", index)
+  //       index_to_drop = index
+  //       break;
+  //     }
+  //   }
+  //   if (index_to_drop) {
+  //     console.log("Dropping index:", index_to_drop)
+  //     indexObj = {}
+  //     indexObj[index_to_drop] = 1
+  //     await db.collection('conversations').dropIndex(index_to_drop.key);
+  //     console.log("Index dropped:", index_to_drop)
+  //   }
+  //   else {
+  //     console.log("No index to drop found (" + index_to_drop_name + ")");
+  //   }
+  // }
+  // else {
+  //   console.log("Setting unique index for conversations collection...");
+  //   const indexes = await db.collection('conversations').indexes()
+  //   console.log("Current indexes on 'conversations' collection:", indexes);
+  //   let old_index_exists = null;
+  //   const old_index_name = 'timelineOf_1_conversWith_1'
+  //   for (count = 0; count < indexes.length; count++) {
+  //     let index = indexes[count]
+  //     //console.log("index[" + count + "]:", index)
+  //     if (index["name"] === index_to_drop_name) {
+  //       console.log("Index to drop found:", index)
+  //       old_index_exists = index
+  //       break;
+  //     }
+  //   }
+  //   if (!old_index_exists) {
+  //     console.log("Setting unique index con conversations collection...")
+  //     this.db.collection("conversations").createIndex(
+  //       { 'timelineOf': 1, 'conversWith': 1 }, { unique: 1 }
+  //     );
+  //     console.log("Unique index created on 'conversations': { 'timelineOf': 1, 'conversWith': 1 }, { unique: 1 }");
+  //   }
+  //   else {
+  //     console.log("Please remove the old index: { 'timelineOf': 1, 'conversWith': 1 }, remove all duplicates on 'conversations' collection for this index. The new Unique index will be automatically created.");
+  //   }
+  // }
   
   
 
-  chatdb = new ChatDB({database: db, UNIQUE_CONVERSATIONS_INDEX: process.env.UNIQUE_CONVERSATIONS_INDEX})
+  //chatdb = new ChatDB({database: db, UNIQUE_CONVERSATIONS_INDEX: process.env.UNIQUE_CONVERSATIONS_INDEX})
+  chatdb = new ChatDB({database: db});
   logger.info("Starting webhooks...");
   try {
     webhooks = new Webhooks({appId: app_id, RABBITMQ_URI: rabbitmq_uri, exchange: exchange, webhook_endpoints: webhook_endpoints_array, webhook_events: webhook_events_array, queue_name: 'webhooks', logger: logger});
