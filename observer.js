@@ -349,6 +349,10 @@ function work(msg, callback) {
 function process_presence(topic, message_string, callback) {
   logger.debug("> got PRESENCE testament", message_string, " on topic", topic);
   callback(true);
+  if (!webhook_enabled) {
+    console.log("WEBHOOKS DISABLED. Skipping presence notification");
+    return;
+  }
   // examples:
   // {"disconnected":true}  on topic apps.tilechat.users.6d011n62ir097c0143cc42dc.presence.8d8ecd4e-3cb9-4ff6-a36e-7b22459cbebf
   // {"connected":true}  on topic apps.tilechat.users.6d011n62ir097c0143cc42dc.presence.e80e73f1-4934-4ba9-8cdc-81051d518a90
@@ -357,15 +361,27 @@ function process_presence(topic, message_string, callback) {
   const user_id = topic_parts[3]
   const client_id = topic_parts[5];
   let presence_payload = JSON.parse(message_string);
-  presence_payload['temp_webhook_endpoints'] = [process.env.PRESENCE_WEBHOOK_ENDPOINT];
-  presence_payload['user_id'] = user_id;
-  presence_payload['app_id'] = app_id;
-  presence_payload['client_id'] = client_id;
-  const presence_payload_string = JSON.stringify(presence_payload);
+  console.log("presence_payload:", presence_payload);
+  const presence_status = presence_payload.connected ? "online" : "offline";
+  console.log("presence_status:", presence_status);
+  // presence_payload['temp_webhook_endpoints'] = [process.env.PRESENCE_WEBHOOK_ENDPOINT];
+  // presence_payload['user_id'] = user_id;
+  // presence_payload['app_id'] = app_id;
+  // presence_payload['client_id'] = client_id;
+  presence_event = {
+    "event_type": "presence-change",
+    "presence": presence_status,
+    "createdAt": new Date().getTime(),
+    "app_id": app_id,
+    "user_id": user_id,
+    "data": true,
+    temp_webhook_endpoints: webhook_endpoints_array
+  }
+  const presence_event_string = JSON.stringify(presence_event);
   const presence_webhook_topic = `observer.webhook.apps.${app_id}.presence`;
-  logger.debug(">>> NOW PUBLISHING PRESENCE. TOPIC: " + presence_webhook_topic + ", PAYLOAD ", presence_payload_string);
-  publish(exchange, presence_webhook_topic, Buffer.from(presence_payload_string), function(err) {
-    logger.debug(">>> PUBLISHED PRESENCE!" + presence_webhook_topic + " WITH PATCH: " + presence_payload_string)
+  logger.debug(">>> NOW PUBLISHING PRESENCE. TOPIC: " + presence_webhook_topic + ", EVENT PAYLOAD ", presence_event_string);
+  publish(exchange, presence_webhook_topic, Buffer.from(presence_event_string), function(err) {
+    logger.debug(">>> PUBLISHED PRESENCE!" + presence_webhook_topic + " WITH PATCH: " + presence_event_string)
     if (err) {
       logger.error("publish presence error:", err);
     }

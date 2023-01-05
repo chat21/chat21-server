@@ -494,17 +494,17 @@ class Webhooks {
     delete payload['temp_webhook_endpoints'];
     endpoints.forEach((endpoint) => {
       logger.debug("Sending notification to webhook (presence) on webhook_endpoint:" + endpoint);
-      const user_id = payload.user_id;
-      const app_id = payload.app_id;
-      let event_type;
-      var json = {
-        event_type: payload.event_type,
-        createdAt: new Date().getTime(),
-        user_id: user_id,
-        app_id: app_id,
-        data: payload
-      };
-      this.WHsendData(endpoint, json, function(err, data) {
+      // const user_id = payload.user_id;
+      // const app_id = payload.app_id;
+      // let event_type;
+      // var json = {
+      //   event_type: payload.event_type,
+      //   createdAt: new Date().getTime(),
+      //   user_id: user_id,
+      //   app_id: app_id,
+      //   data: payload
+      // };
+      this.WHsendData(endpoint, payload, function(err, data) {
         if (err)  {
           logger.error("Err WHsendData callback", err);
         } else {
