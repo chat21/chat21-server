@@ -1,15 +1,3 @@
-/*
-    Chat21Client
-
-    v0.1.12.4
-
-    @Author Andrea Sponziello
-    (c) Tiledesk 2020
-*/
-
-let mqtt = require('mqtt');
-let axios = require('axios');
-
 const _CLIENTADDED = "/clientadded"
 const _CLIENTUPDATED = "/clientupdated"
 const _CLIENTDELETED = "/clientdeleted"
@@ -1066,9 +1054,9 @@ class Chat21Client {
 }
 
 function isBrowser() {
-    // return true;
+    //return true;
     return false;
 }
 
-// export { Chat21Client }; // Browser
+//export { Chat21Client }; // Browser
 module.exports = { Chat21Client };

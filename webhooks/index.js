@@ -65,6 +65,7 @@ class Webhooks {
     // this.topic_webhook_message_saved = `observer.webhook.apps.${this.appId}.message_saved`
     // this.topic_webhook_conversation_saved = `observer.webhook.apps.${this.appId}.conversation_saved`
     this.topic_webhook_conversation_archived = `observer.webhook.apps.${this.appId}.conversation_archived`;
+    this.topic_webhook_presence = `observer.webhook.apps.${this.appId}.presence`;
     this.amqpConn = null;
     this.exchange = options.exchange;
     this.channel = null;
@@ -478,6 +479,41 @@ class Webhooks {
     });
   }
 
+  WHprocess_webhook_presence(topic, presence_payload_string, callback) {
+    logger.debug("process WHprocess_webhook_presence: " + presence_payload_string + " on topic: " + topic)
+    var payload = JSON.parse(presence_payload_string);
+    if (callback) {
+      callback(true)
+    }
+    if (!payload['temp_webhook_endpoints']) {
+      logger.debug("WHprocess_webhook_presence Discarding notification. temp_webhook_endpoints undefined.")
+      return
+    }
+    
+    const endpoints = payload['temp_webhook_endpoints'];
+    delete payload['temp_webhook_endpoints'];
+    endpoints.forEach((endpoint) => {
+      logger.debug("Sending notification to webhook (presence) on webhook_endpoint:" + endpoint);
+      const user_id = payload.user_id;
+      const app_id = payload.app_id;
+      let event_type;
+      var json = {
+        event_type: payload.event_type,
+        createdAt: new Date().getTime(),
+        user_id: user_id,
+        app_id: app_id,
+        data: payload
+      };
+      this.WHsendData(endpoint, json, function(err, data) {
+        if (err)  {
+          logger.error("Err WHsendData callback", err);
+        } else {
+          logger.debug("WHsendData sendata end with data:" + data);
+        }
+      });
+    });
+  }
+
   WHisMessageOnGroupTimeline(message) {
     if (message && message.timelineOf) {
       if (message.timelineOf.toLowerCase().indexOf("group") !== -1) {
@@ -606,6 +642,7 @@ class Webhooks {
         this.subscribeTo(this.topic_webhook_message_deliver, ch, _ok.queue)
         this.subscribeTo(this.topic_webhook_message_update, ch, _ok.queue)
         this.subscribeTo(this.topic_webhook_conversation_archived, ch, _ok.queue)
+        this.subscribeTo(this.topic_webhook_presence, ch, _ok.queue)
         ch.consume(this.queue, this.processMsg.bind(this), { noAck: false });
       });
     });
@@ -673,9 +710,12 @@ class Webhooks {
       this.WHprocess_webhook_conversation_archived(topic, message_string, callback);
     //  }
     }
+    else if (topic.startsWith('observer.webhook.') && topic.endsWith('.presence')) {
+      this.WHprocess_webhook_presence(topic, message_string, callback);
+    }
     else {
       logger.error("Webooks.unhandled topic:", topic)
-      callback(true)
+      callback(true);
     }
   }
 

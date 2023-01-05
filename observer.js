@@ -349,6 +349,30 @@ function work(msg, callback) {
 function process_presence(topic, message_string, callback) {
   logger.debug("> got PRESENCE testament", message_string, " on topic", topic);
   callback(true);
+  // examples:
+  // {"disconnected":true}  on topic apps.tilechat.users.6d011n62ir097c0143cc42dc.presence.8d8ecd4e-3cb9-4ff6-a36e-7b22459cbebf
+  // {"connected":true}  on topic apps.tilechat.users.6d011n62ir097c0143cc42dc.presence.e80e73f1-4934-4ba9-8cdc-81051d518a90
+  var topic_parts = topic.split(".");
+  const app_id = topic_parts[1];
+  const user_id = topic_parts[3]
+  const client_id = topic_parts[5];
+  let presence_payload = JSON.parse(message_string);
+  presence_payload['temp_webhook_endpoints'] = [process.env.PRESENCE_WEBHOOK_ENDPOINT];
+  presence_payload['user_id'] = user_id;
+  presence_payload['app_id'] = app_id;
+  presence_payload['client_id'] = client_id;
+  const presence_payload_string = JSON.stringify(presence_payload);
+  const presence_webhook_topic = `observer.webhook.apps.${app_id}.presence`;
+  logger.debug(">>> NOW PUBLISHING PRESENCE. TOPIC: " + presence_webhook_topic + ", PAYLOAD ", presence_payload_string);
+  publish(exchange, presence_webhook_topic, Buffer.from(presence_payload_string), function(err) {
+    logger.debug(">>> PUBLISHED PRESENCE!" + presence_webhook_topic + " WITH PATCH: " + presence_payload_string)
+    if (err) {
+      logger.error("publish presence error:", err);
+    }
+    else {
+      logger.log("PRESENCE UPDATE PUBLISHED");
+    }
+  });
 }
 
 function process_outgoing(topic, message_string, callback) {
