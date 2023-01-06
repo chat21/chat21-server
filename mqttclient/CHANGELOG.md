@@ -2,6 +2,8 @@ Chat21Client.js CHANGELOG
 
 ### v0.1.12.4
 - added presence topic con connect() publish
+- added ImHere() to chat21Client.js
+
 
 ### v0.1.12.3
 - - RESTORED if (savedMessage.attributes && savedMessage.attributes.updateconversation == false) {update_conversation = false}. See v0.1.12.2
