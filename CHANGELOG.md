@@ -7,6 +7,7 @@ available on:
 ## v0.2.33 - online
 - presence webhook and observer.webhooks...presence introduced
 - updated chat21client.js => v0.1.12.4 with 'presence' publish on.connect()
+- updated chat21client.js => v0.1.12.4 with ImHere()
 
 ## v0.2.32 - online
 - RESTORED if (savedMessage.attributes && savedMessage.attributes.updateconversation == false) {update_conversation = false}. See v0.2.26

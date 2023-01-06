@@ -1003,7 +1003,7 @@ class Chat21Client {
                     JSON.stringify({connected: true}),
                     null, (err) => {
                         if (err) {
-                            console.error("Error con presence publish:", err);
+                            console.error("Error on presence publish:", err);
                         }
                     }
                 );
@@ -1029,6 +1029,20 @@ class Chat21Client {
                 console.error("Chat client error event", error);
             }
         );
+    }
+
+    ImHere() {
+        if (this.client) {
+            this.client.publish(
+                this.presence_topic,
+                JSON.stringify({connected: true}),
+                null, (err) => {
+                    if (err) {
+                        console.error("Error on presence publish:", err);
+                    }
+                }
+            );
+        }
     }
 
     close(callback) {
