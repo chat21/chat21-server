@@ -12,6 +12,8 @@ const { Console } = require("console");
 const app = express();
 app.use(bodyParser.json());
 const logger = require('./tiledesk-logger').logger;
+console.log("Setting log level:", process.env.LOG_LEVEL);
+logger.setLog(process.env.LOG_LEVEL);
 var amqpConn = null;
 let exchange;
 let app_id;
@@ -27,6 +29,7 @@ let topic_update_group;
 var chatdb;
 let webhooks;
 let webhook_enabled;
+let presence_enabled;
 let autoRestart;
 
 if (webhook_enabled == undefined || webhook_enabled === "true" || webhook_enabled === true ) {
@@ -80,6 +83,10 @@ function setWebHookEvents(events) {
   if (webhooks) {
     webhooks.setWebHookEvents(events);
   }
+}
+
+function setPresenceEnabled(enabled) {
+  presence_enabled = enabled;
 }
 
 function setActiveQueues(queues) {
@@ -347,10 +354,15 @@ function work(msg, callback) {
 // ***** TOPIC HANDLERS ******/
 
 function process_presence(topic, message_string, callback) {
-  logger.debug("> got PRESENCE testament", message_string, " on topic", topic);
   callback(true);
+  if (!presence_enabled) {
+    logger.log("Presence disabled");
+    return;
+  }
+  logger.debug("> got PRESENCE testament", message_string, " on topic", topic);
+  
   if (!webhook_enabled) {
-    console.log("WEBHOOKS DISABLED. Skipping presence notification");
+    logger.debug("WEBHOOKS DISABLED. Skipping presence notification");
     return;
   }
   // examples:
@@ -361,9 +373,9 @@ function process_presence(topic, message_string, callback) {
   const user_id = topic_parts[3]
   const client_id = topic_parts[5];
   let presence_payload = JSON.parse(message_string);
-  console.log("presence_payload:", presence_payload);
+  logger.debug("presence_payload:", presence_payload);
   const presence_status = presence_payload.connected ? "online" : "offline";
-  console.log("presence_status:", presence_status);
+  logger.debug("presence_status:", presence_status);
   // presence_payload['temp_webhook_endpoints'] = [process.env.PRESENCE_WEBHOOK_ENDPOINT];
   // presence_payload['user_id'] = user_id;
   // presence_payload['app_id'] = app_id;
@@ -386,7 +398,7 @@ function process_presence(topic, message_string, callback) {
       logger.error("publish presence error:", err);
     }
     else {
-      logger.log("PRESENCE UPDATE PUBLISHED");
+      logger.ldebugog("PRESENCE UPDATE PUBLISHED");
     }
   });
 }
@@ -1142,4 +1154,4 @@ function stopServer(callback) {
   amqpConn.close(callback);
 }
 
-module.exports = {startServer: startServer, stopServer: stopServer, setAutoRestart: setAutoRestart, getWebhooks: getWebhooks, setWebHookEndpoints: setWebHookEndpoints, setWebHookEvents: setWebHookEvents, setWebHookEnabled: setWebHookEnabled, setActiveQueues: setActiveQueues, setPrefetchMessages: setPrefetchMessages, logger: logger };
+module.exports = {startServer: startServer, stopServer: stopServer, setAutoRestart: setAutoRestart, getWebhooks: getWebhooks, setWebHookEndpoints: setWebHookEndpoints, setWebHookEvents: setWebHookEvents, setWebHookEnabled: setWebHookEnabled, setActiveQueues: setActiveQueues, setPrefetchMessages: setPrefetchMessages, setPresenceEnabled: setPresenceEnabled, logger: logger };

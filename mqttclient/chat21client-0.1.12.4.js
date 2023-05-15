@@ -1,15 +1,13 @@
 /*
     Chat21Client
 
-    v0.1.12.5
+    v0.1.12.4
 
     @Author Andrea Sponziello
-    @Member Gabriele Panico
     (c) Tiledesk 2020
 */
 
-//let mqtt = require('./mqtt/4.2.6/mqtt.min.js');
-let mqtt = require('mqtt')
+let mqtt = require('mqtt');
 let axios = require('axios');
 
 const _CLIENTADDED = "/clientadded"
@@ -24,17 +22,14 @@ class Chat21Client {
         this.client = null;
         this.reconnections = 0 // just to check how many reconnections
         this.client_id = this.uuidv4();
-        this.log = options.log ? true : false;
-    
+        this.log = true;// options.log ? true : false;
         if (options && options.MQTTendpoint) {
+            console.log("MQTTendpoint connecti...");
             if (options.MQTTendpoint.startsWith('/')) {
                 if (this.log) {
                     console.log("MQTTendpoint relative url");
                 }
                 var loc = window.location, new_uri;
-                if(window.frameElement && window.frameElement.getAttribute('tiledesk_context') === 'parent'){
-                    loc = window.parent.location
-                }
                 if (loc.protocol === "https:") {
                     // new_uri = "wss:";
                     new_uri = "mqtt:";
@@ -48,7 +43,9 @@ class Chat21Client {
                 new_uri += options.MQTTendpoint;
                 this.endpoint = new_uri
             } else {
+               
                 this.endpoint = options.MQTTendpoint
+                console.log("endpoint relative url", this.endpoint);
             }
             
         }
@@ -961,12 +958,12 @@ class Chat21Client {
 
     connect(user_id, jwt, callback) {
         this.user_id = user_id;
-        // console.log("userid:", this.user_id)
+        console.log("userid:", this.user_id)
         this.jwt = jwt
-        if (this.log) {
+        // if (this.log) {
             console.log("connecting user_id:", user_id)
             console.log("using jwt token:", jwt)
-        }
+        // }
         
         if (this.client) {
             this.client.end()
@@ -990,9 +987,10 @@ class Chat21Client {
             password: jwt,
             rejectUnauthorized: false
         }
-        if (this.log) {console.log("starting mqtt connection with LWT on:", this.presence_topic, this.endpoint)}
+        // if (this.log) {
+            console.log("starting mqtt connection with LWT on:", this.presence_topic, this.endpoint)
+        // }
         // client = mqtt.connect('mqtt://127.0.0.1:15675/ws',options)
-        console.log("starting mqtt connection with LWT on:", this.presence_topic, this.endpoint)
         this.client = mqtt.connect(this.endpoint,options)
         
         this.client.on('connect', // TODO if token is wrong it must reply with an error!
@@ -1010,7 +1008,7 @@ class Chat21Client {
                     JSON.stringify({connected: true}),
                     null, (err) => {
                         if (err) {
-                            console.error("Error con presence publish:", err);
+                            console.error("Error on presence publish:", err);
                         }
                     }
                 );
@@ -1087,9 +1085,9 @@ class Chat21Client {
 }
 
 function isBrowser() {
-    return true;
-    // return false;
+    // return true;
+    return false;
 }
 
-//export { Chat21Client }; // Browser
+// export { Chat21Client }; // Browser
 module.exports = { Chat21Client };

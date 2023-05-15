@@ -25,7 +25,7 @@ class TiledeskLogger {
   constructor(log_level) {
     this.levels = {'DEBUG': LEVEL_DEBUG, 'VERBOSE':LEVEL_VERBOSE, 'ERROR': LEVEL_ERROR, 'INFO': LEVEL_INFO, 'LOG': LEVEL_LOG};
     if (log_level) {
-      this.logLevel = this.levels[log_level.toUpperCase()] || LEVEL_DEBUG
+      this.logLevel = this.levels[log_level.toUpperCase()] || LEVEL_INFO
     }
     else if (process.env.LOG_LEVEL) {
       this.logLevel = this.levels[process.env.LOG_LEVEL.toUpperCase()] || LEVEL_DEBUG

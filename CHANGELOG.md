@@ -4,6 +4,11 @@
 available on:
  ▶️ https://www.npmjs.com/package/@chat21/chat21-server
 
+## v0.2.34
+- Adds log info for Prefetch messages
+- Adds support to disable Presence
+- Log defaults to INFO level
+
 ## v0.2.33 - online
 - presence webhook and observer.webhooks...presence introduced
 - updated chat21client.js => v0.1.12.4 with 'presence' publish on.connect()

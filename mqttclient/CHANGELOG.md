@@ -1,12 +1,19 @@
 Chat21Client.js CHANGELOG
 
+### v0.1.12.5
+- added a snippet to automatically get the host location when deployed on localhost
+    var loc = window.location, new_uri;
+    if(window.frameElement && window.frameElement.getAttribute('tiledesk_context') === 'parent'){
+        loc = window.parent.location
+    }
+
 ### v0.1.12.4
 - added presence topic con connect() publish
 - added ImHere() to chat21Client.js
 
 
 ### v0.1.12.3
-- - RESTORED if (savedMessage.attributes && savedMessage.attributes.updateconversation == false) {update_conversation = false}. See v0.1.12.2
+- RESTORED if (savedMessage.attributes && savedMessage.attributes.updateconversation == false) {update_conversation = false}. See v0.1.12.2
 
 ### v0.1.12.2
 - - removed if (savedMessage.attributes && savedMessage.attributes.updateconversation == false) {update_conversation = false}. Now conversations are always updated. Same modification also on observer.js

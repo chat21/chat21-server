@@ -86,26 +86,35 @@ if (process.env.WEBHOOK_EVENTS) {
 }
 logger.info("webhook_events_array: " , webhook_events_array);
 
+let presence_enabled = false;
+if (process.env.PRESENCE_ENABLED && process.env.PRESENCE_ENABLED === "true") {
+  presence_enabled = true;
+  logger.info("Presence manager enabled.");
+}
+else {
+  logger.info("Presence manager disabled.");
+}
+
 logger.info("Starting observer")
 async function start() {
+  observer.setPresenceEnabled(presence_enabled);
+  observer.setWebHookEnabled(webhook_enabled);
+  observer.setWebHookEndpoints(webhook_endpoints_array);
+  observer.setWebHookEvents(webhook_events_array);
+  observer.setActiveQueues(active_queues);
+  if (process.env.PREFETCH_MESSAGES) {// && process.env.PREFETCH_MESSAGES > 0) {
+    prefetch = parseInt(process.env.PREFETCH_MESSAGES);
+    if (prefetch > 0) {
+      logger.log("Set prefetch messages number:", prefetch);
+      observer.setPrefetchMessages(prefetch);
+    }
+  }
+  else {
+    logger.log("Using default prefetch messages number.");
+  }
+  // observer.setPersistentMessages(true);
 
-      observer.setWebHookEnabled(webhook_enabled);
-      observer.setWebHookEndpoints(webhook_endpoints_array);
-      observer.setWebHookEvents(webhook_events_array);
-      observer.setActiveQueues(active_queues);
-      if (process.env.PREFETCH_MESSAGES) {// && process.env.PREFETCH_MESSAGES > 0) {
-        prefetch = parseInt(process.env.PREFETCH_MESSAGES);
-        if (prefetch > 0) {
-          logger.log("Set prefetch messages number:", prefetch);
-          observer.setPrefetchMessages(prefetch);
-        }
-      }
-      else {
-        logger.log("Using default prefetch messages number.");
-      }
-      // observer.setPersistentMessages(true);
-
-      await startServer({app_id: process.env.APP_ID, exchange: 'amq.topic', rabbitmq_uri:process.env.RABBITMQ_URI, mongo_uri: process.env.MONGODB_URI});
+  await startServer({app_id: process.env.APP_ID, exchange: 'amq.topic', rabbitmq_uri:process.env.RABBITMQ_URI, mongo_uri: process.env.MONGODB_URI});
 }
 start();
 

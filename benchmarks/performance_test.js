@@ -21,19 +21,22 @@ const { Console } = require('console');
 
 // const APPID = 'tilechat';
 
-// CONSOLE.NATIVE
 let config = {
     EXPECTED_AVG_DIRECT_MESSAGE_DELAY: 160,
     EXPECTED_AVG_GROUP_MESSAGE_DELAY: 160,
-    REQS_PER_SECOND: 100,
+    REQS_PER_SECOND: 60,
     MAX_SECONDS: 10,
     CONCURRENCY: 1, // 2
-    API_SERVER_HOST: 'localhost',
-    API_SERVER_PORT: 8004,
+    //API_SERVER_HOST: 'localhost',
+    //API_SERVER_PORT: 8004,
     // MQTT_ENDPOINT: 'wss://console.native.tiledesk.com/ws',
     // API_ENDPOINT: 'https://console.native.tiledesk.com/chatapi/api',
-    MQTT_ENDPOINT: 'ws://localhost:15675/ws',
-    API_ENDPOINT: 'http://localhost:8004/api',
+    // LOCAL
+    //MQTT_ENDPOINT: 'ws://localhost:15675/ws',
+    //API_ENDPOINT: 'http://localhost:8004/api',
+    // REMOTE
+    MQTT_ENDPOINT: 'ws://34.106.191.96/mqws/ws',
+    API_ENDPOINT: 'http://34.106.191.96/chatapi/api',
     APPID: 'tilechat'
 }
 
@@ -71,7 +74,7 @@ let chatClient1 = new Chat21Client(
     appId: config.APPID,
     MQTTendpoint: config.MQTT_ENDPOINT,
     APIendpoint: config.API_ENDPOINT,
-    log: false
+    log: true
 });
 
 let chatClient2 = new Chat21Client(
@@ -118,7 +121,7 @@ describe("Performance Test", function() {
                     group_members,
                     (err, result) => {
                         total_ = Date.now() - start_
-                        console.log("TOTAL GROUP CREATION TIME", total_)
+                        console.log("TOTAL GROUP CREATION TIME", total_ + "ms")
                         assert(err == null);
                         assert(result != null);
                         assert(result.success == true);
