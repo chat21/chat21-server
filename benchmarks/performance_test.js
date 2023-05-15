@@ -25,7 +25,7 @@ let config = {
     EXPECTED_AVG_DIRECT_MESSAGE_DELAY: 160,
     EXPECTED_AVG_GROUP_MESSAGE_DELAY: 160,
     REQS_PER_SECOND: 60,
-    MAX_SECONDS: 10,
+    MAX_SECONDS: 120,
     CONCURRENCY: 1, // 2
     //API_SERVER_HOST: 'localhost',
     //API_SERVER_PORT: 8004,
@@ -74,7 +74,7 @@ let chatClient1 = new Chat21Client(
     appId: config.APPID,
     MQTTendpoint: config.MQTT_ENDPOINT,
     APIendpoint: config.API_ENDPOINT,
-    log: true
+    log: false
 });
 
 let chatClient2 = new Chat21Client(
@@ -105,6 +105,7 @@ let group_name; // got in before()
 
 describe("Performance Test", function() {
     before(function(done) {
+        this.timeout(5000);
         chatClient1.connect(user1.userid, user1.token, () => {
             console.log("chatClient1 Connected...");
             chatClient2.connect(user2.userid, user2.token, async () => {
@@ -131,6 +132,7 @@ describe("Performance Test", function() {
                         // console.log("before() - Group created:", result.group.name);
                         chatClient1.groupData(group_id, (err, json) => {
                             // console.log("before() - Verified group updated:", group_id, "data:", json);
+                            console.log("groupData:", json)
                             assert(err == null);
                             assert(json != null);
                             assert(json.success == true);
@@ -140,7 +142,7 @@ describe("Performance Test", function() {
                             assert(json.result.members != null);
                             assert(json.result.members[user1.userid] != null);
                             assert(json.result.members[user2.userid] != null);
-                            // console.log("before() - assertions ok -> done()");
+                            console.log("before() - assertions ok -> done()");
                             done();
                         });
                     }
@@ -158,6 +160,7 @@ describe("Performance Test", function() {
 	});
 
     it("Benchmark for direct messages", function(done) {
+        console.log("..................::::::::::::::::")
         this.timeout(1000 * 70);
         async function benchmark() {
             console.log("\n\n*********************************************");
