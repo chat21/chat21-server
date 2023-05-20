@@ -1,6 +1,6 @@
 {
   "name": "@chat21/chat21-server",
-  "version": "0.2.34",
+  "version": "0.2.40",
   "description": "Chat21 AMQP/MQTT messages dispatcher",
   "dependencies": {
     "aedes": "^0.40.1",
@@ -13,10 +13,10 @@
     "mongodb": "^3.5.6",
     "mongoose": "^5.9.10",
     "mqtt": "^4.3.7",
-    "redis": "^4.0.0",
     "rhea": "^1.0.20",
     "uuid": "^8.3.2",
-    "websocket-stream": "^5.5.2"
+    "websocket-stream": "^5.5.2",
+    "redis": "^3.1.2"
   },
   "devDependencies": {
     "@chat21/chat21-http-server": "^0.2.15",

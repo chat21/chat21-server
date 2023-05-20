@@ -30,6 +30,8 @@ class Webhooks {
    * @param {Object} options.webhook_endpoints Optional. This weebhook endpoint.
    * @param {Object} options.queue_name Optional. The queue name. Defaults to 'weebhooks'.
    * @param {Object} options.webhook_events Optional. The active webhook events.
+   * @param {Object} options.durable_enabled Optional. If true queues are declared as durable: true.
+   * @param {Object} options.prefetch_messages Optional. How many prefecth from queue.
    * @param {Object} options.logger Optional. The logger.
    * 
    */
@@ -71,7 +73,9 @@ class Webhooks {
     this.channel = null;
     this.pubChannel = null;
     this.offlinePubQueue = [];
-    this.enabled = true
+    this.enabled = true;
+    this.durable_enabled = options.durable_enabled || true;
+    this.prefetch_messages = options.prefetch_messages || 10;
     this.queue = options.queue_name || 'webhooks';
     const DEFAULT_WEBHOOK_EVENTS = [
       MessageConstants.WEBHOOK_EVENTS.MESSAGE_SENT,
@@ -632,18 +636,18 @@ class Webhooks {
       ch.on("close", function () {
         logger.debug("[Webooks.AMQP] channel closed");
       });
-      ch.prefetch(10);
+      ch.prefetch(this.prefetch_messages);
       ch.assertExchange(this.exchange, 'topic', {
-        durable: true
+        durable: this.durable_enabled
       });
-      ch.assertQueue(this.queue, { durable: true }, (err, _ok) => {
+      ch.assertQueue(this.queue, { durable: this.durable_enabled }, (err, _ok) => {
         if (this.closeOnErr(err)) return;
         logger.debug("subscribed to _ok.queue: " + _ok.queue);
         this.subscribeTo(this.topic_webhook_message_deliver, ch, _ok.queue)
         this.subscribeTo(this.topic_webhook_message_update, ch, _ok.queue)
         this.subscribeTo(this.topic_webhook_conversation_archived, ch, _ok.queue)
         this.subscribeTo(this.topic_webhook_presence, ch, _ok.queue)
-        ch.consume(this.queue, this.processMsg.bind(this), { noAck: false });
+        ch.consume(this.queue, this.processMsg.bind(this), { noAck: true });
       });
     });
   }
@@ -662,15 +666,17 @@ class Webhooks {
   processMsg(msg) {
     this.work(msg, (ok) => {
       logger.debug("Webhooks.worked.");
-      try {
-        if (ok)
-          this.channel.ack(msg);
-        else
-          this.channel.reject(msg, true);
-      } catch (e) {
-        logger.debug("gin2:", e)
-        this.closeOnErr(e);
-      }
+      // try {
+      //   if (ok) {
+      //     this.channel.ack(msg);
+      //   }
+      //   else {
+      //     this.channel.reject(msg, true);
+      //   }
+      // } catch (e) {
+      //   logger.debug("gin2:", e)
+      //   this.closeOnErr(e);
+      // }
     });
   }
 
@@ -759,7 +765,7 @@ class Webhooks {
   publish(exchange, routingKey, content, callback) {
     try {
       logger.debug("Webooks.TRYING TO PUB...")
-      this.pubChannel.publish(exchange, routingKey, content, { persistent: true }, (err, ok) => {
+      this.pubChannel.publish(exchange, routingKey, content, { persistent: false }, (err, ok) => {
           if (err) {
             logger.error("[Webooks.AMQP] publish ERROR:", err);
             this.offlinePubQueue.push([exchange, routingKey, content]);

@@ -6,7 +6,7 @@ var should = require('should');
 const { send } = require('process');
 const { v4: uuidv4 } = require('uuid');
 const { Chat21Client } = require('../mqttclient/chat21client.js');
-const { Console } = require('console');
+// const { Console } = require('console');
 
 // *******************************
 // ******** MQTT SECTION *********
@@ -24,19 +24,19 @@ const { Console } = require('console');
 let config = {
     EXPECTED_AVG_DIRECT_MESSAGE_DELAY: 160,
     EXPECTED_AVG_GROUP_MESSAGE_DELAY: 160,
-    REQS_PER_SECOND: 60,
-    MAX_SECONDS: 120,
+    REQS_PER_SECOND: 2,
+    MAX_SECONDS: 10,
     CONCURRENCY: 1, // 2
     //API_SERVER_HOST: 'localhost',
     //API_SERVER_PORT: 8004,
     // MQTT_ENDPOINT: 'wss://console.native.tiledesk.com/ws',
     // API_ENDPOINT: 'https://console.native.tiledesk.com/chatapi/api',
     // LOCAL
-    //MQTT_ENDPOINT: 'ws://localhost:15675/ws',
-    //API_ENDPOINT: 'http://localhost:8004/api',
+    MQTT_ENDPOINT: 'ws://localhost:15675/ws',
+    API_ENDPOINT: 'http://localhost:8004/api',
     // REMOTE
-    MQTT_ENDPOINT: 'ws://34.106.191.96/mqws/ws',
-    API_ENDPOINT: 'http://34.106.191.96/chatapi/api',
+    //MQTT_ENDPOINT: 'ws://34.106.191.96/mqws/ws',
+    //API_ENDPOINT: 'http://34.106.191.96/chatapi/api',
     APPID: 'tilechat'
 }
 
@@ -105,7 +105,7 @@ let group_name; // got in before()
 
 describe("Performance Test", function() {
     before(function(done) {
-        this.timeout(5000);
+        this.timeout(20000);
         chatClient1.connect(user1.userid, user1.token, () => {
             console.log("chatClient1 Connected...");
             chatClient2.connect(user2.userid, user2.token, async () => {

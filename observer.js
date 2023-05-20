@@ -9,14 +9,16 @@ const bodyParser = require('body-parser');
 var url = require('url');
 const { Webhooks } = require("./webhooks");
 const { Console } = require("console");
+const { TdCache } = require('./TdCache.js');
 const app = express();
 app.use(bodyParser.json());
 const logger = require('./tiledesk-logger').logger;
-console.log("Setting log level:", process.env.LOG_LEVEL);
+console.log("(Observer) Log level:", process.env.LOG_LEVEL);
 logger.setLog(process.env.LOG_LEVEL);
 var amqpConn = null;
 let exchange;
 let app_id;
+let tdcache;
 let topic_outgoing;
 let topic_update;
 let topic_archive;
@@ -30,6 +32,8 @@ var chatdb;
 let webhooks;
 let webhook_enabled;
 let presence_enabled;
+let durable_enabled;
+let redis_enabled = false;
 let autoRestart;
 
 if (webhook_enabled == undefined || webhook_enabled === "true" || webhook_enabled === true ) {
@@ -38,7 +42,6 @@ if (webhook_enabled == undefined || webhook_enabled === "true" || webhook_enable
 else {
   webhook_enabled = false;
 }
-logger.info("(Observer) webhook_enabled: " + webhook_enabled);
 
 let active_queues = {
   'messages': true,
@@ -89,6 +92,10 @@ function setPresenceEnabled(enabled) {
   presence_enabled = enabled;
 }
 
+function setDurableEnabled(enabled) {
+  durable_enabled = enabled;
+}
+
 function setActiveQueues(queues) {
   logger.log("active queues setting", queues)
   active_queues = queues;
@@ -122,7 +129,8 @@ function startMQ(resolve, reject) {
   } else {
       autoRestart=false;
   }
-  logger.debug("Observer. Connecting to RabbitMQ...")
+
+  logger.debug("(Observer) Connecting to RabbitMQ...")
   amqp.connect(rabbitmq_uri, (err, conn) => {
       if (err) {
           logger.error("[Observer AMQP]", err);
@@ -197,7 +205,7 @@ function publish(exchange, routingKey, content, callback) {
     return;
   }
   try {
-    pubChannel.publish(exchange, routingKey, content, { persistent: true },
+    pubChannel.publish(exchange, routingKey, content, { persistent: false },
       function (err, ok) {
         if (err) {
           logger.error("[AMQP] publish error:", err);
@@ -229,14 +237,14 @@ function startWorker() {
     ch.on("close", function () {
       logger.debug("[AMQP] channel closed");
     });
-    logger.info("Prefetch messages:", prefetch_messages);
+    logger.info("(Observer) Prefetch messages:", prefetch_messages);
     ch.prefetch(prefetch_messages);
     ch.assertExchange(exchange, 'topic', {
-      durable: true
+      durable: durable_enabled
     });
-    logger.info("enabling queues", active_queues);
+    logger.info("(Observer) Enabling queues:", active_queues);
     if (active_queues['messages']) {
-      ch.assertQueue("messages", { durable: true }, function (err, _ok) {
+      ch.assertQueue("messages", { durable: durable_enabled }, function (err, _ok) {
         if (closeOnErr(err)) return;
         let queue = _ok.queue;
         logger.log("asserted queue:", queue);
@@ -261,18 +269,18 @@ function startWorker() {
         // if (subscription_topics['delivered']) {
           subscribeTo(topic_delivered, ch, queue, exchange)
         // }
-        ch.consume(queue, processMsg, { noAck: false });
+        ch.consume(queue, processMsg, { noAck: true });
       });
     }
     if (active_queues['persist']) {
-      ch.assertQueue("persist", { durable: true }, function (err, _ok) {
+      ch.assertQueue("persist", { durable: durable_enabled }, function (err, _ok) {
         if (closeOnErr(err)) return;
         let queue = _ok.queue;
         logger.log("asserted queue:", queue);
         // if (subscription_topics['persist']) {
           subscribeTo(topic_persist, ch, queue, exchange)
         // }
-        ch.consume(queue, processMsg, { noAck: false });
+        ch.consume(queue, processMsg, { noAck: true });
       });
     }
   });
@@ -297,14 +305,13 @@ function processMsg(msg) {
   }
   work(msg, function (ok) {
     try {
-      if (ok) {
-        // logger.debug("channel.ack(msg)");
-        channel.ack(msg);
-      }
-      else {
-        logger.debug("channel.reject(msg, true)");
-        channel.reject(msg, true);
-      }
+      // if (ok) {
+      //   channel.ack(msg);
+      // }
+      // else {
+      //   logger.debug("channel.reject(msg, true)");
+      //   channel.reject(msg, true);
+      // }
     } catch (e) {
       logger.debug("processMsgwork error ", e)
       closeOnErr(e);
@@ -553,21 +560,65 @@ function sendMessageToGroupMembers(outgoing_message, group, app_id, callback) {
   callback(true);
 }
 
-let groups = {};
+// let groups = {};
 function getGroup(group_id, callback) {
-  // if (groups[group_id]) { // REDIS?
-  //   logger.log("--GROUP", group_id, "FOUND!");
-  //   callback(null, groups[group_id]);
-  // }
-  // else {
-  //   logger.log("--GROUP", group_id, "NOT FOUND! QUERYING DB...");
-    chatdb.getGroup(group_id, function(err, group) {
-      // if (!err) {
-      //   groups[group_id] = group;
-      // }
-      callback(err, group);
+  console.log("getGroup:", group_id)
+  groupFromCache(group_id, (group) => {
+    console.log("group from cache?", group);
+    if (group) {
+      logger.log("--GROUP", group_id, "FOUND IN CACHE:", group);
+      callback(null, group);
+    }
+    else {
+      logger.log("--GROUP", group_id, "NO CACHE! GET FROM DB...");
+      chatdb.getGroup(group_id, function(err, group) {
+        if (!err) {
+          saveGroupInCache(group, group_id, () => {});
+        }
+        console.log("group from db:", group);
+        callback(err, group);
+      });
+    }
+  });
+}
+
+function groupFromCache(group_id, callback) {
+  console.log("groupFromCache() group_id:", group_id)
+  if (redis_enabled) {
+    const group_key = "chat21:messages:groups:" + group_id;
+    console.log("group key", group_key)
+    tdcache.client.get(group_key, (err, group) => {
+      if (err) {
+        console.error("Error during getGroup():", err);
+        callback(null);
+      }
+      else {
+        if (callback) {
+          console.log("got by group key:", group);
+          callback(JSON.parse(group));
+        }
+      }
     });
-  // }
+  }
+  else {
+    console.log("No redis.");
+    callback(null);
+  }
+}
+
+async function saveGroupInCache(group, group_id, callback) {
+  if (redis_enabled) {
+    const group_key = "chat21:messages:groups:" + group_id;
+    await tdcache.set(
+      group_key,
+      JSON.stringify(group),
+      {EX: 86400} // 1 day
+    );
+    callback();
+  }
+  else {
+    callback();
+  }
 }
 
 function isGroupMessage(message) {
@@ -1034,6 +1085,9 @@ async function startServer(config) {
   if (!config) {
     config = {}
   }
+  console.log("(Observer) webhook_enabled: " + webhook_enabled);
+  logger.debug("(Observer) webhook_enabled: " + webhook_enabled);
+  logger.debug("(Observer) presence_enabled: " + presence_enabled);
 
   app_id = config.app_id || "tilechat";
 
@@ -1073,10 +1127,29 @@ async function startServer(config) {
   }
 
   var db;
-  logger.debug("[Observer] connecting to mongodb:", mongouri);
+  logger.debug("(Observer) connecting to mongodb:", mongouri);
   var client = await mongodb.MongoClient.connect(mongouri, { useNewUrlParser: true, useUnifiedTopology: true });
   db = client.db();
-  logger.debug("Mongodb connected.");
+  logger.debug("(Observer) Mongodb connected.");
+
+  if (config.redis_enabled && (config.redis_enabled === "true" || config.redis_enabled === true) ) {
+    redis_enabled = true;
+  } else {
+    redis_enabled = false;
+  }
+  if (redis_enabled && config.redis_host && config.redis_port) {
+    logger.info("(Observer) Redis enabled.");
+    tdcache = new TdCache({
+      host: config.redis_host,
+      port: config.redis_port,
+      password: config.redis_password
+    });
+    await connectRedis();
+    logger.info("(Observer) Redis connected.");
+  }
+  else {
+    logger.info("(Observer) Redis disabled.");
+  }
 
   // const index_to_drop_name = 'timelineOf_1_conversWith_1'
   // if (process.env.UNIQUE_CONVERSATIONS_INDEX) {
@@ -1135,23 +1208,51 @@ async function startServer(config) {
 
   //chatdb = new ChatDB({database: db, UNIQUE_CONVERSATIONS_INDEX: process.env.UNIQUE_CONVERSATIONS_INDEX})
   chatdb = new ChatDB({database: db});
-  logger.info("Starting webhooks...");
   try {
-    webhooks = new Webhooks({appId: app_id, RABBITMQ_URI: rabbitmq_uri, exchange: exchange, webhook_endpoints: webhook_endpoints_array, webhook_events: webhook_events_array, queue_name: 'webhooks', logger: logger});
-    webhooks.enabled = webhook_enabled;
-    await webhooks.start();
+    if (webhook_enabled) {
+      logger.info("(Observer) Starting webhooks...");
+      webhooks = new Webhooks({appId: app_id, RABBITMQ_URI: rabbitmq_uri, exchange: exchange, webhook_endpoints: webhook_endpoints_array, webhook_events: webhook_events_array, queue_name: 'webhooks', durable_enabled: durable_enabled, prefetch_messages: prefetch_messages, logger: logger});
+      webhooks.enabled = true;
+      await webhooks.start();
+    }
+    else {
+      logger.info("(Observer) Webhooks disabled.");
+    }
   }
   catch(error) {
     logger.error("An error occurred initializing webhooks:", error)
   }
-  logger.debug('Starting AMQP connection....');
+
+  if (presence_enabled) {
+    logger.info("(Observer) Presence enabled.");
+  }
+  else {
+    logger.info("(Observer) Presence disabled.");
+  }
+
+  logger.debug('(Observer) Starting AMQP connection....');
   var amqpConnection = await start();
   logger.debug("[Observer.AMQP] connected.");
   logger.debug("Observer started.");
+}
+
+async function connectRedis() {
+  if (tdcache) {
+    try {
+      console.log("(Observer) Connecting Redis...");
+      await tdcache.connect();
+    }
+    catch (error) {
+      tdcache = null;
+      console.error("(Observer) Redis connection error:", error);
+      process.exit(1);
+    }
+  }
+  return;
 }
 
 function stopServer(callback) {
   amqpConn.close(callback);
 }
 
-module.exports = {startServer: startServer, stopServer: stopServer, setAutoRestart: setAutoRestart, getWebhooks: getWebhooks, setWebHookEndpoints: setWebHookEndpoints, setWebHookEvents: setWebHookEvents, setWebHookEnabled: setWebHookEnabled, setActiveQueues: setActiveQueues, setPrefetchMessages: setPrefetchMessages, setPresenceEnabled: setPresenceEnabled, logger: logger };
+module.exports = {startServer: startServer, stopServer: stopServer, setAutoRestart: setAutoRestart, getWebhooks: getWebhooks, setWebHookEndpoints: setWebHookEndpoints, setWebHookEvents: setWebHookEvents, setWebHookEnabled: setWebHookEnabled, setActiveQueues: setActiveQueues, setPrefetchMessages: setPrefetchMessages, setPresenceEnabled: setPresenceEnabled, setDurableEnabled: setDurableEnabled, logger: logger };

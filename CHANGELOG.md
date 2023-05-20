@@ -4,6 +4,47 @@
 available on:
  ▶️ https://www.npmjs.com/package/@chat21/chat21-server
 
+## v0.2.40
+- BUG FIX: Webhooks now use PREFETCH_MESSAGES setup from .env
+- Introduced DURABLE_ENABLED: true|false in .env
+- persistent: false
+- Improved perfomance management. To better scale now you can:
+
+- Create an instance to only process webhooks queue:
+
+> ACTIVE_QUEUES=none PRESENCE_ENABLED=false WEBHOOK_ENABLED=true node chatservermq.js
+
+- Create an instance to only process "messages" queues (there are many):
+
+> ACTIVE_QUEUES=messages PRESENCE_ENABLED=false WEBHOOK_ENABLED=false node chatservermq.js
+
+- Create an instance to only process 'persist' queue:
+
+> ACTIVE_QUEUES=persist PRESENCE_ENABLED=false WEBHOOK_ENABLED=false node chatservermq.js
+
+- Create an instance to only process presence:
+
+> ACTIVE_QUEUES=none PRESENCE_ENABLED=true WEBHOOK_ENABLED=false node chatservermq.js
+
+Or everything in a single process:
+
+> ACTIVE_QUEUES=messages,persist PRESENCE_ENABLED=true WEBHOOK_ENABLED=true node chatservermq.js
+
+## v0.2.39
+- durable: false on every queue
+
+## v0.2.38
+- persistent: true in publish AGAIN
+
+## v0.2.37
+- noAck: true
+
+## v0.2.36
+- persistent: false in publish NOW ONLINE
+
+## v0.2.35
+- persistent: false in publish
+
 ## v0.2.34
 - Adds log info for Prefetch messages
 - Adds support to disable Presence

@@ -1,1 +1,1 @@
-LOG_LEVEL=INFO node chatservermq.js ALL
+LOG_LEVEL=DEBUG node chatservermq.js
