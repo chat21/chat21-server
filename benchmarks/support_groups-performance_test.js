@@ -113,8 +113,8 @@ describe("Performance Test", function() {
             console.log("chatClient1 Connected...");
             chatClient2.connect(user2.userid, user2.token, async () => {
                 console.log("chatClient2 Connected...");
-                group_id = "support-group-" + uuidv4().replace("-", "");
-                group_name = "benchmarks group " + group_id;
+                group_id = "support-group-" + "64690469599137001a6dc6f5-" + uuidv4().replace(/-+/g, "");
+                group_name = "benchmarks group: " + group_id;
                 const group_members = {}
                 group_members['USER2'] = 1;
                 group_members['USER3'] = 1;
@@ -202,7 +202,7 @@ describe("Performance Test", function() {
                     let recipient_id = group_id;
                     let recipient_fullname = group_name;
                     sendMessage(i, c, recipient_id, recipient_fullname, async function(latency, iteration, concurrent_iteration) {
-                        console.log("Group", i, "- latency:", latency.latencyMs);
+                        console.log("Group", i, "- latency/meanLatency:", latency.latencyMs + "/" + Math.round(latency.meanLatencyMs));
                         if (iteration == total_iterations - 1 && concurrent_iteration == config.CONCURRENCY - 1) {
                             endCallback(latency);
                             console.log("'Group' benchmark end.");
@@ -241,7 +241,7 @@ let total_messages = 0;
 let total_delay = 0;
 function sendMessage(iteration, concurrent_iteration, recipient_id, recipient_fullname, callback) {
     let starttime = Date.now();
-    const sent_message = uuidv4();
+    const sent_message = "Performance-test-" + uuidv4();
     let handler = chatClient2.onMessageAdded((message, topic) => {
         // console.log("user2 message added:", message.text);
         if (
