@@ -198,9 +198,9 @@ describe("Performance Test", function() {
             console.log("Group - Expected TOTAL ITERATIONS =", total_iterations);
             console.log("Group - Running benchmark...");
             for (let i = 0; i < total_iterations; i++) {
-                // console.log("GROUP i:", i)
+                console.log("GROUP i:", i)
                 for (let c = 0; c < config.CONCURRENCY; c++) {
-                    // console.log("c", c)
+                    console.log("c", c)
                     let recipient_id = group_id;
                     let recipient_fullname = group_name;
                     sendMessage(i, c, recipient_id, recipient_fullname, async function(latency, iteration, concurrent_iteration) {
@@ -284,8 +284,10 @@ function sendMessage(iteration, concurrent_iteration, recipient_id, recipient_fu
         recipient_id, //user2.userid, // recipient
         recipient_fullname, //user2.fullname, // recipient fullname
         user1.fullname, // sender fullname
-        null,
-        null,
+        { // attributes
+            projectId: "64690469599137001a6dc6f5"
+        },
+        null, // metadata
         recipient_id.startsWith("support-group-") ? 'group' : 'direct', //user2.userid.startsWith("group-") ? 'group' : 'direct',
         (err, msg) => {
             if (err) {
