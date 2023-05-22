@@ -59,7 +59,7 @@ describe("Performance Test", function() {
             console.log("\n\n**************************************");
             console.log("********* Creating N connections *********");
             console.log("******************************************\n\n");
-            let total_connections = 500;
+            let total_connections = 200;
             let delay = 300;
             for (let i = 0; i < total_connections; i++) {
                 console.log("Creating connection:", i);

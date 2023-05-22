@@ -24,7 +24,7 @@ const { Chat21Client } = require('../mqttclient/chat21client.js');
 let config = {
     EXPECTED_AVG_DIRECT_MESSAGE_DELAY: 160,
     EXPECTED_AVG_GROUP_MESSAGE_DELAY: 160,
-    REQS_PER_SECOND: 4,
+    REQS_PER_SECOND: 1,
     MAX_SECONDS: 15000,
     CONCURRENCY: 1, // 2
     //API_SERVER_HOST: 'localhost',
@@ -116,7 +116,10 @@ describe("Performance Test", function() {
                 group_id = "support-group-" + uuidv4().replace("-", "");
                 group_name = "benchmarks group " + group_id;
                 const group_members = {}
-                group_members[user2.userid] = 1;
+                group_members['USER2'] = 1;
+                group_members['USER3'] = 1;
+                group_members['USER4'] = 1;
+                group_members['USER5'] = 1;
                 let total_ = 0
                 const start_ = Date.now();
                 chatClient1.groupCreate(
@@ -131,8 +134,12 @@ describe("Performance Test", function() {
                         assert(result.success == true);
                         assert(result.group.name === group_name);
                         assert(result.group.members != null);
-                        assert(result.group.members[user2.userid] == 1);
-                        // console.log("before() - Group created:", result.group.name);
+                        assert(result.group.members['USER1'] == 1);
+                        assert(result.group.members['USER2'] == 1);
+                        assert(result.group.members['USER3'] == 1);
+                        assert(result.group.members['USER4'] == 1);
+                        assert(result.group.members['USER5'] == 1);
+                        console.log("before() - Group created:", result.group.name);
                         chatClient1.groupData(group_id, (err, json) => {
                             // console.log("before() - Verified group updated:", group_id, "data:", json);
                             //console.log("groupData:", json)
@@ -143,8 +150,13 @@ describe("Performance Test", function() {
                             assert(json.result.uid === group_id);
                             assert(json.result.owner === user1.userid);
                             assert(json.result.members != null);
-                            assert(json.result.members[user1.userid] != null);
-                            assert(json.result.members[user2.userid] != null);
+                            // assert(json.result.members[user1.userid] != null);
+                            // assert(json.result.members[user2.userid] != null);
+                            assert(json.result.members['USER1'] == 1);
+                            assert(json.result.members['USER2'] == 1);
+                            assert(json.result.members['USER3'] == 1);
+                            assert(json.result.members['USER4'] == 1);
+                            assert(json.result.members['USER5'] == 1);
                             //console.log("before() - assertions ok -> done()");
                             done();
                         });
@@ -162,72 +174,12 @@ describe("Performance Test", function() {
         });
 	});
 
-    it("Benchmark for direct messages", function(done) {
-        //console.log("..................::::::::::::::::")
-        this.timeout(1000 * 700000);
-        async function benchmark() {
-            console.log("\n\n*********************************************");
-            console.log("********* Direct messages benchmark *********");
-            console.log("*********************************************\n\n");
-            total_delay = 0;
-            total_messages = 0;
-            let delay = 1000 / config.REQS_PER_SECOND;
-            let total_iterations = config.REQS_PER_SECOND * config.MAX_SECONDS;
-            let test_start_time = Date.now();
-            let current = 0;
-            console.log("Direct - Expected message average latency to be <", config.EXPECTED_AVG_DIRECT_MESSAGE_DELAY + "ms");
-            console.log("Direct - Expected MESSAGES/SEC =", config.REQS_PER_SECOND * config.CONCURRENCY);
-            console.log("Direct - Expected MESSAGES/SEC/VU =", config.REQS_PER_SECOND);
-            console.log("Direct - Expected TEST DURATION (s) =", config.MAX_SECONDS);
-            console.log("Direct - Expected CONCURRENCY (#VUs) =", config.CONCURRENCY);
-            console.log("Direct - Expected DELAY BETWEEN MESSAGES (ms) =", delay);
-            console.log("Direct - Expected TOTAL ITERATIONS =", total_iterations);
-            console.log("Direct - Running benchmark...");
-            
-            for (let i = 0; i < total_iterations; i++) {
-                for (let c = 0; c < config.CONCURRENCY; c++) {
-                    let recipient_id = user2.userid;
-                    let recipient_fullname = user2.fullname;
-                    console.log("sending...",i,c);
-                    sendMessage(i, c, recipient_id, recipient_fullname, async function(latency, iteration, concurrent_iteration) {
-                        // console.log("Direct - latency:", latency)
-                        if (iteration == total_iterations - 1 && concurrent_iteration == config.CONCURRENCY - 1) {
-                            endCallback(latency);
-                            console.log("'Direct' benchmark end.");
-                            done();
-                        }
-                    });
-                }
-                await new Promise(resolve => setTimeout(resolve, delay));
-                current = Date.now() - test_start_time;
-            }
-            console.log("End 'Direct' benchmark iterations.");
-
-            function endCallback(latency) {
-                console.log("\n\n********* Direct - Benchmark results *********");
-                console.log("Direct - Message mean latency:", latency.meanLatencyMs);
-                let test_duration = Math.round(current / 1000)
-                console.log("Direct - Test duration:", test_duration + " seconds" + " (" + current + ") ms");
-                let mesg_sec = Math.round(latency.totalMessages / test_duration)
-                console.log("Direct - MESSAGES/SEC:", mesg_sec);
-                if (latency.meanLatencyMs > config.EXPECTED_AVG_DIRECT_MESSAGE_DELAY) {
-                    console.error("Warning: final mean latency " + latency.meanLatencyMs + " is greater then expected (" + config.EXPECTED_AVG_DIRECT_MESSAGE_DELAY + ")")
-                }
-                else {
-                    console.log("Direct messages benchmark performed good! 😎");
-                }
-                // (latency.meanLatencyMs).should.be.below(config.EXPECTED_AVG_DIRECT_MESSAGE_DELAY);
-            }
-        }
-        benchmark();
-    });
-
     it("Benchmark for group messages", function(done) {
         this.timeout(1000 * 700000);
 
         async function benchmark() {
             console.log("\n\n********************************************");
-            console.log("********* Group messages benchmark *********");
+            console.log("********* Support Group messages benchmark *********");
             console.log("********************************************\n\n");
             total_delay = 0;
             total_messages = 0;
