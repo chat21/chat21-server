@@ -765,7 +765,7 @@ class Webhooks {
   publish(exchange, routingKey, content, callback) {
     try {
       logger.debug("Webooks.TRYING TO PUB...")
-      this.pubChannel.publish(exchange, routingKey, content, { persistent: false }, (err, ok) => {
+      this.pubChannel.publish(exchange, routingKey, content, { persistent: true }, (err, ok) => {
           if (err) {
             logger.error("[Webooks.AMQP] publish ERROR:", err);
             this.offlinePubQueue.push([exchange, routingKey, content]);

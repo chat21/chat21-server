@@ -4,6 +4,21 @@
 available on:
  ▶️ https://www.npmjs.com/package/@chat21/chat21-server
 
+## v0.2.45
+- DISABLED ch.prefetch(prefetch_messages);
+
+## v0.2.44
+- presence fully disabled
+
+## v0.2.43
+- amqplib updated v0.8.0 => v0.10.3
+
+## v0.2.42
+- persistent: true on publish()
+
+## v0.2.41
+- Refactored testing (webhooks tests separated from conversations tests)
+
 ## v0.2.40
 - BUG FIX: Webhooks now use PREFETCH_MESSAGES setup from .env
 - Introduced DURABLE_ENABLED: true|false in .env

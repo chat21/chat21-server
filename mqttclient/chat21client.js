@@ -915,7 +915,6 @@ class Chat21Client {
             }
         }
         else {
-            console.log("Axios call...")
             axios(
                 {
                   url: options.url,

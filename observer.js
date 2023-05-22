@@ -205,7 +205,7 @@ function publish(exchange, routingKey, content, callback) {
     return;
   }
   try {
-    pubChannel.publish(exchange, routingKey, content, { persistent: false },
+    pubChannel.publish(exchange, routingKey, content, { persistent: true },
       function (err, ok) {
         if (err) {
           logger.error("[AMQP] publish error:", err);
@@ -238,7 +238,7 @@ function startWorker() {
       logger.debug("[AMQP] channel closed");
     });
     logger.info("(Observer) Prefetch messages:", prefetch_messages);
-    ch.prefetch(prefetch_messages);
+    // ch.prefetch(prefetch_messages);
     ch.assertExchange(exchange, 'topic', {
       durable: durable_enabled
     });
@@ -361,54 +361,58 @@ function work(msg, callback) {
 // ***** TOPIC HANDLERS ******/
 
 function process_presence(topic, message_string, callback) {
-  callback(true);
-  if (!presence_enabled) {
-    logger.log("Presence disabled");
-    return;
-  }
-  logger.debug("> got PRESENCE testament", message_string, " on topic", topic);
-  
-  if (!webhook_enabled) {
-    logger.debug("WEBHOOKS DISABLED. Skipping presence notification");
-    return;
-  }
-  // examples:
-  // {"disconnected":true}  on topic apps.tilechat.users.6d011n62ir097c0143cc42dc.presence.8d8ecd4e-3cb9-4ff6-a36e-7b22459cbebf
-  // {"connected":true}  on topic apps.tilechat.users.6d011n62ir097c0143cc42dc.presence.e80e73f1-4934-4ba9-8cdc-81051d518a90
-  var topic_parts = topic.split(".");
-  const app_id = topic_parts[1];
-  const user_id = topic_parts[3]
-  const client_id = topic_parts[5];
-  let presence_payload = JSON.parse(message_string);
-  logger.debug("presence_payload:", presence_payload);
-  const presence_status = presence_payload.connected ? "online" : "offline";
-  logger.debug("presence_status:", presence_status);
-  // presence_payload['temp_webhook_endpoints'] = [process.env.PRESENCE_WEBHOOK_ENDPOINT];
-  // presence_payload['user_id'] = user_id;
-  // presence_payload['app_id'] = app_id;
-  // presence_payload['client_id'] = client_id;
-  presence_event = {
-    "event_type": "presence-change",
-    "presence": presence_status,
-    "createdAt": new Date().getTime(),
-    "app_id": app_id,
-    "user_id": user_id,
-    "data": true,
-    temp_webhook_endpoints: webhook_endpoints_array
-  }
-  const presence_event_string = JSON.stringify(presence_event);
-  const presence_webhook_topic = `observer.webhook.apps.${app_id}.presence`;
-  logger.debug(">>> NOW PUBLISHING PRESENCE. TOPIC: " + presence_webhook_topic + ", EVENT PAYLOAD ", presence_event_string);
-  publish(exchange, presence_webhook_topic, Buffer.from(presence_event_string), function(err) {
-    logger.debug(">>> PUBLISHED PRESENCE!" + presence_webhook_topic + " WITH PATCH: " + presence_event_string)
-    if (err) {
-      logger.error("publish presence error:", err);
-    }
-    else {
-      logger.ldebugog("PRESENCE UPDATE PUBLISHED");
-    }
-  });
+  // temp disabling
 }
+
+// function process_presence(topic, message_string, callback) {
+//   callback(true);
+//   if (!presence_enabled) {
+//     logger.log("Presence disabled");
+//     return;
+//   }
+//   logger.debug("> got PRESENCE testament", message_string, " on topic", topic);
+  
+//   if (!webhook_enabled) {
+//     logger.debug("WEBHOOKS DISABLED. Skipping presence notification");
+//     return;
+//   }
+//   // examples:
+//   // {"disconnected":true}  on topic apps.tilechat.users.6d011n62ir097c0143cc42dc.presence.8d8ecd4e-3cb9-4ff6-a36e-7b22459cbebf
+//   // {"connected":true}  on topic apps.tilechat.users.6d011n62ir097c0143cc42dc.presence.e80e73f1-4934-4ba9-8cdc-81051d518a90
+//   var topic_parts = topic.split(".");
+//   const app_id = topic_parts[1];
+//   const user_id = topic_parts[3]
+//   const client_id = topic_parts[5];
+//   let presence_payload = JSON.parse(message_string);
+//   logger.debug("presence_payload:", presence_payload);
+//   const presence_status = presence_payload.connected ? "online" : "offline";
+//   logger.debug("presence_status:", presence_status);
+//   // presence_payload['temp_webhook_endpoints'] = [process.env.PRESENCE_WEBHOOK_ENDPOINT];
+//   // presence_payload['user_id'] = user_id;
+//   // presence_payload['app_id'] = app_id;
+//   // presence_payload['client_id'] = client_id;
+//   presence_event = {
+//     "event_type": "presence-change",
+//     "presence": presence_status,
+//     "createdAt": new Date().getTime(),
+//     "app_id": app_id,
+//     "user_id": user_id,
+//     "data": true,
+//     temp_webhook_endpoints: webhook_endpoints_array
+//   }
+//   const presence_event_string = JSON.stringify(presence_event);
+//   const presence_webhook_topic = `observer.webhook.apps.${app_id}.presence`;
+//   logger.debug(">>> NOW PUBLISHING PRESENCE. TOPIC: " + presence_webhook_topic + ", EVENT PAYLOAD ", presence_event_string);
+//   publish(exchange, presence_webhook_topic, Buffer.from(presence_event_string), function(err) {
+//     logger.debug(">>> PUBLISHED PRESENCE!" + presence_webhook_topic + " WITH PATCH: " + presence_event_string)
+//     if (err) {
+//       logger.error("publish presence error:", err);
+//     }
+//     else {
+//       logger.ldebugog("PRESENCE UPDATE PUBLISHED");
+//     }
+//   });
+// }
 
 function process_outgoing(topic, message_string, callback) {
   callback(true);
@@ -562,15 +566,15 @@ function sendMessageToGroupMembers(outgoing_message, group, app_id, callback) {
 
 // let groups = {};
 function getGroup(group_id, callback) {
-  console.log("getGroup:", group_id)
+  console.log("**** getGroup:", group_id)
   groupFromCache(group_id, (group) => {
     console.log("group from cache?", group);
     if (group) {
-      logger.log("--GROUP", group_id, "FOUND IN CACHE:", group);
+      console.log("--GROUP", group_id, "FOUND IN CACHE:", group);
       callback(null, group);
     }
     else {
-      logger.log("--GROUP", group_id, "NO CACHE! GET FROM DB...");
+      console.log("--GROUP", group_id, "NO CACHE! GET FROM DB...");
       chatdb.getGroup(group_id, function(err, group) {
         if (!err) {
           saveGroupInCache(group, group_id, () => {});
@@ -594,7 +598,7 @@ function groupFromCache(group_id, callback) {
       }
       else {
         if (callback) {
-          console.log("got by group key:", group);
+          console.log("got group by key:", group);
           callback(JSON.parse(group));
         }
       }

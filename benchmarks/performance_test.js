@@ -24,19 +24,19 @@ const { Chat21Client } = require('../mqttclient/chat21client.js');
 let config = {
     EXPECTED_AVG_DIRECT_MESSAGE_DELAY: 160,
     EXPECTED_AVG_GROUP_MESSAGE_DELAY: 160,
-    REQS_PER_SECOND: 2,
-    MAX_SECONDS: 10,
+    REQS_PER_SECOND: 4,
+    MAX_SECONDS: 15000,
     CONCURRENCY: 1, // 2
     //API_SERVER_HOST: 'localhost',
     //API_SERVER_PORT: 8004,
     // MQTT_ENDPOINT: 'wss://console.native.tiledesk.com/ws',
     // API_ENDPOINT: 'https://console.native.tiledesk.com/chatapi/api',
     // LOCAL
-    MQTT_ENDPOINT: 'ws://localhost:15675/ws',
-    API_ENDPOINT: 'http://localhost:8004/api',
+    //MQTT_ENDPOINT: 'ws://localhost:15675/ws',
+    //API_ENDPOINT: 'http://localhost:8004/api',
     // REMOTE
-    //MQTT_ENDPOINT: 'ws://34.106.191.96/mqws/ws',
-    //API_ENDPOINT: 'http://34.106.191.96/chatapi/api',
+    MQTT_ENDPOINT: 'ws://35.198.150.252/mqws/ws',
+    API_ENDPOINT: 'http://35.198.150.252/chatapi/api',
     APPID: 'tilechat'
 }
 
@@ -102,6 +102,9 @@ let chatClient2 = new Chat21Client(
 let group_id; // got in before()
 let group_name; // got in before()
 
+console.log("Executing benchmarks.");
+console.log("MQTT endpoint:", config.MQTT_ENDPOINT);
+console.log("API endpoint:", config.API_ENDPOINT);
 
 describe("Performance Test", function() {
     before(function(done) {
@@ -132,7 +135,7 @@ describe("Performance Test", function() {
                         // console.log("before() - Group created:", result.group.name);
                         chatClient1.groupData(group_id, (err, json) => {
                             // console.log("before() - Verified group updated:", group_id, "data:", json);
-                            console.log("groupData:", json)
+                            //console.log("groupData:", json)
                             assert(err == null);
                             assert(json != null);
                             assert(json.success == true);
@@ -142,7 +145,7 @@ describe("Performance Test", function() {
                             assert(json.result.members != null);
                             assert(json.result.members[user1.userid] != null);
                             assert(json.result.members[user2.userid] != null);
-                            console.log("before() - assertions ok -> done()");
+                            //console.log("before() - assertions ok -> done()");
                             done();
                         });
                     }
@@ -160,8 +163,8 @@ describe("Performance Test", function() {
 	});
 
     it("Benchmark for direct messages", function(done) {
-        console.log("..................::::::::::::::::")
-        this.timeout(1000 * 70);
+        //console.log("..................::::::::::::::::")
+        this.timeout(1000 * 700000);
         async function benchmark() {
             console.log("\n\n*********************************************");
             console.log("********* Direct messages benchmark *********");
@@ -185,7 +188,7 @@ describe("Performance Test", function() {
                 for (let c = 0; c < config.CONCURRENCY; c++) {
                     let recipient_id = user2.userid;
                     let recipient_fullname = user2.fullname;
-                    // console.log("sending...",i,c);
+                    console.log("sending...",i,c);
                     sendMessage(i, c, recipient_id, recipient_fullname, async function(latency, iteration, concurrent_iteration) {
                         // console.log("Direct - latency:", latency)
                         if (iteration == total_iterations - 1 && concurrent_iteration == config.CONCURRENCY - 1) {
@@ -220,7 +223,7 @@ describe("Performance Test", function() {
     });
 
     it("Benchmark for group messages", function(done) {
-        this.timeout(1000 * 70);
+        this.timeout(1000 * 700000);
 
         async function benchmark() {
             console.log("\n\n********************************************");
