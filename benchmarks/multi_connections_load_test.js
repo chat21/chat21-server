@@ -75,7 +75,8 @@ describe("Performance Test", function() {
                 });
                 await new Promise(resolve => setTimeout(resolve, delay));
             }
-            console.log("All connections created.");
+            console.log("All connections created. Waiting.");
+            await new Promise(resolve => setTimeout(resolve, 10000000));
         }
         benchmark();
     });

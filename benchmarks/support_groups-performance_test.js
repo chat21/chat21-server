@@ -24,7 +24,7 @@ const { Chat21Client } = require('../mqttclient/chat21client.js');
 let config = {
     EXPECTED_AVG_DIRECT_MESSAGE_DELAY: 160,
     EXPECTED_AVG_GROUP_MESSAGE_DELAY: 160,
-    REQS_PER_SECOND: 1,
+    REQS_PER_SECOND: 4,
     MAX_SECONDS: 15000,
     CONCURRENCY: 1, // 2
     //API_SERVER_HOST: 'localhost',
@@ -202,7 +202,7 @@ describe("Performance Test", function() {
                     let recipient_id = group_id;
                     let recipient_fullname = group_name;
                     sendMessage(i, c, recipient_id, recipient_fullname, async function(latency, iteration, concurrent_iteration) {
-                        // console.log("Group - latency:", latency)
+                        console.log("Group", i, "- latency:", latency.latencyMs);
                         if (iteration == total_iterations - 1 && concurrent_iteration == config.CONCURRENCY - 1) {
                             endCallback(latency);
                             console.log("'Group' benchmark end.");
