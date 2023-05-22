@@ -60,7 +60,7 @@ describe("Performance Test", function() {
             console.log("********* Creating N connections *********");
             console.log("******************************************\n\n");
             let total_connections = 200;
-            let delay = 300;
+            let delay = 2000;
             for (let i = 0; i < total_connections; i++) {
                 console.log("Creating connection:", i);
                 let chatClient = new Chat21Client(
