@@ -180,9 +180,9 @@ describe("Performance Test", function() {
         this.timeout(1000 * 700000);
 
         async function benchmark() {
-            console.log("\n\n********************************************");
+            console.log("\n\n****************************************************");
             console.log("********* Support Group messages benchmark *********");
-            console.log("********************************************\n\n");
+            console.log("****************************************************\n\n");
             total_delay = 0;
             total_messages = 0;
             let delay = 1000 / config.REQS_PER_SECOND;
@@ -198,9 +198,9 @@ describe("Performance Test", function() {
             console.log("Group - Expected TOTAL ITERATIONS =", total_iterations);
             console.log("Group - Running benchmark...");
             for (let i = 0; i < total_iterations; i++) {
-                console.log("GROUP i:", i)
+                // console.log("GROUP i:", i)
                 for (let c = 0; c < config.CONCURRENCY; c++) {
-                    console.log("c", c)
+                    // console.log("c", c)
                     let recipient_id = group_id;
                     let recipient_fullname = group_name;
                     sendMessage(i, c, recipient_id, recipient_fullname, async function(latency, iteration, concurrent_iteration) {
@@ -245,7 +245,8 @@ function sendMessage(iteration, concurrent_iteration, recipient_id, recipient_fu
     let starttime = Date.now();
     const sent_message = "Performance-test-" + uuidv4();
     let handler = chatClient2.onMessageAdded((message, topic) => {
-        // console.log("user2 message added:", message.text);
+        // console.log("******** message added:", message);
+        // console.log("callback2")
         if (
             message &&
             message.text === sent_message
@@ -284,9 +285,8 @@ function sendMessage(iteration, concurrent_iteration, recipient_id, recipient_fu
         recipient_id, //user2.userid, // recipient
         recipient_fullname, //user2.fullname, // recipient fullname
         user1.fullname, // sender fullname
-        { // attributes
-            projectId: "64690469599137001a6dc6f5"
-        },
+        { projectId: "64690469599137001a6dc6f5" },
+        // null,
         null, // metadata
         recipient_id.startsWith("support-group-") ? 'group' : 'direct', //user2.userid.startsWith("group-") ? 'group' : 'direct',
         (err, msg) => {
