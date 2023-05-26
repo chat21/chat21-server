@@ -101,7 +101,7 @@ class Chat21Client {
     }
 
     sendMessage(text, type, recipient_id, recipient_fullname, sender_fullname, attributes, metadata, channel_type, callback) {
-        // console.log("sendMessage:",text, recipient_id)
+        // console.log("sendMessage sattributes:", attributes);
         let dest_topic = `apps/${this.appid}/outgoing/users/${this.user_id}/messages/${recipient_id}/outgoing`
         // console.log("dest_topic:", dest_topic)
         let outgoing_message = {
@@ -113,7 +113,7 @@ class Chat21Client {
             metadata: metadata,
             channel_type: channel_type
         }
-        console.log("outgoing_message:", outgoing_message)
+        // console.log("outgoing_message:", outgoing_message)
         const payload = JSON.stringify(outgoing_message)
         this.client.publish(dest_topic, payload, null, (err) => {
             callback(err, outgoing_message)
@@ -630,6 +630,7 @@ class Chat21Client {
                     if (topic.includes("/messages/") && topic.endsWith(_CLIENTADDED)) {
                         if (this.onMessageAddedCallbacks) {
                             this.onMessageAddedCallbacks.forEach((callback, handler, map) => {
+                                // console.log("DEBUG: MESSAGE:", message)
                                 callback(JSON.parse(message.toString()), _topic)
                             });
                         }

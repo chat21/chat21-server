@@ -119,6 +119,7 @@ if (process.env.DURABLE_ENABLED && process.env.DURABLE_ENABLED === "true") {
   logger.info("(Observer) Durable enabled.");
 }
 else {
+  durable_enabled = false;
   logger.info("(Observer) Durable disabled.");
 }
 

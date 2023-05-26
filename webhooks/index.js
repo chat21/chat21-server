@@ -636,7 +636,7 @@ class Webhooks {
       ch.on("close", function () {
         logger.debug("[Webooks.AMQP] channel closed");
       });
-      ch.prefetch(this.prefetch_messages);
+      // ch.prefetch(this.prefetch_messages);
       ch.assertExchange(this.exchange, 'topic', {
         durable: this.durable_enabled
       });

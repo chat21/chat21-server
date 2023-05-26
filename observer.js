@@ -304,18 +304,18 @@ function processMsg(msg) {
     return;
   }
   work(msg, function (ok) {
-    try {
-      // if (ok) {
-      //   channel.ack(msg);
-      // }
-      // else {
-      //   logger.debug("channel.reject(msg, true)");
-      //   channel.reject(msg, true);
-      // }
-    } catch (e) {
-      logger.debug("processMsgwork error ", e)
-      closeOnErr(e);
-    }
+    // try {
+    //   if (ok) {
+    //     channel.ack(msg);
+    //   }
+    //   else {
+    //     logger.debug("channel.reject(msg, true)");
+    //     channel.reject(msg, true);
+    //   }
+    // } catch (e) {
+    //   logger.debug("processMsgwork error ", e)
+    //   closeOnErr(e);
+    // }
   });
 }
 
@@ -360,59 +360,59 @@ function work(msg, callback) {
 
 // ***** TOPIC HANDLERS ******/
 
-function process_presence(topic, message_string, callback) {
-  // temp disabling
-}
-
 // function process_presence(topic, message_string, callback) {
-//   callback(true);
-//   if (!presence_enabled) {
-//     logger.log("Presence disabled");
-//     return;
-//   }
-//   logger.debug("> got PRESENCE testament", message_string, " on topic", topic);
-  
-//   if (!webhook_enabled) {
-//     logger.debug("WEBHOOKS DISABLED. Skipping presence notification");
-//     return;
-//   }
-//   // examples:
-//   // {"disconnected":true}  on topic apps.tilechat.users.6d011n62ir097c0143cc42dc.presence.8d8ecd4e-3cb9-4ff6-a36e-7b22459cbebf
-//   // {"connected":true}  on topic apps.tilechat.users.6d011n62ir097c0143cc42dc.presence.e80e73f1-4934-4ba9-8cdc-81051d518a90
-//   var topic_parts = topic.split(".");
-//   const app_id = topic_parts[1];
-//   const user_id = topic_parts[3]
-//   const client_id = topic_parts[5];
-//   let presence_payload = JSON.parse(message_string);
-//   logger.debug("presence_payload:", presence_payload);
-//   const presence_status = presence_payload.connected ? "online" : "offline";
-//   logger.debug("presence_status:", presence_status);
-//   // presence_payload['temp_webhook_endpoints'] = [process.env.PRESENCE_WEBHOOK_ENDPOINT];
-//   // presence_payload['user_id'] = user_id;
-//   // presence_payload['app_id'] = app_id;
-//   // presence_payload['client_id'] = client_id;
-//   presence_event = {
-//     "event_type": "presence-change",
-//     "presence": presence_status,
-//     "createdAt": new Date().getTime(),
-//     "app_id": app_id,
-//     "user_id": user_id,
-//     "data": true,
-//     temp_webhook_endpoints: webhook_endpoints_array
-//   }
-//   const presence_event_string = JSON.stringify(presence_event);
-//   const presence_webhook_topic = `observer.webhook.apps.${app_id}.presence`;
-//   logger.debug(">>> NOW PUBLISHING PRESENCE. TOPIC: " + presence_webhook_topic + ", EVENT PAYLOAD ", presence_event_string);
-//   publish(exchange, presence_webhook_topic, Buffer.from(presence_event_string), function(err) {
-//     logger.debug(">>> PUBLISHED PRESENCE!" + presence_webhook_topic + " WITH PATCH: " + presence_event_string)
-//     if (err) {
-//       logger.error("publish presence error:", err);
-//     }
-//     else {
-//       logger.ldebugog("PRESENCE UPDATE PUBLISHED");
-//     }
-//   });
+//   // temp disabling
 // }
+
+function process_presence(topic, message_string) { //, callback) {
+  // callback(true);
+  if (!presence_enabled) {
+    logger.log("Presence disabled");
+    return;
+  }
+  logger.debug("> got PRESENCE testament", message_string, " on topic", topic);
+  
+  if (!webhook_enabled) {
+    logger.debug("WEBHOOKS DISABLED. Skipping presence notification");
+    return;
+  }
+  // examples:
+  // {"disconnected":true}  on topic apps.tilechat.users.6d011n62ir097c0143cc42dc.presence.8d8ecd4e-3cb9-4ff6-a36e-7b22459cbebf
+  // {"connected":true}  on topic apps.tilechat.users.6d011n62ir097c0143cc42dc.presence.e80e73f1-4934-4ba9-8cdc-81051d518a90
+  var topic_parts = topic.split(".");
+  const app_id = topic_parts[1];
+  const user_id = topic_parts[3]
+  const client_id = topic_parts[5];
+  let presence_payload = JSON.parse(message_string);
+  logger.debug("presence_payload:", presence_payload);
+  const presence_status = presence_payload.connected ? "online" : "offline";
+  logger.debug("presence_status:", presence_status);
+  // presence_payload['temp_webhook_endpoints'] = [process.env.PRESENCE_WEBHOOK_ENDPOINT];
+  // presence_payload['user_id'] = user_id;
+  // presence_payload['app_id'] = app_id;
+  // presence_payload['client_id'] = client_id;
+  presence_event = {
+    "event_type": "presence-change",
+    "presence": presence_status,
+    "createdAt": new Date().getTime(),
+    "app_id": app_id,
+    "user_id": user_id,
+    "data": true,
+    temp_webhook_endpoints: webhook_endpoints_array
+  }
+  const presence_event_string = JSON.stringify(presence_event);
+  const presence_webhook_topic = `observer.webhook.apps.${app_id}.presence`;
+  logger.debug(">>> NOW PUBLISHING PRESENCE. TOPIC: " + presence_webhook_topic + ", EVENT PAYLOAD ", presence_event_string);
+  publish(exchange, presence_webhook_topic, Buffer.from(presence_event_string), function(err) {
+    logger.debug(">>> PUBLISHED PRESENCE!" + presence_webhook_topic + " WITH PATCH: " + presence_event_string)
+    if (err) {
+      logger.error("publish presence error:", err);
+    }
+    else {
+      logger.ldebugog("PRESENCE UPDATE PUBLISHED");
+    }
+  });
+}
 
 function process_outgoing(topic, message_string, callback) {
   callback(true);

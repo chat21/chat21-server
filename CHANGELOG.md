@@ -1,8 +1,14 @@
 
-**npm @chat21/chat21-server@0.2.32**
+**npm @chat21/chat21-server@0.2.45**
 
 available on:
  ▶️ https://www.npmjs.com/package/@chat21/chat21-server
+
+## v0.2.47
+- presence is back!
+
+## v0.2.46
+- DURABLE_ENABLED fixed
 
 ## v0.2.45
 - DISABLED ch.prefetch(prefetch_messages);

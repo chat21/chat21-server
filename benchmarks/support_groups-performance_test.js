@@ -34,9 +34,12 @@ let config = {
     // LOCAL
     //MQTT_ENDPOINT: 'ws://localhost:15675/ws',
     //API_ENDPOINT: 'http://localhost:8004/api',
-    // REMOTE
+    // REMOTE TEST
     MQTT_ENDPOINT: 'ws://35.198.150.252/mqws/ws',
     API_ENDPOINT: 'http://35.198.150.252/chatapi/api',
+    // // REMOTE
+    // MQTT_ENDPOINT: 'wss://eu.rtmv3.tiledesk.com/mqws/ws',
+    // API_ENDPOINT: 'https://eu.rtmv3.tiledesk.com/chatapi/api',    
     APPID: 'tilechat'
 }
 
@@ -55,12 +58,14 @@ let config = {
 
 const user1 = {
     // userid: "USER1",
-    userid: 'ad29ae36-f83d-447e-a197-f70fd7fa3eca',
+    userid: 'ad29ae36-f83d-447e-a197-f70fd7fa3eca', // test
+    //userid: "69a6b668-6a4f-4543-b5a9-5b3c34dd95ae",
 	fullname: 'User 1',
 	firstname: 'User',
 	lastname: '1',
 	// token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI2OGFkODJjYi1lODE2LTRkYWEtYjljYi0wM2NiZmFjMDY1OGQiLCJzdWIiOiJVU0VSMSIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjEuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVIxLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSMS4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVIxIiwiY2lkIjoiVVNFUjEiLCJhenAiOiJVU0VSMSIsInVzZXJfaWQiOiJVU0VSMSIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjQ0Njc1NzcxLCJleHAiOjE5NTU3MTU3NzEsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVIxIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.CrvQLL3DMydcRyLSyfyJBSdyG-HKDj5Pd8kA1UIPjQA'
     token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ZGM1YTE5OC1kZWM5LTRjNGYtYWU0Yy03Y2M2MWI0MTIxYWMiLCJzdWIiOiJhZDI5YWUzNi1mODNkLTQ0N2UtYTE5Ny1mNzBmZDdmYTNlY2EiLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLmFkMjlhZTM2LWY4M2QtNDQ3ZS1hMTk3LWY3MGZkN2ZhM2VjYS4qIiwicmFiYml0bXEud3JpdGU6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuYWQyOWFlMzYtZjgzZC00NDdlLWExOTctZjcwZmQ3ZmEzZWNhLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5hZDI5YWUzNi1mODNkLTQ0N2UtYTE5Ny1mNzBmZDdmYTNlY2EuKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiJhZDI5YWUzNi1mODNkLTQ0N2UtYTE5Ny1mNzBmZDdmYTNlY2EiLCJjaWQiOiJhZDI5YWUzNi1mODNkLTQ0N2UtYTE5Ny1mNzBmZDdmYTNlY2EiLCJhenAiOiJhZDI5YWUzNi1mODNkLTQ0N2UtYTE5Ny1mNzBmZDdmYTNlY2EiLCJ1c2VyX2lkIjoiYWQyOWFlMzYtZjgzZC00NDdlLWExOTctZjcwZmQ3ZmEzZWNhIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE2ODQ3NjkwNTEsImV4cCI6MTY4NzM2MTA1MSwiYXVkIjpbInJhYmJpdG1xIiwiYWQyOWFlMzYtZjgzZC00NDdlLWExOTctZjcwZmQ3ZmEzZWNhIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.XC7TLQsrbYxoyKiCneNrHO_9pKhS_Cx55Maf0RT7o40'
+    //token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwOTAyM2JmYS1mZmZlLTRlZmQtYmQ1ZS1lZGExZTM0NTA1NmEiLCJzdWIiOiI2OWE2YjY2OC02YTRmLTQ1NDMtYjVhOS01YjNjMzRkZDk1YWUiLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLjY5YTZiNjY4LTZhNGYtNDU0My1iNWE5LTViM2MzNGRkOTVhZS4qIiwicmFiYml0bXEud3JpdGU6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuNjlhNmI2NjgtNmE0Zi00NTQzLWI1YTktNWIzYzM0ZGQ5NWFlLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy42OWE2YjY2OC02YTRmLTQ1NDMtYjVhOS01YjNjMzRkZDk1YWUuKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiI2OWE2YjY2OC02YTRmLTQ1NDMtYjVhOS01YjNjMzRkZDk1YWUiLCJjaWQiOiI2OWE2YjY2OC02YTRmLTQ1NDMtYjVhOS01YjNjMzRkZDk1YWUiLCJhenAiOiI2OWE2YjY2OC02YTRmLTQ1NDMtYjVhOS01YjNjMzRkZDk1YWUiLCJ1c2VyX2lkIjoiNjlhNmI2NjgtNmE0Zi00NTQzLWI1YTktNWIzYzM0ZGQ5NWFlIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE2ODQ4MzMxOTIsImV4cCI6MTY4NzQyNTE5MiwiYXVkIjpbInJhYmJpdG1xIiwiNjlhNmI2NjgtNmE0Zi00NTQzLWI1YTktNWIzYzM0ZGQ5NWFlIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.-33y3cBb1a0hY4Te-I1doc-MHloFzX-qdml3o3DWXg8'
 };
 
 const user2 = {
@@ -285,7 +290,8 @@ function sendMessage(iteration, concurrent_iteration, recipient_id, recipient_fu
         recipient_id, //user2.userid, // recipient
         recipient_fullname, //user2.fullname, // recipient fullname
         user1.fullname, // sender fullname
-        { projectId: "64690469599137001a6dc6f5" },
+        { projectId: "64690469599137001a6dc6f5" }, // TEST
+        //{ projectId: "646c838d55f7620013e4ab92" }, // PROD
         // null,
         null, // metadata
         recipient_id.startsWith("support-group-") ? 'group' : 'direct', //user2.userid.startsWith("group-") ? 'group' : 'direct',

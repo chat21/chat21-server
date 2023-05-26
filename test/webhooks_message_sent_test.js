@@ -101,30 +101,30 @@ TEST_HTTP_SERVER_LOG_LEVEL=error
 TEST_OBSERVER_LOG_LEVEL=error
 TEST_LOCAL_STACK=true
 */
-const config = {
-	APPID: process.env.TEST_APPID || 'tilechat',
-	MQTT_ENDPOINT: process.env.TEST_MQTT_ENDPOINT || 'ws://localhost:15675/ws',
-	API_ENDPOINT: process.env.TEST_API_ENDPOINT || 'http://localhost:8010/api',
-	CLIENT_API_LOG: client_api_log,
-	HTTP_SERVER_LOG_LEVEL: process.env.TEST_HTTP_SERVER_LOG_LEVEL || 'error',
-	OBSERVER_LOG_LEVEL: process.env.TEST_OBSERVER_LOG_LEVEL || 'error',
-	LOCAL_STACK: local_stack
-}
+// const config = {
+// 	APPID: process.env.TEST_APPID || 'tilechat',
+// 	MQTT_ENDPOINT: process.env.TEST_MQTT_ENDPOINT || 'ws://localhost:15675/ws',
+// 	API_ENDPOINT: process.env.TEST_API_ENDPOINT || 'http://localhost:8010/api',
+// 	CLIENT_API_LOG: client_api_log,
+// 	HTTP_SERVER_LOG_LEVEL: process.env.TEST_HTTP_SERVER_LOG_LEVEL || 'error',
+// 	OBSERVER_LOG_LEVEL: process.env.TEST_OBSERVER_LOG_LEVEL || 'error',
+// 	LOCAL_STACK: local_stack
+// }
 
 // ** **LOCAL MACHINE COMPONENTS ****
 // ** RABBITMQ, RUN IT WITH DOCKER
 // ** RUN LOCAL MONGODB, EX: mongod --dbpath /usr/local/var/mongodb
 // ** RUN LOCAL CHAT-HTTP-SERVER ON "API_ENDPOINT"
 // ** RUN LOCAL CHAT-OBSERVER (ENSURE: ONLY ONE INSTANCE!)
-// const config = {
-// 	APPID: 'tilechat',
-// 	MQTT_ENDPOINT: 'ws://localhost:15675/ws',
-// 	API_ENDPOINT: 'http://localhost:8004/api',
-// 	CLIENT_API_LOG: false,
-// 	HTTP_SERVER_LOG_LEVEL: 'ERROR',
-// 	OBSERVER_LOG_LEVEL: 'ERROR',
-// 	LOCAL_STACK: false
-// }
+const config = {
+	APPID: 'tilechat',
+	MQTT_ENDPOINT: 'ws://localhost:15675/ws',
+	API_ENDPOINT: 'http://localhost:8004/api',
+	CLIENT_API_LOG: false,
+	HTTP_SERVER_LOG_LEVEL: 'ERROR',
+	OBSERVER_LOG_LEVEL: 'ERROR',
+	LOCAL_STACK: false
+}
 
 // **** REMOTE ON AWS ****
 // const MQTT_ENDPOINT = 'ws://99.80.197.164:15675/ws';
@@ -234,10 +234,9 @@ describe('Main', function() {
 								);
 								console.log('HTTP server AMQP connection started.');
 								observer.logger.setLog(config.OBSERVER_LOG_LEVEL);//(config.OBSERVER_LOG_LEVEL);
-								// const webhook_endpoints = ["http://localhost:8002/postdata","http://localhost:8002/postdata2"];
-								// observer.setWebHookEndpoints();
 								observer.setWebHookEnabled(true);
-								// observer_config = {rabbitmq_uri: process.env.RABBITMQ_URI};
+								observer.setWebHookEndpoints(["http://localhost:10456/postdata3", "http://localhost:10456/postdata4"]);
+								observer.setWebHookEvents([messageConstants.WEBHOOK_EVENTS.MESSAGE_SENT]);
 								observer.setAutoRestart(false);
 								console.log("Starting observer...");
 								await observer.startServer(
@@ -309,34 +308,55 @@ describe('Main', function() {
 	// **************** TEST CASES *****************
     // *********************************************
 
-	describe('TiledeskClient - Webhooks _test 14_', function() {
-		it('test 14 - "message-sent" webhook event, 1 endpoint \
+	
+
+	describe('TiledeskClient - Webhooks _test 15_', function() {
+		it('test 15 - "message-sent" webhook event, 2 endpoints \
 REUSE SHARED CHAT CLIENTS', function(done) {
 			if (!config.LOCAL_STACK) {
-				logger.log("LOCAL_STACK=false, skipping webhooks test 14");
+				logger.log("LOCAL_STACK=false, skipping webhooks test 15");
 				done();
 				return;
 			}
-			logger.log("test 14 - start.");
-			let SENT_MESSAGE = 'MESSAGE TEST 14';
-			observer.setWebHookEndpoints(["http://localhost:10456/postdata3"]);
-			// observer.setWebHookEnabled(true);
+			logger.log("test 15 - start.");
+			let SENT_MESSAGE = 'MESSAGE TEST 15';
 			let webhooksServer = express();
 			webhooksServer.use(bodyParser.json());
 			logger.log('setWebHookEndpoint ok.');
+			let endpoints_call = {
+				postdata3: false,
+				postdata4: false
+			}
 			webhooksServer.post('/postdata3', function (req, res) {
-				logger.log("test 14 - message-sent received:", req.body);
+				logger.log("test 15 - message-sent received:", req.body);
 				res.status(200).send({success: true});
 				if (req.body.event_type === messageConstants.WEBHOOK_EVENTS.MESSAGE_SENT &&
 					req.body.data.text === SENT_MESSAGE) {
+						endpoints_call.postdata3 = true;
+				}
+				if (endpoints_call.postdata3 && endpoints_call.postdata4) {
 					done();
 					// observer.setWebHookEnabled(false);
 					observer.setWebHookEndpoints(null);
 					webhook_app.close();
 				}
 			});
+			webhooksServer.post('/postdata4', function (req, res) {
+				logger.log("test 15 - message-sent received:", req.body);
+				res.status(200).send({success: true});
+				if (req.body.event_type === messageConstants.WEBHOOK_EVENTS.MESSAGE_SENT &&
+					req.body.data.text === SENT_MESSAGE) {
+						endpoints_call.postdata4 = true;
+				}
+				if (endpoints_call.postdata3 && endpoints_call.postdata4) {
+					done();
+					observer.setWebHookEnabled(false);
+					observer.setWebHookEndpoints(null);
+					webhook_app.close();
+				}
+			});
 			let webhook_app = webhooksServer.listen(10456, async function() {
-				logger.log('test 14 - Webhooks App started.', webhook_app.address());
+				logger.log('test 15 - Webhooks App started.', webhook_app.address());
 				chatClient1.sendMessage(
 					SENT_MESSAGE,
 					TYPE_TEXT,
@@ -350,204 +370,6 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 						logger.log("Message sent:", SENT_MESSAGE);
 					}
 				);
-			});
-		});
-	});
-
-// 	describe('TiledeskClient - Webhooks _test 15_', function() {
-// 		it('test 15 - "message-sent" webhook event, 2 endpoints \
-// REUSE SHARED CHAT CLIENTS', function(done) {
-// 			if (!config.LOCAL_STACK) {
-// 				logger.log("LOCAL_STACK=false, skipping webhooks test 15");
-// 				done();
-// 				return;
-// 			}
-// 			logger.log("test 15 - start.");
-// 			let SENT_MESSAGE = 'MESSAGE TEST 15';
-// 			observer.setWebHookEndpoints(["http://localhost:10456/postdata3", "http://localhost:10456/postdata4"]);
-// 			observer.setWebHookEvents([messageConstants.WEBHOOK_EVENTS.MESSAGE_SENT]);
-// 			// observer.setWebHookEnabled(true);
-// 			let webhooksServer = express();
-// 			webhooksServer.use(bodyParser.json());
-// 			logger.log('setWebHookEndpoint ok.');
-// 			let endpoints_call = {
-// 				postdata3: false,
-// 				postdata4: false
-// 			}
-// 			webhooksServer.post('/postdata3', function (req, res) {
-// 				logger.log("test 15 - message-sent received:", req.body);
-// 				res.status(200).send({success: true});
-// 				if (req.body.event_type === messageConstants.WEBHOOK_EVENTS.MESSAGE_SENT &&
-// 					req.body.data.text === SENT_MESSAGE) {
-// 						endpoints_call.postdata3 = true;
-// 				}
-// 				if (endpoints_call.postdata3 && endpoints_call.postdata4) {
-// 					done();
-// 					// observer.setWebHookEnabled(false);
-// 					observer.setWebHookEndpoints(null);
-// 					webhook_app.close();
-// 				}
-// 			});
-// 			webhooksServer.post('/postdata4', function (req, res) {
-// 				logger.log("test 15 - message-sent received:", req.body);
-// 				res.status(200).send({success: true});
-// 				if (req.body.event_type === messageConstants.WEBHOOK_EVENTS.MESSAGE_SENT &&
-// 					req.body.data.text === SENT_MESSAGE) {
-// 						endpoints_call.postdata4 = true;
-// 				}
-// 				if (endpoints_call.postdata3 && endpoints_call.postdata4) {
-// 					done();
-// 					observer.setWebHookEnabled(false);
-// 					observer.setWebHookEndpoints(null);
-// 					webhook_app.close();
-// 				}
-// 			});
-// 			let webhook_app = webhooksServer.listen(10456, async function() {
-// 				logger.log('test 15 - Webhooks App started.', webhook_app.address());
-// 				chatClient1.sendMessage(
-// 					SENT_MESSAGE,
-// 					TYPE_TEXT,
-// 					user2.userid,
-// 					user2.fullname,
-// 					user1.fullname,
-// 					null,
-// 					null,
-// 					CHANNEL_TYPE_DIRECT,
-// 					() => {
-// 						logger.log("Message sent:", SENT_MESSAGE);
-// 					}
-// 				);
-// 			});
-// 		});
-// 	});
-
-	describe('TiledeskClient - Webhooks _test 16_', function() {
-		it('test 16 - "message-sent" webhook event, 2 endpoints', function(done) {
-			if (!config.LOCAL_STACK) {
-				console.log("LOCAL_STACK=false, skipping webhooks test 16");
-				done();
-				return;
-			}
-			console.log("test 16 - start.");
-			let _chatClient4 = new Chat21Client(
-				{
-					appId: config.APPID,
-					MQTTendpoint: config.MQTT_ENDPOINT,
-					APIendpoint: config.API_ENDPOINT,
-					log: true //config.CLIENT_API_LOG
-				}
-			);
-			observer.setWebHookEndpoints(
-				[
-					"http://localhost:10456/delivered-endpoint",
-					"http://localhost:10456/sent-endpoint"
-				]
-			);
-			observer.setWebHookEvents(
-				[
-					messageConstants.WEBHOOK_EVENTS.MESSAGE_SENT,
-					messageConstants.WEBHOOK_EVENTS.MESSAGE_DELIVERED
-				]
-			);
-			// observer.setWebHookEnabled(true);
-			let webhooksServer = express();
-			webhooksServer.use(bodyParser.json());
-			console.log('setWebHookEndpoint ok.');
-			let delivered_in_history_count = 0;
-			webhooksServer.post('/delivered-endpoint', function (req, res) {
-				console.log("req.body.event_type", req.body.event_type)
-				res.status(200).send({success: true});
-				if (req.body.event_type !== 'message-delivered') {
-					return;
-				}
-				console.log("test 16 WEBHOOK - Delivered endpoint event_type:", req.body.event_type, " delivered_to", req.body.delivered_to);
-				console.log("test 16 WEBHOOK - Delivered endpoint text:", req.body.data.text, " __history?", req.body.data.__history);
-				if (req.body.data.__history) {
-					console.log("Adding to delivered history:", req.body.data.text);
-					delivered_in_history_count++;
-				}
-				
-				// 1. test 16 WEBHOOK - Delivered endpoint text: Group created  __history? true
-				// 2. test 16 WEBHOOK - Delivered endpoint text: USER1 joined group on creation  __history? true
-				// 3. test 16 WEBHOOK - Delivered endpoint text: USER2 joined group on creation  __history? true
-				// 4. test 16 WEBHOOK - Delivered endpoint text: test 16, user1, first message  __history? true
-				
-				if (delivered_in_history_count == 4) {
-					// observer.setWebHookEnabled(false);
-					observer.setWebHookEndpoints(null);
-					webhook_app.close();
-					_chatClient4.close(() => {
-						console.log("test 16 - _chatClient4 successfully disconnected.");
-						done();
-					});
-				}
-			});
-			webhooksServer.post('/sent-endpoint', function (req, res) {
-				res.status(200).send({success: true});
-				if (req.body.event_type !== 'message-sent') {
-					return;
-				}
-				if (req.body.data.__history) {
-					// test fails if "history messages" (__history = true) got through the "message-sent" event!
-					assert.fail("'history messages' (__history = true) got through the 'message-sent' event");
-				}
-				console.log("test 16 WEBHOOK - Sent endpoint event_type:", req.body.event_type);
-				console.log("test 16 WEBHOOK - Sent endpoint text:", req.body.data.text, " __history?", req.body.data.__history);
-			});
-			let webhook_app = webhooksServer.listen(10456, async function() {
-				console.log('test 16 - Webhooks App started.', webhook_app.address());
-				const group_id = "group-test16_" + uuidv4();
-				const group_name = "group-join test16";
-				const MESSAGE1_USER1 = "test 16, user1, first message";
-				let group_members = {};
-				// group_members[user1.userid] = 1;
-				group_members[user2.userid] = 1;
-				_chatClient4.connect(user4.userid, user4.token, () => {
-					console.log("test 16 - _chatClient1 connected.");
-					console.log("test 16 - creating group:", group_id);
-						_chatClient4.groupCreate(
-							group_name,
-							group_id,
-							group_members,
-							async (err, result) => {
-								assert(err == null);
-								assert(result != null);
-								assert(result.success == true);
-								assert(result.group.name === group_name);
-								logger.log("test 16 - group:", group_id, "created");
-								_chatClient4.sendMessageRaw(
-									{
-										text: MESSAGE1_USER1,
-										type: TYPE_TEXT,
-										recipient_fullname: group_name,
-										sender_fullname: user4.fullname,
-										attributes: null,
-										metadata: null,
-										channel_type: CHANNEL_TYPE_GROUP
-									},
-									group_id, // recipient
-									async (err, msg) => {
-										if (err) {
-											logger.log("test 11 - Error sending message:", err);
-										}
-										assert(err == null);
-										logger.log("test 16 - message sent:", msg);
-										logger.log("test 16 - waiting some time to allow the sent message to reach the 'persistent' status...");
-										await new Promise(resolve => setTimeout(resolve, 1000)); // it gives time to join message to reach the "persistent" status
-										logger.log("test 16 - end waiting.");
-										_chatClient4.groupJoin(group_id, user3.userid, (err, json) => {
-											if (err) {
-												logger.log("test 16 - member joinned error:", err);
-											}
-											assert(err == null);
-											logger.log("test 16 - member joined json:", json);
-										});
-									}
-								);
-							}
-						);
-					// });
-				});
 			});
 		});
 	});
