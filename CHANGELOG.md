@@ -1,8 +1,23 @@
 
-**npm @chat21/chat21-server@0.2.45**
+**npm @chat21/chat21-server@0.2.47**
 
 available on:
  ▶️ https://www.npmjs.com/package/@chat21/chat21-server
+
+## v0.2.52
+- debug version
+
+## v0.2.51
+- queues are always "durable". "DURABLE_ENABLED" option removed.
+
+## v0.2.50
+- renamed CHAT21OBSERVER_CACHE_ENABLED, CHAT21OBSERVER_REDIS_HOST, CHAT21OBSERVER_REDIS_PORT, CHAT21OBSERVER_REDIS_PASSWORD
+
+## v0.2.49
+- presence fix
+
+## v0.2.48
+- debug version
 
 ## v0.2.47
 - presence is back!

@@ -57,8 +57,8 @@ else if (active_queues_env_string === "none") {
   logger.error("(Observer) To activate queues use syntax: active_queues=messages,persist (valid topics: messages | persist | messages,persist)");
 }
 else {
-  active_queues_env_array = active_queues_env_string.split(",");
-  logger.info("(Observer) ACTIVE_QUEUES found:", active_queues_env_array)
+  let active_queues_env_array = active_queues_env_string.split(",");
+  logger.info("(Observer) ACTIVE_QUEUES found:", active_queues_env_array);
   if (active_queues_env_array.length == 0) {
     logger.error("(Observer) Not ACTIVE_QUEUES enabled.");
     logger.error("(Observer) To activate queues use syntax: active_queues=messages,persist (valid topics: messages | persist | messages,persist)");
@@ -113,17 +113,14 @@ else {
 }
 
 let durable_enabled = true;
-logger.debug("process.env.DURABLE_ENABLED:", process.env.DURABLE_ENABLED)
-if (process.env.DURABLE_ENABLED && process.env.DURABLE_ENABLED === "true") {
-  durable_enabled = true;
-  logger.info("(Observer) Durable enabled.");
-}
-else {
-  durable_enabled = false;
-  logger.info("(Observer) Durable disabled.");
-}
+// logger.debug("process.env.DURABLE_ENABLED:", process.env.DURABLE_ENABLED)
+// if (process.env.DURABLE_ENABLED && process.env.DURABLE_ENABLED === "false") {
+//   durable_enabled = false;
+//   logger.info("(Observer) Durable disabled.");
+// }
 
-logger.info("Starting observer")
+
+logger.info("Starting observer (DURABLE_ENABLED disabled)");
 async function start() {
   observer.setPresenceEnabled(presence_enabled);
   observer.setDurableEnabled(durable_enabled);
@@ -148,10 +145,10 @@ async function start() {
     exchange: 'amq.topic',
     rabbitmq_uri:process.env.RABBITMQ_URI,
     mongo_uri: process.env.MONGODB_URI,
-    redis_enabled: process.env.REDIS_ENABLED,
-    redis_host: process.env.REDIS_HOST,
-    redis_port: process.env.REDIS_PORT,
-    redis_password: process.env.REDIS_PASSWORD
+    redis_enabled: process.env.CHAT21OBSERVER_CACHE_ENABLED,
+    redis_host: process.env.CHAT21OBSERVER_REDIS_HOST,
+    redis_port: process.env.CHAT21OBSERVER_REDIS_PORT,
+    redis_password: process.env.CHAT21OBSERVER_REDIS_PASSWORD
   });
 }
 start();

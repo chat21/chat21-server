@@ -274,9 +274,9 @@ describe('Main', function() {
 									{
 										rabbitmq_uri: process.env.RABBITMQ_URI,
 										mongodb_uri: process.env.MONGODB_URI,
-										redis_enabled: process.env.REDIS_ENABLED,
-										redis_host: process.env.REDIS_HOST,
-										redis_port: process.env.REDIS_PORT
+										redis_enabled: process.env.CHAT21OBSERVER_CACHE_ENABLED,
+										redis_host: process.env.CHAT21OBSERVER_REDIS_HOST,
+										redis_port: process.env.CHAT21OBSERVER_REDIS_PORT
 									}
 								);
 								logger.log("Observer ready.");

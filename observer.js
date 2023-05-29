@@ -325,7 +325,7 @@ function work(msg, callback) {
     callback(true);
     return;
   }
-  logger.debug("work NEW TOPIC: " + msg.fields.routingKey) //, " message:", msg.content.toString());
+  logger.debug("work NEW TOPIC (v0.2.48): " + msg.fields.routingKey) //, " message:", msg.content.toString());
   const topic = msg.fields.routingKey //.replace(/[.]/g, '/');
   const message_string = msg.content.toString();
   if (topic.endsWith('.outgoing')) {
@@ -338,6 +338,7 @@ function work(msg, callback) {
     process_delivered(topic, message_string, callback);
   }
   else if (topic.endsWith('.archive')) {
+    logger.log("Got presence topic:", topic);
     process_archive(topic, message_string, callback);
   }
   else if (topic.includes('.presence.')) {
@@ -364,8 +365,8 @@ function work(msg, callback) {
 //   // temp disabling
 // }
 
-function process_presence(topic, message_string) { //, callback) {
-  // callback(true);
+function process_presence(topic, message_string, callback) {
+  callback(true);
   if (!presence_enabled) {
     logger.log("Presence disabled");
     return;
@@ -409,7 +410,7 @@ function process_presence(topic, message_string) { //, callback) {
       logger.error("publish presence error:", err);
     }
     else {
-      logger.ldebugog("PRESENCE UPDATE PUBLISHED");
+      logger.log("PRESENCE UPDATE PUBLISHED");
     }
   });
 }
@@ -949,6 +950,7 @@ function process_update(topic, message_string, callback) {
 }
 
 function process_archive(topic, payload, callback) {
+  logger.log("Inside presence function:", topic);
   // Ex. apps/tilechat/users/USER_ID/conversations/CONVERS_WITH/archive
   const topic_parts = topic.split(".")
   logger.debug("ARCHIVE. TOPIC PARTS:" + topic_parts + "payload (ignored): " + payload)

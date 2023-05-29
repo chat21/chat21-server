@@ -1,79 +1,91 @@
-// var loadtest = require('loadtest');
 var assert = require('assert');
-var should = require('should');
-// let express = require('express');
-// var http = require('http');
-const { send } = require('process');
 const { v4: uuidv4 } = require('uuid');
 const { Chat21Client } = require('../mqttclient/chat21client.js');
-// const { Console } = require('console');
+require('dotenv').config();
 
 // *******************************
 // ******** MQTT SECTION *********
 // *******************************
 
-// REMOTE
-// const MQTT_ENDPOINT = 'ws://99.80.197.164:15675/ws';
-// const API_ENDPOINT = 'http://99.80.197.164:8004/api';
-// LOCAL
-// const MQTT_ENDPOINT = 'ws://localhost:15675/ws';
-// const API_ENDPOINT = 'http://localhost:8004/api';
+// console.log("process.env.PERFORMANCE_TEST_TILEDESK_PROJECT_ID:", process.env.PERFORMANCE_TEST_TILEDESK_PROJECT_ID);
+let TILEDESK_PROJECT_ID = "";
+if (process.env && process.env.PERFORMANCE_TEST_TILEDESK_PROJECT_ID) {
+	TILEDESK_PROJECT_ID = process.env.PERFORMANCE_TEST_TILEDESK_PROJECT_ID
+    // console.log("TILEDESK_PROJECT_ID:", TILEDESK_PROJECT_ID);
+}
+else {
+    throw new Error(".env.PERFORMANCE_TEST_TILEDESK_PROJECT_ID is mandatory");
+}
 
-// const APPID = 'tilechat';
+// console.log("process.env.PERFORMANCE_TEST_MQTT_ENDPOINT:", process.env.PERFORMANCE_TEST_MQTT_ENDPOINT);
+let MQTT_ENDPOINT = "";
+if (process.env && process.env.PERFORMANCE_TEST_MQTT_ENDPOINT) {
+	MQTT_ENDPOINT = process.env.PERFORMANCE_TEST_MQTT_ENDPOINT
+    // console.log("MQTT_ENDPOINT:", MQTT_ENDPOINT);
+}
+else {
+    throw new Error(".env.PERFORMANCE_TEST_MQTT_ENDPOINT is mandatory");
+}
+
+let API_ENDPOINT = "";
+if (process.env && process.env.PERFORMANCE_TEST_API_ENDPOINT) {
+	API_ENDPOINT = process.env.PERFORMANCE_TEST_API_ENDPOINT
+    // console.log("API_ENDPOINT:", API_ENDPOINT);
+}
+else {
+    throw new Error(".env.PERFORMANCE_TEST_API_ENDPOINT is mandatory");
+}
+
+// console.log("process.env.PERFORMANCE_TEST_API_ENDPOINT:", process.env.PERFORMANCE_TEST_API_ENDPOINT);
+let TILEDESK_USER_ID = "";
+if (process.env && process.env.PERFORMANCE_TEST_USER_ID) {
+	TILEDESK_USER_ID = process.env.PERFORMANCE_TEST_USER_ID
+}
+else {
+    throw new Error(".env.PERFORMANCE_TEST_USER_ID is mandatory");
+}
+
+let TILEDESK_USER_TOKEN = "";
+if (process.env && process.env.PERFORMANCE_TEST_USER_TOKEN) {
+	TILEDESK_USER_TOKEN = process.env.PERFORMANCE_TEST_USER_TOKEN;
+}
+else {
+    throw new Error(".env.PERFORMANCE_TEST_USER_TOKEN is mandatory");
+}
+
+console.log("process.env.PERFORMANCE_TEST_REQS_PER_SECOND:", process.env.PERFORMANCE_TEST_REQS_PER_SECOND);
+let REQS_PER_SECOND = 4;
+if (process.env && process.env.PERFORMANCE_TEST_REQS_PER_SECOND) {
+	REQS_PER_SECOND = process.env.PERFORMANCE_TEST_REQS_PER_SECOND
+    console.log("REQS_PER_SECOND:", REQS_PER_SECOND);
+}
+else {
+    console.log("Using default .env.PERFORMANCE_TEST_REQS_PER_SECOND:", REQS_PER_SECOND);
+}
 
 let config = {
     EXPECTED_AVG_DIRECT_MESSAGE_DELAY: 160,
     EXPECTED_AVG_GROUP_MESSAGE_DELAY: 160,
-    REQS_PER_SECOND: 4,
+    REQS_PER_SECOND: REQS_PER_SECOND,
     MAX_SECONDS: 15000,
-    CONCURRENCY: 1, // 2
-    //API_SERVER_HOST: 'localhost',
-    //API_SERVER_PORT: 8004,
-    // MQTT_ENDPOINT: 'wss://console.native.tiledesk.com/ws',
-    // API_ENDPOINT: 'https://console.native.tiledesk.com/chatapi/api',
-    // LOCAL
-    //MQTT_ENDPOINT: 'ws://localhost:15675/ws',
-    //API_ENDPOINT: 'http://localhost:8004/api',
-    // REMOTE TEST
-    MQTT_ENDPOINT: 'ws://35.198.150.252/mqws/ws',
-    API_ENDPOINT: 'http://35.198.150.252/chatapi/api',
-    // // REMOTE
-    // MQTT_ENDPOINT: 'wss://eu.rtmv3.tiledesk.com/mqws/ws',
-    // API_ENDPOINT: 'https://eu.rtmv3.tiledesk.com/chatapi/api',    
-    APPID: 'tilechat'
+    CONCURRENCY: 1,
+    MQTT_ENDPOINT: MQTT_ENDPOINT,
+    API_ENDPOINT: API_ENDPOINT,
+    APPID: 'tilechat',
+    TILEDESK_PROJECT_ID: TILEDESK_PROJECT_ID,
+    MESSAGE_PREFIX: "Performance-test-",
+    TILEDESK_USER_ID: TILEDESK_USER_ID,
+    TILEDESK_USER_TOKEN: TILEDESK_USER_TOKEN
 }
 
-// let config = {
-//     EXPECTED_AVG_DIRECT_MESSAGE_DELAY: 160,
-//     EXPECTED_AVG_GROUP_MESSAGE_DELAY: 160,
-//     REQS_PER_SECOND: 100,
-//     MAX_SECONDS: 10,
-//     CONCURRENCY: 1, // 2
-//     //API_SERVER_HOST: 'localhost',
-//     API_SERVER_PORT: 8004,
-//     MQTT_ENDPOINT: 'ws://localhost:15675/ws',
-//     API_ENDPOINT: 'http://localhost:8004/api',
-//     APPID: 'tilechat'
-// }
-
 const user1 = {
-    // userid: "USER1",
-    userid: 'ad29ae36-f83d-447e-a197-f70fd7fa3eca', // test
-    //userid: "69a6b668-6a4f-4543-b5a9-5b3c34dd95ae",
+    userid: config.TILEDESK_USER_ID, //'ad29ae36-f83d-447e-a197-f70fd7fa3eca', // test
 	fullname: 'User 1',
 	firstname: 'User',
 	lastname: '1',
 	// token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI2OGFkODJjYi1lODE2LTRkYWEtYjljYi0wM2NiZmFjMDY1OGQiLCJzdWIiOiJVU0VSMSIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjEuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVIxLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSMS4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVIxIiwiY2lkIjoiVVNFUjEiLCJhenAiOiJVU0VSMSIsInVzZXJfaWQiOiJVU0VSMSIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjQ0Njc1NzcxLCJleHAiOjE5NTU3MTU3NzEsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVIxIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.CrvQLL3DMydcRyLSyfyJBSdyG-HKDj5Pd8kA1UIPjQA'
-    token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ZGM1YTE5OC1kZWM5LTRjNGYtYWU0Yy03Y2M2MWI0MTIxYWMiLCJzdWIiOiJhZDI5YWUzNi1mODNkLTQ0N2UtYTE5Ny1mNzBmZDdmYTNlY2EiLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLmFkMjlhZTM2LWY4M2QtNDQ3ZS1hMTk3LWY3MGZkN2ZhM2VjYS4qIiwicmFiYml0bXEud3JpdGU6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuYWQyOWFlMzYtZjgzZC00NDdlLWExOTctZjcwZmQ3ZmEzZWNhLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5hZDI5YWUzNi1mODNkLTQ0N2UtYTE5Ny1mNzBmZDdmYTNlY2EuKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiJhZDI5YWUzNi1mODNkLTQ0N2UtYTE5Ny1mNzBmZDdmYTNlY2EiLCJjaWQiOiJhZDI5YWUzNi1mODNkLTQ0N2UtYTE5Ny1mNzBmZDdmYTNlY2EiLCJhenAiOiJhZDI5YWUzNi1mODNkLTQ0N2UtYTE5Ny1mNzBmZDdmYTNlY2EiLCJ1c2VyX2lkIjoiYWQyOWFlMzYtZjgzZC00NDdlLWExOTctZjcwZmQ3ZmEzZWNhIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE2ODQ3NjkwNTEsImV4cCI6MTY4NzM2MTA1MSwiYXVkIjpbInJhYmJpdG1xIiwiYWQyOWFlMzYtZjgzZC00NDdlLWExOTctZjcwZmQ3ZmEzZWNhIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.XC7TLQsrbYxoyKiCneNrHO_9pKhS_Cx55Maf0RT7o40'
+    token: config.TILEDESK_USER_TOKEN //'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ZGM1YTE5OC1kZWM5LTRjNGYtYWU0Yy03Y2M2MWI0MTIxYWMiLCJzdWIiOiJhZDI5YWUzNi1mODNkLTQ0N2UtYTE5Ny1mNzBmZDdmYTNlY2EiLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLmFkMjlhZTM2LWY4M2QtNDQ3ZS1hMTk3LWY3MGZkN2ZhM2VjYS4qIiwicmFiYml0bXEud3JpdGU6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuYWQyOWFlMzYtZjgzZC00NDdlLWExOTctZjcwZmQ3ZmEzZWNhLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5hZDI5YWUzNi1mODNkLTQ0N2UtYTE5Ny1mNzBmZDdmYTNlY2EuKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiJhZDI5YWUzNi1mODNkLTQ0N2UtYTE5Ny1mNzBmZDdmYTNlY2EiLCJjaWQiOiJhZDI5YWUzNi1mODNkLTQ0N2UtYTE5Ny1mNzBmZDdmYTNlY2EiLCJhenAiOiJhZDI5YWUzNi1mODNkLTQ0N2UtYTE5Ny1mNzBmZDdmYTNlY2EiLCJ1c2VyX2lkIjoiYWQyOWFlMzYtZjgzZC00NDdlLWExOTctZjcwZmQ3ZmEzZWNhIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE2ODQ3NjkwNTEsImV4cCI6MTY4NzM2MTA1MSwiYXVkIjpbInJhYmJpdG1xIiwiYWQyOWFlMzYtZjgzZC00NDdlLWExOTctZjcwZmQ3ZmEzZWNhIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.XC7TLQsrbYxoyKiCneNrHO_9pKhS_Cx55Maf0RT7o40'
     //token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwOTAyM2JmYS1mZmZlLTRlZmQtYmQ1ZS1lZGExZTM0NTA1NmEiLCJzdWIiOiI2OWE2YjY2OC02YTRmLTQ1NDMtYjVhOS01YjNjMzRkZDk1YWUiLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLjY5YTZiNjY4LTZhNGYtNDU0My1iNWE5LTViM2MzNGRkOTVhZS4qIiwicmFiYml0bXEud3JpdGU6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuNjlhNmI2NjgtNmE0Zi00NTQzLWI1YTktNWIzYzM0ZGQ5NWFlLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy42OWE2YjY2OC02YTRmLTQ1NDMtYjVhOS01YjNjMzRkZDk1YWUuKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiI2OWE2YjY2OC02YTRmLTQ1NDMtYjVhOS01YjNjMzRkZDk1YWUiLCJjaWQiOiI2OWE2YjY2OC02YTRmLTQ1NDMtYjVhOS01YjNjMzRkZDk1YWUiLCJhenAiOiI2OWE2YjY2OC02YTRmLTQ1NDMtYjVhOS01YjNjMzRkZDk1YWUiLCJ1c2VyX2lkIjoiNjlhNmI2NjgtNmE0Zi00NTQzLWI1YTktNWIzYzM0ZGQ5NWFlIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE2ODQ4MzMxOTIsImV4cCI6MTY4NzQyNTE5MiwiYXVkIjpbInJhYmJpdG1xIiwiNjlhNmI2NjgtNmE0Zi00NTQzLWI1YTktNWIzYzM0ZGQ5NWFlIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.-33y3cBb1a0hY4Te-I1doc-MHloFzX-qdml3o3DWXg8'
-};
-
-const user2 = {
-	userid: 'USER2',
-	fullname: 'User 2',
-	firstname: 'User',
-	lastname: '2',
-	token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI0NGUzZjdhZC1jNGM1LTQxZmMtOTQzZi0wZjFjZjYwZTBkNDEiLCJzdWIiOiJVU0VSMiIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjIuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVIyLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSMi4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVIyIiwiY2lkIjoiVVNFUjIiLCJhenAiOiJVU0VSMiIsInVzZXJfaWQiOiJVU0VSMiIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjQ0Njc1NzcxLCJleHAiOjE5NTU3MTU3NzEsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVIyIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.NQsVvyrwGaCz9W6vS1-QSPRxBL1b2mPz1ntLtEFJm_A'
 };
 
 let chatClient1 = new Chat21Client(
@@ -84,112 +96,91 @@ let chatClient1 = new Chat21Client(
     log: false
 });
 
-let chatClient2 = new Chat21Client(
-{
-    appId: config.APPID,
-    MQTTendpoint: config.MQTT_ENDPOINT,
-    APIendpoint: config.API_ENDPOINT
-});
-
-// DEPRECATED infos.
-// noRequestPerSecond:
-// >=95, direct ('messages'+'persist' queues, LOGLEVEL=error), not-passing
-// <=105, direct, mean-latency=160 ('messages' queue only, LOGLEVEL=error,prefetch=10)
-// <=300, direct, mean-latency=30 ('messages' queue only, LOGLEVEL=error, no-logs in load-http-app, prefetch=50)
-// <=350, direct, mean-latency=110 ('messages' queue only, LOGLEVEL=error, no-logs in load-http-app, prefetch=50)
-
-// deprecated
-// let EXPECTED_AVG_MESSAGE_DELAY = 160;
-// let REQS_PER_SECOND = 340;
-// let MAX_SECONDS = 5;
-// let CONCURRENCY = 2;
-
-// var host = 'https://loadtest.andreasponziell.repl.co'
-// let host = 'http://localhost:3000' // 3002 embedded
 let group_id; // got in before()
 let group_name; // got in before()
+let sent_messages = new Map();
+let total_messages = 0;
+let total_delay = 0;
 
 console.log("Executing benchmarks.");
 console.log("MQTT endpoint:", config.MQTT_ENDPOINT);
 console.log("API endpoint:", config.API_ENDPOINT);
+console.log("Tiledesk Project Id:", config.TILEDESK_PROJECT_ID);
+console.log("Requests per second:", config.REQS_PER_SECOND);
 
-describe("Performance Test", function() {
-    before(function(done) {
-        this.timeout(20000);
+// describe("Performance Test", function() {
+//     before(function(done) {
+//         this.timeout(20000);
+console.log("connecting...")
         chatClient1.connect(user1.userid, user1.token, () => {
-            console.log("chatClient1 Connected...");
-            chatClient2.connect(user2.userid, user2.token, async () => {
-                console.log("chatClient2 Connected...");
-                group_id = "support-group-" + "64690469599137001a6dc6f5-" + uuidv4().replace(/-+/g, "");
-                group_name = "benchmarks group: " + group_id;
-                const group_members = {}
-                group_members['USER2'] = 1;
-                group_members['USER3'] = 1;
-                group_members['USER4'] = 1;
-                group_members['USER5'] = 1;
-                let total_ = 0
-                const start_ = Date.now();
-                chatClient1.groupCreate(
-                    group_name,
-                    group_id,
-                    group_members,
-                    (err, result) => {
-                        total_ = Date.now() - start_
-                        console.log("TOTAL GROUP CREATION TIME", total_ + "ms")
+            console.log("chatClient1 Connected...");group_id = "support-group-" + "64690469599137001a6dc6f5-" + uuidv4().replace(/-+/g, "");
+            group_name = "benchmarks group => " + group_id;
+            const group_members = {}
+            group_members['USER2'] = 1;
+            group_members['USER3'] = 1;
+            group_members['USER4'] = 1;
+            group_members['USER5'] = 1;
+            let total_ = 0
+            const start_ = Date.now();
+            chatClient1.groupCreate(
+                group_name,
+                group_id,
+                group_members,
+                (err, result) => {
+                    total_ = Date.now() - start_
+                    console.log("TOTAL GROUP CREATION TIME", total_ + "ms");
+                    assert(err == null);
+                    assert(result != null);
+                    assert(result.success == true);
+                    assert(result.group.name === group_name);
+                    assert(result.group.members != null);
+                    assert(result.group.members[user1.userid] == 1);
+                    assert(result.group.members['USER2'] == 1);
+                    assert(result.group.members['USER3'] == 1);
+                    assert(result.group.members['USER4'] == 1);
+                    assert(result.group.members['USER5'] == 1);
+                    console.log("Group created:", result.group.name);
+                    chatClient1.groupData(group_id, (err, json) => {
+                        // console.log("before() - Verified group updated:", group_id, "data:", json);
+                        //console.log("groupData:", json)
                         assert(err == null);
-                        assert(result != null);
-                        assert(result.success == true);
-                        assert(result.group.name === group_name);
-                        assert(result.group.members != null);
-                        assert(result.group.members[user1.userid] == 1);
-                        assert(result.group.members['USER2'] == 1);
-                        assert(result.group.members['USER3'] == 1);
-                        assert(result.group.members['USER4'] == 1);
-                        assert(result.group.members['USER5'] == 1);
-                        console.log("before() - Group created:", result.group.name);
-                        chatClient1.groupData(group_id, (err, json) => {
-                            // console.log("before() - Verified group updated:", group_id, "data:", json);
-                            //console.log("groupData:", json)
-                            assert(err == null);
-                            assert(json != null);
-                            assert(json.success == true);
-                            assert(json.result != null);
-                            assert(json.result.uid === group_id);
-                            assert(json.result.owner === user1.userid);
-                            assert(json.result.members != null);
-                            // assert(json.result.members[user1.userid] != null);
-                            // assert(json.result.members[user2.userid] != null);
-                            assert(json.result.members[user1.userid] == 1);
-                            assert(json.result.members['USER2'] == 1);
-                            assert(json.result.members['USER3'] == 1);
-                            assert(json.result.members['USER4'] == 1);
-                            assert(json.result.members['USER5'] == 1);
-                            //console.log("before() - assertions ok -> done()");
-                            done();
-                        });
-                    }
-                );
-            });
+                        assert(json != null);
+                        assert(json.success == true);
+                        assert(json.result != null);
+                        assert(json.result.uid === group_id);
+                        assert(json.result.owner === user1.userid);
+                        assert(json.result.members != null);
+                        // assert(json.result.members[user1.userid] != null);
+                        // assert(json.result.members[user2.userid] != null);
+                        assert(json.result.members[user1.userid] == 1);
+                        assert(json.result.members['USER2'] == 1);
+                        assert(json.result.members['USER3'] == 1);
+                        assert(json.result.members['USER4'] == 1);
+                        assert(json.result.members['USER5'] == 1);
+                        //console.log("before() - assertions ok -> done()");
+                        // done();
+                        benchmark();
+                    });
+                }
+            );
         });
-	});
+	// });
 	
-	after(function(done) {
-        chatClient1.close(() => {
-            chatClient2.close(() => {
-                done();
-            });
-        });
-	});
+	// after(function(done) {
+    //     chatClient1.close(() => {
+    //         chatClient2.close(() => {
+    //             done();
+    //         });
+    //     });
+	// });
 
-    it("Benchmark for group messages", function(done) {
-        this.timeout(1000 * 700000);
+    // it("Benchmark for group messages", function(done) {
+    //     this.timeout(1000 * 700000); // infinite timeout
 
         async function benchmark() {
             console.log("\n\n****************************************************");
             console.log("********* Support Group messages benchmark *********");
             console.log("****************************************************\n\n");
-            total_delay = 0;
-            total_messages = 0;
             let delay = 1000 / config.REQS_PER_SECOND;
             let total_iterations = config.REQS_PER_SECOND * config.MAX_SECONDS;
             let test_start_time = Date.now();
@@ -200,7 +191,40 @@ describe("Performance Test", function() {
             console.log("Group - Expected MESSAGES/SEC/VU =", config.REQS_PER_SECOND);
             console.log("Group - Expected TEST DURATION (s) =", config.MAX_SECONDS);
             console.log("Group - Expected DELAY BETWEEN MESSAGES (ms) =", delay);
-            console.log("Group - Expected TOTAL ITERATIONS =", total_iterations);
+            // console.log("Group - Expected TOTAL ITERATIONS =", total_iterations);
+
+            let handler = chatClient1.onMessageAdded((message, topic) => {
+                // console.log("> Incoming message:", message);
+                //console.log("> Incoming message [sender:" + message.sender_fullname + "]: " + message.text);
+                if (
+                    message &&
+                    message.text.startsWith(config.MESSAGE_PREFIX) &&
+                    message.sender_fullname === "echo bot" &&
+                    message.recipient === group_id
+                ) {
+                    let text = message.text.trim();
+                    // console.log("> Accepted [sender:" + message.sender_fullname + "]: " + text);
+                    let message_iteration = text.split("/")[1];
+                    let time_sent = sent_messages.get(text);
+                    // console.log("> sent_message[" + message_iteration + "], time sent:", time_sent);
+                    let time_received = Date.now();
+                    let delay = time_received - time_sent;
+                    total_messages++;
+                    // current = Date.now() - APP_start_time;
+                    total_delay += delay;
+                    // console.log("total:", total_delay)
+                    let mean = total_delay / total_messages;
+                    // console.log("total_messages N:", total_messages, "currentTimeMs:", current, "meanMs:", Math.floor(mean));
+                    let latency = {
+                        totalMessages: total_messages,
+                        latencyMs: delay,
+                        meanLatencyMs: mean
+                    };
+                    console.log("Message id:", message_iteration, "- latency/meanLatency:", latency.latencyMs + "/" + Math.round(latency.meanLatencyMs));
+                    //callback(latency_info, iteration, concurrent_iteration);
+                    // chatClient2.removeOnMessageAddedHandler(handler);
+                }
+            });
             console.log("Group - Running benchmark...");
             for (let i = 0; i < total_iterations; i++) {
                 // console.log("GROUP i:", i)
@@ -208,100 +232,37 @@ describe("Performance Test", function() {
                     // console.log("c", c)
                     let recipient_id = group_id;
                     let recipient_fullname = group_name;
-                    sendMessage(i, c, recipient_id, recipient_fullname, async function(latency, iteration, concurrent_iteration) {
+                    sendMessage(i, c, recipient_id, recipient_fullname, async (latency, iteration, concurrent_iteration) => {
                         console.log("Group", i, "- latency/meanLatency:", latency.latencyMs + "/" + Math.round(latency.meanLatencyMs));
-                        if (iteration == total_iterations - 1 && concurrent_iteration == config.CONCURRENCY - 1) {
-                            endCallback(latency);
-                            console.log("'Group' benchmark end.");
-                            done();
-                        }
                     });
                 }
                 await new Promise(resolve => setTimeout(resolve, delay));
                 current = Date.now() - test_start_time;
             }
-
-            function endCallback(latency) {
-                console.log("\n\n********* Group - Benchmark results *********");
-                console.log("Group - Final latency:", latency.meanLatencyMs);
-                console.log("Group - Expected max average latency:", config.EXPECTED_AVG_GROUP_MESSAGE_DELAY);
-                let test_duration = Math.round(current / 1000)
-                console.log("Group - Test duration:", test_duration + " seconds" + " (" + current + ") ms");
-                let mesg_sec = Math.round(latency.totalMessages / test_duration)
-                console.log("Group - MESSAGES/SEC:", mesg_sec);
-                if (latency.meanLatencyMs > config.EXPECTED_AVG_GROUP_MESSAGE_DELAY) {
-                    console.error("Warning: final mean latency " + latency.meanLatencyMs + " is greater then expected (" + config.EXPECTED_AVG_GROUP_MESSAGE_DELAY + ")")
-                }
-                else {
-                    console.log("Group messages benchmark performed good! 😎");
-                }
-                // assert(latency.meanLatencyMs < config.EXPECTED_AVG_GROUP_MESSAGE_DELAY);
-                
-                // (latency.meanLatencyMs).should.be.below(config.EXPECTED_AVG_GROUP_MESSAGE_DELAY);
-            }
         }
-        benchmark();
-    });
-});
+        // benchmark();
+//     });
+// });
 
-let total_messages = 0;
-let total_delay = 0;
 function sendMessage(iteration, concurrent_iteration, recipient_id, recipient_fullname, callback) {
-    let starttime = Date.now();
-    const sent_message = "Performance-test-" + uuidv4();
-    let handler = chatClient2.onMessageAdded((message, topic) => {
-        // console.log("******** message added:", message);
-        // console.log("callback2")
-        if (
-            message &&
-            message.text === sent_message
-        ) {
-            // console.log("message received: " + sent_message);
-            let endtime = Date.now();
-            let delay = endtime - starttime;
-            // console.log("message received:", sent_message, "after: " + delay + " ms");
-            // TEST
-            // if (APP_start_time == 0) {
-            //     APP_start_time = Date.now();
-            // }
-            total_messages++;
-            // current = Date.now() - APP_start_time;
-            total_delay += delay;
-            // console.log("total:", total_delay)
-            let mean = total_delay / total_messages
-            // console.log("total_messages N:", total_messages, "currentTimeMs:", current, "meanMs:", Math.floor(mean));
-            let latency_info = {
-                totalMessages: total_messages,
-                latencyMs: delay,
-                meanLatencyMs: mean
-            };
-            callback(latency_info, iteration, concurrent_iteration);
-            chatClient2.removeOnMessageAddedHandler(handler);
-        }
-    });
-
-    
-    // console.log("handler:", handler);
-    // console.log("client1:", chatClient1);
+    let time_sent = Date.now();
+    const sent_message = config.MESSAGE_PREFIX + uuidv4() + "/"+ iteration;
+    sent_messages.set(sent_message, time_sent);
+    console.log("Sent (and added to map):", sent_message);
     
     chatClient1.sendMessage(
         sent_message,
         'text',
-        recipient_id, //user2.userid, // recipient
-        recipient_fullname, //user2.fullname, // recipient fullname
-        user1.fullname, // sender fullname
-        { projectId: "64690469599137001a6dc6f5" }, // TEST
-        //{ projectId: "646c838d55f7620013e4ab92" }, // PROD
-        // null,
-        null, // metadata
-        recipient_id.startsWith("support-group-") ? 'group' : 'direct', //user2.userid.startsWith("group-") ? 'group' : 'direct',
+        recipient_id,
+        recipient_fullname,
+        user1.fullname,
+        {projectId: config.TILEDESK_PROJECT_ID},
+        null, // no metadata
+        'group',
         (err, msg) => {
             if (err) {
                 console.error("Error send:", err);
             }
-            // else {
-            //     console.log("Message sent:", msg.text);
-            // }
         }
     );
 }
