@@ -4,6 +4,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@chat21/chat21-server
 
+## v0.2.53
+- debug version
+
 ## v0.2.52
 - debug version
 
