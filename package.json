@@ -19,7 +19,7 @@
     "redis": "^3.1.2"
   },
   "devDependencies": {
-    "@chat21/chat21-http-server": "^0.2.28",
+    "@chat21/chat21-http-server": "^0.2.31",
     "axios": "^0.21.1",
     "loadtest": "^1.4.3",
     "should": "^9.0.2"

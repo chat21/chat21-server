@@ -567,20 +567,20 @@ function sendMessageToGroupMembers(outgoing_message, group, app_id, callback) {
 
 // let groups = {};
 function getGroup(group_id, callback) {
-  console.log("**** getGroup:", group_id)
+  logger.log("**** getGroup:", group_id)
   groupFromCache(group_id, (group) => {
-    console.log("group from cache?", group);
+    logger.log("group from cache?", group);
     if (group) {
-      console.log("--GROUP", group_id, "FOUND IN CACHE:", group);
+      logger.log("--GROUP", group_id, "FOUND IN CACHE:", group);
       callback(null, group);
     }
     else {
-      console.log("--GROUP", group_id, "NO CACHE! GET FROM DB...");
+      logger.log("--GROUP", group_id, "NO CACHE! GET FROM DB...");
       chatdb.getGroup(group_id, function(err, group) {
         if (!err) {
           saveGroupInCache(group, group_id, () => {});
         }
-        console.log("group from db:", group);
+        logger.log("group from db:", group);
         callback(err, group);
       });
     }
@@ -588,25 +588,25 @@ function getGroup(group_id, callback) {
 }
 
 function groupFromCache(group_id, callback) {
-  console.log("groupFromCache() group_id:", group_id)
+  logger.log("groupFromCache() group_id:", group_id)
   if (redis_enabled) {
     const group_key = "chat21:messages:groups:" + group_id;
-    console.log("group key", group_key)
+    logger.log("group key", group_key)
     tdcache.client.get(group_key, (err, group) => {
       if (err) {
-        console.error("Error during getGroup():", err);
+        logger.error("Error during getGroup():", err);
         callback(null);
       }
       else {
         if (callback) {
-          console.log("got group by key:", group);
+          logger.log("got group by key:", group);
           callback(JSON.parse(group));
         }
       }
     });
   }
   else {
-    console.log("No redis.");
+    logger.log("No redis.");
     callback(null);
   }
 }

@@ -53,11 +53,11 @@ else {
     throw new Error(".env.PERFORMANCE_TEST_USER_TOKEN is mandatory");
 }
 
-console.log("process.env.PERFORMANCE_TEST_REQS_PER_SECOND:", process.env.PERFORMANCE_TEST_REQS_PER_SECOND);
+//console.log("process.env.PERFORMANCE_TEST_REQS_PER_SECOND:", process.env.PERFORMANCE_TEST_REQS_PER_SECOND);
 let REQS_PER_SECOND = 4;
 if (process.env && process.env.PERFORMANCE_TEST_REQS_PER_SECOND) {
 	REQS_PER_SECOND = process.env.PERFORMANCE_TEST_REQS_PER_SECOND
-    console.log("REQS_PER_SECOND:", REQS_PER_SECOND);
+    // console.log("REQS_PER_SECOND:", REQS_PER_SECOND);
 }
 else {
     console.log("Using default .env.PERFORMANCE_TEST_REQS_PER_SECOND:", REQS_PER_SECOND);
@@ -73,7 +73,7 @@ let config = {
     API_ENDPOINT: API_ENDPOINT,
     APPID: 'tilechat',
     TILEDESK_PROJECT_ID: TILEDESK_PROJECT_ID,
-    MESSAGE_PREFIX: "Performance-test-",
+    MESSAGE_PREFIX: "Performance-test",
     TILEDESK_USER_ID: TILEDESK_USER_ID,
     TILEDESK_USER_TOKEN: TILEDESK_USER_TOKEN
 }
@@ -83,9 +83,7 @@ const user1 = {
 	fullname: 'User 1',
 	firstname: 'User',
 	lastname: '1',
-	// token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI2OGFkODJjYi1lODE2LTRkYWEtYjljYi0wM2NiZmFjMDY1OGQiLCJzdWIiOiJVU0VSMSIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjEuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVIxLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSMS4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVIxIiwiY2lkIjoiVVNFUjEiLCJhenAiOiJVU0VSMSIsInVzZXJfaWQiOiJVU0VSMSIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjQ0Njc1NzcxLCJleHAiOjE5NTU3MTU3NzEsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVIxIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.CrvQLL3DMydcRyLSyfyJBSdyG-HKDj5Pd8kA1UIPjQA'
-    token: config.TILEDESK_USER_TOKEN //'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ZGM1YTE5OC1kZWM5LTRjNGYtYWU0Yy03Y2M2MWI0MTIxYWMiLCJzdWIiOiJhZDI5YWUzNi1mODNkLTQ0N2UtYTE5Ny1mNzBmZDdmYTNlY2EiLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLmFkMjlhZTM2LWY4M2QtNDQ3ZS1hMTk3LWY3MGZkN2ZhM2VjYS4qIiwicmFiYml0bXEud3JpdGU6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuYWQyOWFlMzYtZjgzZC00NDdlLWExOTctZjcwZmQ3ZmEzZWNhLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5hZDI5YWUzNi1mODNkLTQ0N2UtYTE5Ny1mNzBmZDdmYTNlY2EuKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiJhZDI5YWUzNi1mODNkLTQ0N2UtYTE5Ny1mNzBmZDdmYTNlY2EiLCJjaWQiOiJhZDI5YWUzNi1mODNkLTQ0N2UtYTE5Ny1mNzBmZDdmYTNlY2EiLCJhenAiOiJhZDI5YWUzNi1mODNkLTQ0N2UtYTE5Ny1mNzBmZDdmYTNlY2EiLCJ1c2VyX2lkIjoiYWQyOWFlMzYtZjgzZC00NDdlLWExOTctZjcwZmQ3ZmEzZWNhIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE2ODQ3NjkwNTEsImV4cCI6MTY4NzM2MTA1MSwiYXVkIjpbInJhYmJpdG1xIiwiYWQyOWFlMzYtZjgzZC00NDdlLWExOTctZjcwZmQ3ZmEzZWNhIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.XC7TLQsrbYxoyKiCneNrHO_9pKhS_Cx55Maf0RT7o40'
-    //token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwOTAyM2JmYS1mZmZlLTRlZmQtYmQ1ZS1lZGExZTM0NTA1NmEiLCJzdWIiOiI2OWE2YjY2OC02YTRmLTQ1NDMtYjVhOS01YjNjMzRkZDk1YWUiLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLjY5YTZiNjY4LTZhNGYtNDU0My1iNWE5LTViM2MzNGRkOTVhZS4qIiwicmFiYml0bXEud3JpdGU6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuNjlhNmI2NjgtNmE0Zi00NTQzLWI1YTktNWIzYzM0ZGQ5NWFlLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy42OWE2YjY2OC02YTRmLTQ1NDMtYjVhOS01YjNjMzRkZDk1YWUuKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiI2OWE2YjY2OC02YTRmLTQ1NDMtYjVhOS01YjNjMzRkZDk1YWUiLCJjaWQiOiI2OWE2YjY2OC02YTRmLTQ1NDMtYjVhOS01YjNjMzRkZDk1YWUiLCJhenAiOiI2OWE2YjY2OC02YTRmLTQ1NDMtYjVhOS01YjNjMzRkZDk1YWUiLCJ1c2VyX2lkIjoiNjlhNmI2NjgtNmE0Zi00NTQzLWI1YTktNWIzYzM0ZGQ5NWFlIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE2ODQ4MzMxOTIsImV4cCI6MTY4NzQyNTE5MiwiYXVkIjpbInJhYmJpdG1xIiwiNjlhNmI2NjgtNmE0Zi00NTQzLWI1YTktNWIzYzM0ZGQ5NWFlIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.-33y3cBb1a0hY4Te-I1doc-MHloFzX-qdml3o3DWXg8'
+	token: config.TILEDESK_USER_TOKEN //'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ZGM1YTE5OC1kZWM5LTRjNGYtYWU0Yy03Y2M2MWI0MTIxYWMiLCJzdWIiOiJhZDI5YWUzNi1mODNkLTQ0N2UtYTE5Ny1mNzBmZDdmYTNlY2EiLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLmFkMjlhZTM2LWY4M2QtNDQ3ZS1hMTk3LWY3MGZkN2ZhM2VjYS4qIiwicmFiYml0bXEud3JpdGU6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuYWQyOWFlMzYtZjgzZC00NDdlLWExOTctZjcwZmQ3ZmEzZWNhLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5hZDI5YWUzNi1mODNkLTQ0N2UtYTE5Ny1mNzBmZDdmYTNlY2EuKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiJhZDI5YWUzNi1mODNkLTQ0N2UtYTE5Ny1mNzBmZDdmYTNlY2EiLCJjaWQiOiJhZDI5YWUzNi1mODNkLTQ0N2UtYTE5Ny1mNzBmZDdmYTNlY2EiLCJhenAiOiJhZDI5YWUzNi1mODNkLTQ0N2UtYTE5Ny1mNzBmZDdmYTNlY2EiLCJ1c2VyX2lkIjoiYWQyOWFlMzYtZjgzZC00NDdlLWExOTctZjcwZmQ3ZmEzZWNhIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE2ODQ3NjkwNTEsImV4cCI6MTY4NzM2MTA1MSwiYXVkIjpbInJhYmJpdG1xIiwiYWQyOWFlMzYtZjgzZC00NDdlLWExOTctZjcwZmQ3ZmEzZWNhIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.XC7TLQsrbYxoyKiCneNrHO_9pKhS_Cx55Maf0RT7o40'
 };
 
 let chatClient1 = new Chat21Client(
@@ -111,6 +109,7 @@ console.log("Requests per second:", config.REQS_PER_SECOND);
 // describe("Performance Test", function() {
 //     before(function(done) {
 //         this.timeout(20000);
+let test_start_time = Date.now();
 console.log("connecting...")
         chatClient1.connect(user1.userid, user1.token, () => {
             console.log("chatClient1 Connected...");group_id = "support-group-" + "64690469599137001a6dc6f5-" + uuidv4().replace(/-+/g, "");
@@ -183,9 +182,8 @@ console.log("connecting...")
             console.log("****************************************************\n\n");
             let delay = 1000 / config.REQS_PER_SECOND;
             let total_iterations = config.REQS_PER_SECOND * config.MAX_SECONDS;
-            let test_start_time = Date.now();
-            let current = 0;
-            console.log("Group - Expected message average latency to be <", config.EXPECTED_AVG_DIRECT_MESSAGE_DELAY + "ms");
+            // let current = 0;
+            // console.log("Group - Expected message average latency to be <", config.EXPECTED_AVG_DIRECT_MESSAGE_DELAY + "ms");
             console.log("Group - Expected CONCURRENCY (#VIRTUAL USERs aka VUs) =", config.CONCURRENCY);
             console.log("Group - Expected MESSAGES/SEC =", config.REQS_PER_SECOND * config.CONCURRENCY);
             console.log("Group - Expected MESSAGES/SEC/VU =", config.REQS_PER_SECOND);
@@ -194,18 +192,20 @@ console.log("connecting...")
             // console.log("Group - Expected TOTAL ITERATIONS =", total_iterations);
 
             let handler = chatClient1.onMessageAdded((message, topic) => {
-                // console.log("> Incoming message:", message);
+                //console.log("> Incoming message:", message);
                 //console.log("> Incoming message [sender:" + message.sender_fullname + "]: " + message.text);
                 if (
                     message &&
                     message.text.startsWith(config.MESSAGE_PREFIX) &&
-                    message.sender_fullname === "echo bot" &&
+                    (message.sender_fullname !== "User 1" && message.sender_fullname !== "System") && // bot is the sender
                     message.recipient === group_id
                 ) {
                     let text = message.text.trim();
                     // console.log("> Accepted [sender:" + message.sender_fullname + "]: " + text);
                     let message_iteration = text.split("/")[1];
                     let time_sent = sent_messages.get(text);
+                    let seconds_from_start = Math.round( (Date.now() - test_start_time) /1000);
+                    // console.log("seconds_from_start", seconds_from_start)
                     // console.log("> sent_message[" + message_iteration + "], time sent:", time_sent);
                     let time_received = Date.now();
                     let delay = time_received - time_sent;
@@ -220,9 +220,11 @@ console.log("connecting...")
                         latencyMs: delay,
                         meanLatencyMs: mean
                     };
-                    console.log("Message id:", message_iteration, "- latency/meanLatency:", latency.latencyMs + "/" + Math.round(latency.meanLatencyMs));
-                    //callback(latency_info, iteration, concurrent_iteration);
-                    // chatClient2.removeOnMessageAddedHandler(handler);
+                    // x humans
+                    // console.log("Message id:", message_iteration, "- latency/meanLatency:", latency.latencyMs + "/" + Math.round(latency.meanLatencyMs));
+                    // for spreadsheet
+                    // console.log(message_iteration + ";" + latency.latencyMs);
+                    console.log(seconds_from_start + ";" + latency.latencyMs);
                 }
             });
             console.log("Group - Running benchmark...");
@@ -246,9 +248,9 @@ console.log("connecting...")
 
 function sendMessage(iteration, concurrent_iteration, recipient_id, recipient_fullname, callback) {
     let time_sent = Date.now();
-    const sent_message = config.MESSAGE_PREFIX + uuidv4() + "/"+ iteration;
+    const sent_message = config.MESSAGE_PREFIX + "/"+ iteration; //config.MESSAGE_PREFIX + uuidv4() + "/"+ iteration;
     sent_messages.set(sent_message, time_sent);
-    console.log("Sent (and added to map):", sent_message);
+    //console.log("Sent (and added to map):", sent_message);
     
     chatClient1.sendMessage(
         sent_message,
