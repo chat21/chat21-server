@@ -86,7 +86,23 @@ const user1 = {
 	token: config.TILEDESK_USER_TOKEN //'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ZGM1YTE5OC1kZWM5LTRjNGYtYWU0Yy03Y2M2MWI0MTIxYWMiLCJzdWIiOiJhZDI5YWUzNi1mODNkLTQ0N2UtYTE5Ny1mNzBmZDdmYTNlY2EiLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLmFkMjlhZTM2LWY4M2QtNDQ3ZS1hMTk3LWY3MGZkN2ZhM2VjYS4qIiwicmFiYml0bXEud3JpdGU6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuYWQyOWFlMzYtZjgzZC00NDdlLWExOTctZjcwZmQ3ZmEzZWNhLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5hZDI5YWUzNi1mODNkLTQ0N2UtYTE5Ny1mNzBmZDdmYTNlY2EuKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiJhZDI5YWUzNi1mODNkLTQ0N2UtYTE5Ny1mNzBmZDdmYTNlY2EiLCJjaWQiOiJhZDI5YWUzNi1mODNkLTQ0N2UtYTE5Ny1mNzBmZDdmYTNlY2EiLCJhenAiOiJhZDI5YWUzNi1mODNkLTQ0N2UtYTE5Ny1mNzBmZDdmYTNlY2EiLCJ1c2VyX2lkIjoiYWQyOWFlMzYtZjgzZC00NDdlLWExOTctZjcwZmQ3ZmEzZWNhIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE2ODQ3NjkwNTEsImV4cCI6MTY4NzM2MTA1MSwiYXVkIjpbInJhYmJpdG1xIiwiYWQyOWFlMzYtZjgzZC00NDdlLWExOTctZjcwZmQ3ZmEzZWNhIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.XC7TLQsrbYxoyKiCneNrHO_9pKhS_Cx55Maf0RT7o40'
 };
 
+const user2 = {
+	userid: 'USER2',
+	fullname: 'User 2',
+	firstname: 'User',
+	lastname: '2',
+	token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI0NGUzZjdhZC1jNGM1LTQxZmMtOTQzZi0wZjFjZjYwZTBkNDEiLCJzdWIiOiJVU0VSMiIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjIuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVIyLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSMi4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVIyIiwiY2lkIjoiVVNFUjIiLCJhenAiOiJVU0VSMiIsInVzZXJfaWQiOiJVU0VSMiIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjQ0Njc1NzcxLCJleHAiOjE5NTU3MTU3NzEsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVIyIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.NQsVvyrwGaCz9W6vS1-QSPRxBL1b2mPz1ntLtEFJm_A'
+};
+
 let chatClient1 = new Chat21Client(
+{
+    appId: config.APPID,
+    MQTTendpoint: config.MQTT_ENDPOINT,
+    APIendpoint: config.API_ENDPOINT,
+    log: false
+});
+
+let chatClient2 = new Chat21Client(
 {
     appId: config.APPID,
     MQTTendpoint: config.MQTT_ENDPOINT,
@@ -111,14 +127,14 @@ console.log("Requests per second:", config.REQS_PER_SECOND);
 //         this.timeout(20000);
 let test_start_time = Date.now();
 console.log("connecting...")
+    chatClient2.connect(user2.userid, user2.token, () => {
+        console.log("chatClient2 Connected...");
         chatClient1.connect(user1.userid, user1.token, () => {
-            console.log("chatClient1 Connected...");group_id = "support-group-" + "64690469599137001a6dc6f5-" + uuidv4().replace(/-+/g, "");
+            console.log("chatClient1 Connected...");
+            group_id = "group-" + "64690469599137001a6dc6f5-" + uuidv4().replace(/-+/g, "");
             group_name = "benchmarks group => " + group_id;
             const group_members = {}
             group_members['USER2'] = 1;
-            group_members['USER3'] = 1;
-            group_members['USER4'] = 1;
-            group_members['USER5'] = 1;
             let total_ = 0
             const start_ = Date.now();
             chatClient1.groupCreate(
@@ -135,9 +151,9 @@ console.log("connecting...")
                     assert(result.group.members != null);
                     assert(result.group.members[user1.userid] == 1);
                     assert(result.group.members['USER2'] == 1);
-                    assert(result.group.members['USER3'] == 1);
-                    assert(result.group.members['USER4'] == 1);
-                    assert(result.group.members['USER5'] == 1);
+                    // assert(result.group.members['USER3'] == 1);
+                    // assert(result.group.members['USER4'] == 1);
+                    // assert(result.group.members['USER5'] == 1);
                     console.log("Group created:", result.group.name);
                     chatClient1.groupData(group_id, (err, json) => {
                         // console.log("before() - Verified group updated:", group_id, "data:", json);
@@ -149,13 +165,11 @@ console.log("connecting...")
                         assert(json.result.uid === group_id);
                         assert(json.result.owner === user1.userid);
                         assert(json.result.members != null);
-                        // assert(json.result.members[user1.userid] != null);
-                        // assert(json.result.members[user2.userid] != null);
                         assert(json.result.members[user1.userid] == 1);
                         assert(json.result.members['USER2'] == 1);
-                        assert(json.result.members['USER3'] == 1);
-                        assert(json.result.members['USER4'] == 1);
-                        assert(json.result.members['USER5'] == 1);
+                        // assert(json.result.members['USER3'] == 1);
+                        // assert(json.result.members['USER4'] == 1);
+                        // assert(json.result.members['USER5'] == 1);
                         //console.log("before() - assertions ok -> done()");
                         // done();
                         benchmark();
@@ -163,22 +177,11 @@ console.log("connecting...")
                 }
             );
         });
-	// });
-	
-	// after(function(done) {
-    //     chatClient1.close(() => {
-    //         chatClient2.close(() => {
-    //             done();
-    //         });
-    //     });
-	// });
-
-    // it("Benchmark for group messages", function(done) {
-    //     this.timeout(1000 * 700000); // infinite timeout
+	});
 
         async function benchmark() {
             console.log("\n\n****************************************************");
-            console.log("********* Support Group messages benchmark *********");
+            console.log("********* Chat21 Group messages benchmark *********");
             console.log("****************************************************\n\n");
             let delay = 1000 / config.REQS_PER_SECOND;
             let total_iterations = config.REQS_PER_SECOND * config.MAX_SECONDS;
@@ -191,13 +194,13 @@ console.log("connecting...")
             console.log("Group - Expected DELAY BETWEEN MESSAGES (ms) =", delay);
             // console.log("Group - Expected TOTAL ITERATIONS =", total_iterations);
 
-            let handler = chatClient1.onMessageAdded((message, topic) => {
+            let handler = chatClient2.onMessageAdded((message, topic) => {
                 //console.log("> Incoming message:", message);
                 //console.log("> Incoming message [sender:" + message.sender_fullname + "]: " + message.text);
                 if (
                     message &&
                     message.text.startsWith(config.MESSAGE_PREFIX) &&
-                    (message.sender_fullname !== "User 1" && message.sender_fullname !== "System") && // bot is the sender
+                    (message.sender_fullname === "User 1") &&
                     message.recipient === group_id
                 ) {
                     let text = message.text.trim();
@@ -208,7 +211,6 @@ console.log("connecting...")
                     // console.log("seconds_from_start", seconds_from_start)
                     // console.log("> sent_message[" + message_iteration + "], time sent:", time_sent);
                     let time_received = Date.now();
-                    let stringDate = new Date(time_received).toLocaleTimeString('en-US');
                     let delay = time_received - time_sent;
                     total_messages++;
                     // current = Date.now() - APP_start_time;
@@ -225,7 +227,7 @@ console.log("connecting...")
                     // console.log("Message id:", message_iteration, "- latency/meanLatency:", latency.latencyMs + "/" + Math.round(latency.meanLatencyMs));
                     // for spreadsheet
                     // console.log(message_iteration + ";" + latency.latencyMs);
-                    console.log(stringDate + ";" + seconds_from_start + ";" + latency.latencyMs);
+                    console.log(seconds_from_start + ";" + latency.latencyMs);
                 }
             });
             console.log("Group - Running benchmark...");
