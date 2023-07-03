@@ -1,7 +1,7 @@
 /*
     Chat21Client
 
-    v0.1.12.5
+    v0.1.12.6
 
     @Author Andrea Sponziello
     @Member Gabriele Panico
@@ -86,16 +86,16 @@ class Chat21Client {
         // MQTT: https://www.hivemq.com/blog/mqtt-essentials-part-5-mqtt-topics-best-practices/
         // RABBITMQ: https://www.cloudamqp.com/blog/2015-09-03-part4-rabbitmq-for-beginners-exchanges-routing-keys-bindings.html#topic-exchange
         this.topic_inbox = 'apps/tilechat/users/' + this.user_id + "/#"
-        if (this.log) {
+        // if (this.log) {
             console.log("subscribing to:", this.user_id, "topic", this.topic_inbox);
-        }
+        // }
         this.client.subscribe(this.topic_inbox, (err)  => {
             if (err) {
                 console.error("An error occurred while subscribing user", this.user_id, "on topic:", this.topic_inbox, "Error:", err);
             }
-            if (this.log) {
+            // if (this.log) {
                 console.log("subscribed to:", this.topic_inbox, " with err", err)
-            }
+            // }
             subscribedCallback();
         });
     }
@@ -234,7 +234,7 @@ class Chat21Client {
 
         const URL = `${this.APIendpoint}/${this.appid}/groups`
         if (this.log) {
-            console.log("creating group...", URL)
+            // console.log("creating group...", URL)
         }
         let options = {
             url: URL,
@@ -551,9 +551,10 @@ class Chat21Client {
         }
         this.subscribeToMyConversations(() => {
             // no more than one "on_message" handler, thanks.
+            console.log("Subscribed to MyConversations.");
             this.on_message_handler = this.client.on('message', (topic, message) => {
                 if (this.log) {
-                    console.log("topic:" + topic + "\nmessage payload:" + message)
+                    // console.log("topic:" + topic + "\nmessage payload:" + message)
                 }
                 const _topic = this.parseTopic(topic)
                 if (!_topic) {
@@ -888,7 +889,7 @@ class Chat21Client {
         // data: options.data,
         // method: options.method
         if (log) {
-          console.log("HTTP Request:", options);
+          //console.log("HTTP Request:", options);
         }
         if (isBrowser()) {
             let xmlhttp = new XMLHttpRequest();
@@ -925,7 +926,7 @@ class Chat21Client {
                 })
               .then(function (response) {
                 if (log) {console.log("response.status:", response.status);}
-                if (log) {console.log("response.data:", response.data);}
+                // if (log) {console.log("response.data:", response.data);}
                 if (callback) {
                     callback(null, response.headers, response.data);
                 }
@@ -999,12 +1000,15 @@ class Chat21Client {
         
         this.client.on('connect', // TODO if token is wrong it must reply with an error!
             () => {
-                if (this.log) {console.log("Chat client connected. User:" + user_id)}
+                // if (this.log) {
+                    console.log("Client connected. User:" + user_id)
+                // }
                 if (!this.connected) {
                     if (this.log) {console.log("Chat client first connection for:" + user_id)}
                     this.connected = true
+                    callback();
                     this.start( () => {
-                        callback();
+                        // callback();
                     });
                 }
                 this.client.publish(

@@ -1,5 +1,8 @@
 Chat21Client.js CHANGELOG
 
+### v0.1.12.6
+- connect() callback() invoked immediatly afte connect(). No more after client.subscribe - start() method - that is experiences weird delay.
+
 ### v0.1.12.5
 - added a snippet to automatically get the host location when deployed on localhost
     var loc = window.location, new_uri;

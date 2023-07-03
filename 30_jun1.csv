@@ -1,0 +1,6 @@
+Executing benchmarks.
+MQTT endpoint: wss://eu.rtmv3.tiledesk.com/mqws/ws
+API endpoint: https://eu.rtmv3.tiledesk.com/chatapi/api
+Tiledesk Project Id: 646c838d55f7620013e4ab92
+Requests per second: 2
+connecting...
