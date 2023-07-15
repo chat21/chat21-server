@@ -1006,9 +1006,9 @@ class Chat21Client {
                 if (!this.connected) {
                     if (this.log) {console.log("Chat client first connection for:" + user_id)}
                     this.connected = true
-                    callback();
+                    // callback();
                     this.start( () => {
-                        // callback();
+                        callback();
                     });
                 }
                 this.client.publish(
