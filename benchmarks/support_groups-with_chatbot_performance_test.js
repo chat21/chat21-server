@@ -316,8 +316,8 @@ async function createAnonymousUser(tiledeskProjectId) {
                 // console.log("response.data:", typeof response.data, response.data);
                 const mqtt_token = response.data.token;
                 const chat21_userid = response.data.userid;
-                console.log("chat21 userid:", chat21_userid);
-                console.log("chat21 token:", mqtt_token);
+                // console.log("chat21 userid:", chat21_userid);
+                // console.log("chat21 token:", mqtt_token);
                 resolve({
                     userid: chat21_userid,
                     token:  mqtt_token
@@ -333,5 +333,4 @@ async function createAnonymousUser(tiledeskProjectId) {
             reject(error)
         });
     });
-    
 }
