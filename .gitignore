@@ -4,3 +4,4 @@ deploy.sh
 logs
 publish.sh
 start.sh
+nohup.out
