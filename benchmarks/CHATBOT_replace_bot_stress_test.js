@@ -60,7 +60,7 @@ let chatClient1 = new Chat21Client(
 
 let user1 = {};
 let requests = new Map();
-let interval = 1500;
+let interval = 5000;
 
 (async () => {
     // return new Promise(async (resolve, reject) => {
@@ -112,17 +112,11 @@ let interval = 1500;
                 if (LOG_STATUS) {
                     console.log("> Incoming message from 'Replaced bot 1' is ok.");
                 }
-                // console.log("> First message ok.");
-                
-                // start measuring replace bot delay
-                const sent_at_as_date = new Date();
-                const sent_at = sent_at_as_date.getTime();
-                // console.log("sent at:",sent_at_as_date);
-                // console.log("sent at (timestamp):", sent_at);
-                requests.get(message.recipient).sent_at = sent_at;
+                console.log("> First message ok.");
+                requests.get(message.recipient).sent = true;
                 // console.log("requests[message.recipient]", requests[message.recipient]);
                 chatClient1.sendMessage(
-                    "/replace{\"sent_at\": " + sent_at + "}", // + ", \"msg\": " + count + "}",
+                    "/replace", //{\"sent_at\": " + sent_at + "}", // + ", \"msg\": " + count + "}",
                     'text',
                     message.recipient,
                     "Test support group",
@@ -137,7 +131,7 @@ let interval = 1500;
                         if (LOG_STATUS) {
                             console.log("Message Sent ok:", msg);
                         }
-                        // console.log("replace bot message sent.");
+                        console.log("replace bot message sent.");
                     }
                 );
             }
@@ -149,27 +143,13 @@ let interval = 1500;
                 if (LOG_STATUS) {
                     console.log("> Got replaced.");
                 }
-                // console.log("replaced bot message received."); //, message.text);
+                console.log("replaced bot message received:", message.text);
                 const parts = message.text.split(":");
                 const last = parts[parts.length - 1];
-                // console.log("last:", last);
-                // const parts_msg_and_time = last.split(",");
-                // const mcount = parseInt(parts_msg_and_time[0]);
-                // console.log("received mcount:",mcount);
-                // const sent_at_string = parts_msg_and_time[1];
-                // const sent_at = parseInt(sent_at_string);
-                // const sent_at_date = new Date(sent_at);
-                const sent_at = parseInt(last);
-                // console.log("sent at:",sent_at);
-                // console.log("sent at (timestamp):", sent_at_date.getTime());
-                const now_as_date = new Date();
-                // console.log("received at:", now_as_date);
-                const now = now_as_date.getTime();
-                const delay = now - sent_at;
-                requests.get(message.recipient).received_at = now;
+                console.log("last:", last);
+                const delay = parseInt(last);
+                console.log("delay:", delay);
                 requests.get(message.recipient).delay = delay;
-                // console.log("replace bot delay:", requests[message.recipient].delay);
-                // console.log("requests:", requests);
                 // average delay
                 let sum = 0;
                 requests.forEach( (value, key, map) => {
@@ -197,15 +177,15 @@ let interval = 1500;
 })();
 
 async function go(count) {
-    let group_id = "support-group-" + TILEDESK_PROJECT_ID + "-" + uuidv4().replace(/-+/g, "");
+    let recipient_id = "support-group-" + TILEDESK_PROJECT_ID + "-" + uuidv4().replace(/-+/g, "");
     requests.set(
-        group_id,
+        recipient_id,
         {
-        sent_at: null,
-        received_at: null,
+        sent: false,
+        // received_at: null,
         delay: 0
     });
-    trigger(group_id, user1, count);
+    trigger(recipient_id, user1, count);
     // console.log("Replacing...");
     await new Promise(r => setTimeout(r, interval));
     count++;
