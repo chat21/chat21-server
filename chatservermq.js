@@ -145,10 +145,10 @@ async function start() {
     exchange: 'amq.topic',
     rabbitmq_uri:process.env.RABBITMQ_URI,
     mongo_uri: process.env.MONGODB_URI,
-    redis_enabled: process.env.CHAT21OBSERVER_CACHE_ENABLED,
-    redis_host: process.env.CHAT21OBSERVER_REDIS_HOST,
-    redis_port: process.env.CHAT21OBSERVER_REDIS_PORT,
-    redis_password: process.env.CHAT21OBSERVER_REDIS_PASSWORD
+    redis_enabled: process.env.CACHE_ENABLED,
+    redis_host: process.env.CACHE_REDIS_HOST,
+    redis_port: process.env.CACHE_REDIS_PORT,
+    redis_password: process.env.CACHE_REDIS_PASSWORD
   });
 }
 start();

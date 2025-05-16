@@ -5,11 +5,13 @@
 
 require('dotenv').config();
 
-const LEVEL_DEBUG = 0
-const LEVEL_VERBOSE = 1
-const LEVEL_INFO = 2
-const LEVEL_ERROR = 3
-const LEVEL_LOG = LEVEL_DEBUG
+const LogLevel = {
+  'ERROR': 0,
+  'WARN': 1,
+  'INFO': 2,
+  'VERBOSE': 3,
+  'DEBUG':4
+}
 
 /**
  * Tiledesk logger
@@ -23,15 +25,20 @@ class TiledeskLogger {
    */
   
   constructor(log_level) {
-    this.levels = {'DEBUG': LEVEL_DEBUG, 'VERBOSE':LEVEL_VERBOSE, 'ERROR': LEVEL_ERROR, 'INFO': LEVEL_INFO, 'LOG': LEVEL_LOG};
+    this.levels = {'ERROR': LogLevel.ERROR, 'WARN': LogLevel.WARN, 'INFO': LogLevel.INFO, 'VERBOSE':LogLevel.VERBOSE, 'DEBUG': LogLevel.DEBUG };
     if (log_level) {
-      this.logLevel = this.levels[log_level.toUpperCase()] || LEVEL_INFO
+      this.logLevel = this.levels[log_level.toUpperCase()]
     }
     else if (process.env.LOG_LEVEL) {
-      this.logLevel = this.levels[process.env.LOG_LEVEL.toUpperCase()] || LEVEL_DEBUG
+      this.logLevel = this.levels[process.env.LOG_LEVEL.toUpperCase()]
     }
     else {
-      this.logLevel = LEVEL_DEBUG
+      this.logLevel = LogLevel.DEBUG
+    }
+
+    //fallback to DEBUG default value
+    if (this.logLevel === undefined) {
+      this.logLevel = LogLevel.DEBUG;
     }
   }
 
@@ -41,35 +48,49 @@ class TiledeskLogger {
     }
   }
 
+  error(...args) {
+    if (this.logLevel >= LogLevel.ERROR) {
+      console.error.apply(console,args)
+    }
+  }
+
+  warn(...args) {
+    if (this.logLevel >= LogLevel.WARN) {
+      console.warn.apply(console,args)
+    }
+  }
+
+  info(...args) {
+    if (this.logLevel >= LogLevel.INFO) {
+      console.info.apply(console,args)
+    }
+  }
+
+  verbose(...args) {
+    if (this.logLevel >= LogLevel.VERBOSE) {
+      console.log.apply(console,args)
+    }
+  }
+
   debug(...args) {
-    if (this.logLevel == LEVEL_DEBUG) {
+    if (this.logLevel == LogLevel.DEBUG) {
       console.debug.apply(console,args)
     }
   }
 
   log(...args) {
-    if (this.logLevel == LEVEL_DEBUG) {
+    if (this.logLevel == LogLevel.DEBUG) {
       console.log.apply(console,args)
     }
   }
 
-  verbose(...args) {
-    if (this.logLevel <= LEVEL_VERBOSE) {
-      console.log.apply(console,args)
-    }
-  }
 
-  info(...args) {
-    if (this.logLevel <= LEVEL_INFO) {
-      console.info.apply(console,args)
-    }
-  }
 
-  error(...args) {
-    if (this.logLevel <= LEVEL_ERROR) {
-      console.error.apply(console,args)
-    }
-  }
+  
+
+  
+
+  
 
 }
 
