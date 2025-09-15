@@ -159,11 +159,11 @@ TEST_LOCAL_STACK=true
 const config = {
 	APPID: 'tilechat',
 	MQTT_ENDPOINT: 'ws://localhost:15675/ws',
-	API_ENDPOINT: 'http://localhost:8004/api',
+	API_ENDPOINT: 'http://localhost:8010/api',
 	CLIENT_API_LOG: false,
 	HTTP_SERVER_LOG_LEVEL: 'DEBUG',
 	OBSERVER_LOG_LEVEL: 'DEBUG',
-	LOCAL_STACK: false
+	LOCAL_STACK: local_stack
 }
 
 const TYPE_TEXT = 'text';

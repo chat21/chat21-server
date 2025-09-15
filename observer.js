@@ -10,6 +10,7 @@ var url = require('url');
 const { Webhooks } = require("./webhooks");
 const { Console } = require("console");
 const { TdCache } = require('./TdCache.js');
+const RateManager = require('./services/RateManager.js');
 const app = express();
 app.use(bodyParser.json());
 const logger = require('./tiledesk-logger').logger;
@@ -35,6 +36,7 @@ let presence_enabled;
 let durable_enabled;
 let redis_enabled = false;
 let autoRestart;
+let rate_manager;
 
 if (webhook_enabled == undefined || webhook_enabled === "true" || webhook_enabled === true ) {
   webhook_enabled = true;
@@ -415,7 +417,7 @@ function process_presence(topic, message_string, callback) {
   });
 }
 
-function process_outgoing(topic, message_string, callback) {
+async function process_outgoing(topic, message_string, callback) {
   callback(true);
   logger.debug("***** TOPIC outgoing: " + topic +  " MESSAGE PAYLOAD: " + message_string);
   var topic_parts = topic.split(".")
@@ -426,6 +428,12 @@ function process_outgoing(topic, message_string, callback) {
   // const recipient_id = topic_parts[5]
   const recipient_id = topic_parts[6];
   //const me = sender_id
+
+  const allowed = await rate_manager.canExecute(sender_id, 'message');
+  if (!allowed) {
+    console.warn("Webhook rate limit exceeded for user " + sender_id)
+    return
+  }
 
   let outgoing_message = JSON.parse(message_string)
   let messageId = uuidv4()
@@ -1091,7 +1099,7 @@ async function startServer(config) {
   if (!config) {
     config = {}
   }
-  console.log("(Observer) webhook_enabled: " + webhook_enabled);
+
   logger.debug("(Observer) webhook_enabled: " + webhook_enabled);
   logger.debug("(Observer) presence_enabled: " + presence_enabled);
 
@@ -1151,6 +1159,7 @@ async function startServer(config) {
       password: config.redis_password
     });
     await connectRedis();
+    await startRateManager(tdcache);
     logger.info("(Observer) Redis connected.");
   }
   else {
@@ -1245,16 +1254,18 @@ async function startServer(config) {
 async function connectRedis() {
   if (tdcache) {
     try {
-      console.log("(Observer) Connecting Redis...");
       await tdcache.connect();
     }
     catch (error) {
       tdcache = null;
-      console.error("(Observer) Redis connection error:", error);
       process.exit(1);
     }
   }
   return;
+}
+
+async function startRateManager(tdCache) {
+  rate_manager = new RateManager({ tdCache: tdCache })
 }
 
 function stopServer(callback) {
