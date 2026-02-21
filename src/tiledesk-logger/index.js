@@ -73,13 +73,13 @@ class TiledeskLogger {
   }
 
   debug(...args) {
-    if (this.logLevel == LogLevel.DEBUG) {
+    if (this.logLevel === LogLevel.DEBUG) {
       console.debug.apply(console,args)
     }
   }
 
   log(...args) {
-    if (this.logLevel == LogLevel.DEBUG) {
+    if (this.logLevel === LogLevel.DEBUG) {
       console.log.apply(console,args)
     }
   }
