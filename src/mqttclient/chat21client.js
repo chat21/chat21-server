@@ -918,34 +918,46 @@ class Chat21Client {
         //console.log("starting mqtt connection with LWT on:", this.presence_topic, this.endpoint)
         this.client = mqtt.connect(this.endpoint,options)
         
-        return new Promise((resolve) => {
-            this.client.on('connect', // TODO if token is wrong it must reply with an error!
-                async () => {
-                    // if (this.log) {
-                        console.log("Client connected. User:" + user_id)
-                    // }
-                    if (!this.connected) {
-                        if (this.log) {console.log("Chat client first connection for:" + user_id)}
-                        this.connected = true
-                        // callback();
-                        await this.start( () => {
-                            if (callback) callback();
-                            resolve();
-                        });
-                    } else {
+        return new Promise((resolve, reject) => {
+            const onConnect = async () => {
+                this.client.removeListener('error', onError);
+                // if (this.log) {
+                    console.log("Client connected. User:" + user_id)
+                // }
+                if (!this.connected) {
+                    if (this.log) {console.log("Chat client first connection for:" + user_id)}
+                    this.connected = true
+                    // callback();
+                    await this.start( () => {
+                        if (callback) callback();
                         resolve();
-                    }
-                    this.client.publish(
-                        this.presence_topic,
-                        JSON.stringify({connected: true}),
-                        { qos: 0, retain: false }, (err) => {
-                            if (err) {
-                                console.error("Error con presence publish:", err);
-                            }
-                        }
-                    );
+                    });
+                } else {
+                    resolve();
                 }
-            );
+                this.client.publish(
+                    this.presence_topic,
+                    JSON.stringify({connected: true}),
+                    { qos: 0, retain: false }, (err) => {
+                        if (err) {
+                            console.error("Error con presence publish:", err);
+                        }
+                    }
+                );
+            };
+
+            const onError = (error) => {
+                this.client.removeListener('connect', onConnect);
+                console.error("Chat client error event", error);
+                if (!this.connected) {
+                    this.client.end();
+                    reject(error);
+                }
+            };
+
+            this.client.once('connect', onConnect);
+            this.client.once('error', onError);
+
             this.client.on('reconnect',
                 () => {
                     if (this.log) {console.log("Chat client reconnect event");}
@@ -963,7 +975,10 @@ class Chat21Client {
             );
             this.client.on('error',
                 (error) => {
-                    console.error("Chat client error event", error);
+                    // This remains for errors after successful connection
+                    if (this.connected) {
+                        console.error("Chat client error event (after connect)", error);
+                    }
                 }
             );
         });
