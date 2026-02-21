@@ -33,7 +33,7 @@ class Webhooks {
    * @param {Object} options.durable_enabled Optional. If true queues are declared as durable: true.
    * @param {Object} options.prefetch_messages Optional. How many prefecth from queue.
    * @param {Object} options.logger Optional. The logger.
-   * 
+   *
    */
   constructor(options) {
     if (!options) {
@@ -53,8 +53,7 @@ class Webhooks {
     // }
     if (options.logger) {
       logger = options.logger;
-    }
-    else {
+    } else {
       logger = require('../tiledesk-logger').logger;
     }
     // throw new Error('webhook_endpoint option can NOT be empty.......');
@@ -88,8 +87,8 @@ class Webhooks {
     this.webhook_events_array = options.webhook_events || DEFAULT_WEBHOOK_EVENTS;
     const http = require('http');
     const https = require('https');
-    this.httpAgent = new http.Agent({ keepAlive: true });
-    this.httpsAgent = new https.Agent({ keepAlive: true });
+    this.httpAgent = new http.Agent({keepAlive: true});
+    this.httpsAgent = new https.Agent({keepAlive: true});
     logger.debug("webhooks inizialized: this.exchange:", this.exchange, "this.offlinePubQueue:", this.offlinePubQueue)
   }
 
@@ -105,15 +104,16 @@ class Webhooks {
   getWebHookEndpoints() {
     return this.webhook_endpoints;
   }
-  
+
   setWebHookEndpoints(endpoints) {
     this.webhook_endpoints = endpoints;
     logger.log("New webhook endpoints:", this.webhook_endpoints)
   }
-  
+
   getWebHookEvents() {
     return this.webhook_events_array;
   }
+
   setWebHookEvents(events) {
     this.webhook_events_array = events;
   }
@@ -129,9 +129,9 @@ class Webhooks {
     logger.log("WHnotifyMessageStatusSentOrDelivered()", message_payload)
     let message;
     if (typeof message_payload === 'string') {
-        message = JSON.parse(message_payload);
+      message = JSON.parse(message_payload);
     } else {
-        message = message_payload;
+      message = message_payload;
     }
     message['temp_field_chat_topic'] = topic;
     if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT) {
@@ -144,8 +144,7 @@ class Webhooks {
         //   callback(null);
         // }
       });
-    }
-    else if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED) {
+    } else if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED) {
       logger.log("DELIVERED...")
       this.WHnotifyMessageStatusDelivered(message, (err) => {
         if (callback) {
@@ -155,8 +154,7 @@ class Webhooks {
         //   callback(null);
         // }
       });
-    }
-    else {
+    } else {
       logger.log("STATUS NEITHER SENT OR DELIVERED...");
       if (callback) {
         callback(null);
@@ -230,15 +228,14 @@ class Webhooks {
       if (err) {
         logger.error("Error publishing webhook WHnotifyMessageDeliver", err);
         callback(err);
-      }
-      else {
+      } else {
         callback(null);
       }
     });
   }
 
   WHnotifyMessageUpdate(message, callback) {
-    if (this.enabled===false) {
+    if (this.enabled === false) {
       logger.debug("webhooks disabled");
       callback(null)
       return
@@ -252,15 +249,14 @@ class Webhooks {
       if (err) {
         logger.error("Err", err)
         callback(err)
-      }
-      else {
+      } else {
         callback(null)
       }
     })
   }
 
   WHnotifyConversationArchived(conversation, topic, callback) {
-    if (this.enabled===false) {
+    if (this.enabled === false) {
       logger.debug("WHnotifyConversationArchived Discarding notification. webhook_enabled is false.");
       callback(null);
       return;
@@ -275,8 +271,7 @@ class Webhooks {
       if (err) {
         logger.error("Err", err)
         callback(err)
-      }
-      else {
+      } else {
         callback(null)
       }
     })
@@ -288,7 +283,7 @@ class Webhooks {
     if (callback) {
       callback(true);
     }
-    
+
     // if (!this.webhook_endpoint) {
     //   logger.debug("WHprocess_webhook_message_deliver Discarding notification. webhook_endpoint is undefined.")
     //   // callback(true);
@@ -302,31 +297,28 @@ class Webhooks {
 
     let delivered_to_inbox_of = null;
     if (
-    message.status === MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED ||
-    message.status === MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT
-    && message['temp_field_chat_topic']) {
+        message.status === MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED ||
+        message.status === MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT
+        && message['temp_field_chat_topic']) {
       const topic_parts = message['temp_field_chat_topic'].split(".");
       if (topic_parts.length >= 4) {
         delivered_to_inbox_of = topic_parts[3]
-      }
-      else {
+      } else {
         logger.error("Error: inbox_of not found in topic:", topic);
         return;
       }
-    }
-    else {
+    } else {
       logger.error("Error. Topic processing error on message-delivered/message-sent event. Topic:", topic, ",message:", message);
       return;
     }
-    
+
     const message_id = message.message_id;
     const recipient_id = message.recipient;
     const app_id = message.app_id;
     let event_type;
     if (message.status === MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT) {
       event_type = MessageConstants.WEBHOOK_EVENTS.MESSAGE_SENT;
-    }
-    else {
+    } else {
       event_type = MessageConstants.WEBHOOK_EVENTS.MESSAGE_DELIVERED;
     }
     var json = {
@@ -342,7 +334,7 @@ class Webhooks {
       json['delivered_to'] = delivered_to_inbox_of;
     }
     delete message['temp_field_chat_topic']; // ...then the topic is deleted from "message"
-    
+
     const endpoints = message['temp_webhook_endpoints'];
     delete message['temp_webhook_endpoints'];
     logger.log("Event JSON:" + JSON.stringify(json));
@@ -369,8 +361,8 @@ class Webhooks {
       // };
       // delete message['temp_field_chat_topic']; // then deleted from "message"
       // logger.debug("WHprocess_webhook_message_received Sending JSON webhook:", json)
-      this.WHsendData(endpoint, json, function(err, data) {
-        if (err)  {
+      this.WHsendData(endpoint, json, function (err, data) {
+        if (err) {
           logger.error("Err WHsendData callback", err);
         } else {
           logger.debug("WHsendData sendata end with data:" + data);
@@ -395,7 +387,7 @@ class Webhooks {
       logger.debug("WHprocess_webhook_message_update Discarding notification. temp_webhook_endpoints undefined.")
       return
     }
-    
+
     const endpoints = message['temp_webhook_endpoints'];
     delete message['temp_webhook_endpoints'];
     endpoints.forEach((endpoint) => {
@@ -406,8 +398,7 @@ class Webhooks {
       let event_type;
       if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.RECEIVED) {
         event_type = MessageConstants.WEBHOOK_EVENTS.MESSAGE_RECEIVED;
-      }
-      else if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.RETURN_RECEIPT) {
+      } else if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.RETURN_RECEIPT) {
         event_type = MessageConstants.WEBHOOK_EVENTS.MESSAGE_RETURN_RECEIPT;
       }
       var json = {
@@ -419,8 +410,8 @@ class Webhooks {
         data: message,
         extras: {topic: topic}
       };
-      this.WHsendData(endpoint, json, function(err, data) {
-        if (err)  {
+      this.WHsendData(endpoint, json, function (err, data) {
+        if (err) {
           logger.error("Err WHsendData callback", err);
         } else {
           logger.debug("WHsendData sendata end with data:" + data);
@@ -432,14 +423,14 @@ class Webhooks {
   WHprocess_webhook_conversation_archived(topic, payload, callback) {
     logger.debug("process webhook_conversation_archived on topic" + topic)
     logger.debug("process webhook_conversation_archived on payload" + payload)
-    
+
     var conversation = JSON.parse(payload)
     logger.debug("conversation['temp_field_chat_topic']", conversation['temp_field_chat_topic']);
     if (callback) {
       callback(true)
     }
 
-    if (this.enabled===false) {
+    if (this.enabled === false) {
       logger.debug("Discarding notification. webhook_enabled is false.");
       // callback(true);
       return
@@ -454,7 +445,7 @@ class Webhooks {
       logger.debug("WHprocess_webhook_conversation_archived Discarding notification. temp_webhook_endpoints undefined.")
       return
     }
-    
+
     const endpoints = conversation['temp_webhook_endpoints'];
     delete conversation['temp_webhook_endpoints'];
     endpoints.forEach((endpoint) => {
@@ -484,8 +475,8 @@ class Webhooks {
       };
       delete conversation['temp_field_chat_topic'];
       logger.debug("Sending JSON webhook:", json)
-      this.WHsendData(endpoint, json, function(err, data) {
-        if (err)  {
+      this.WHsendData(endpoint, json, function (err, data) {
+        if (err) {
           logger.error("Err WHsendData callback", err);
         } else {
           logger.debug("WHsendData sendata end with data:" + data);
@@ -504,7 +495,7 @@ class Webhooks {
       logger.debug("WHprocess_webhook_presence Discarding notification. temp_webhook_endpoints undefined.")
       return
     }
-    
+
     const endpoints = payload['temp_webhook_endpoints'];
     delete payload['temp_webhook_endpoints'];
     endpoints.forEach((endpoint) => {
@@ -519,8 +510,8 @@ class Webhooks {
       //   app_id: app_id,
       //   data: payload
       // };
-      this.WHsendData(endpoint, payload, function(err, data) {
-        if (err)  {
+      this.WHsendData(endpoint, payload, function (err, data) {
+        if (err) {
           logger.error("Err WHsendData callback", err);
         } else {
           logger.debug("WHsendData sendata end with data:" + data);
@@ -546,7 +537,7 @@ class Webhooks {
     var protocol = (q.protocol == "http:") ? require('http') : require('https');
     let agent = (q.protocol == "http:") ? this.httpAgent : this.httpsAgent;
     let options = {
-      path:  q.pathname,
+      path: q.pathname,
       host: q.hostname,
       port: q.port,
       method: 'POST',
@@ -566,10 +557,10 @@ class Webhooks {
     logger.debug("Using request options:" + JSON.stringify(options));
     try {
       const req = protocol.request(options, (response) => {
-        logger.debug("statusCode: "+  response.statusCode + " for webhook_endpoint: " + endpoint);
+        logger.debug("statusCode: " + response.statusCode + " for webhook_endpoint: " + endpoint);
         if (response.statusCode < 200 || response.statusCode > 299) { // I don't know if the 3xx responses come here, if so you"ll want to handle them appropriately
-          logger.debug("http statusCode error "+  response.statusCode + " for webhook_endpoint: " + endpoint);
-          return callback({statusCode:response.statusCode}, null);
+          logger.debug("http statusCode error " + response.statusCode + " for webhook_endpoint: " + endpoint);
+          return callback({statusCode: response.statusCode}, null);
         }
         var respdata = '';
         response.on('data', (chunk) => {
@@ -587,8 +578,7 @@ class Webhooks {
       req.write(JSON.stringify(json));
       req.end();
       // logger.debug("end")
-    }
-    catch(err) {
+    } catch (err) {
       logger.error("An error occurred while posting this json " + JSON.stringify(json), err)
       return callback(err, null)
     }
@@ -605,29 +595,29 @@ class Webhooks {
   startPublisher() {
     const that = this;
     return new Promise(function (resolve, reject) {
-        that.amqpConn.createConfirmChannel( (err, ch) => {
-            if (that.closeOnErr(err)) return;
-            ch.on("error", function (err) {
-                logger.error("[Webooks.AMQP] channel error", err);
-            });
-            ch.on("close", function () {
-                logger.debug("[Webooks.AMQP] channel closed");
-            });
-            that.pubChannel = ch;
-            // if (that.offlinePubQueue.length > 0) {
-                // while (true) {
-                //     var m = this.offlinePubQueue.shift();
-                //     if (!m) break;
-                //     this.publish(m[0], m[1], m[2]);
-                //   }
-
-                // while (true) {
-                //     var [exchange, routingKey, content] = offlinePubQueue.shift();
-                //     that.publish(exchange, routingKey, content);
-                // }
-            // }
-            return resolve(ch)
+      that.amqpConn.createConfirmChannel((err, ch) => {
+        if (that.closeOnErr(err)) return;
+        ch.on("error", function (err) {
+          logger.error("[Webooks.AMQP] channel error", err);
         });
+        ch.on("close", function () {
+          logger.debug("[Webooks.AMQP] channel closed");
+        });
+        that.pubChannel = ch;
+        // if (that.offlinePubQueue.length > 0) {
+        // while (true) {
+        //     var m = this.offlinePubQueue.shift();
+        //     if (!m) break;
+        //     this.publish(m[0], m[1], m[2]);
+        //   }
+
+        // while (true) {
+        //     var [exchange, routingKey, content] = offlinePubQueue.shift();
+        //     that.publish(exchange, routingKey, content);
+        // }
+        // }
+        return resolve(ch)
+      });
     });
   }
 
@@ -653,14 +643,14 @@ class Webhooks {
       ch.assertExchange(this.exchange, 'topic', {
         durable: this.durable_enabled
       });
-      ch.assertQueue(this.queue, { durable: this.durable_enabled }, (err, _ok) => {
+      ch.assertQueue(this.queue, {durable: this.durable_enabled}, (err, _ok) => {
         if (this.closeOnErr(err)) return;
         logger.debug("subscribed to _ok.queue: " + _ok.queue);
         this.subscribeTo(this.topic_webhook_message_deliver, ch, _ok.queue)
         this.subscribeTo(this.topic_webhook_message_update, ch, _ok.queue)
         this.subscribeTo(this.topic_webhook_conversation_archived, ch, _ok.queue)
         this.subscribeTo(this.topic_webhook_presence, ch, _ok.queue)
-        ch.consume(this.queue, this.processMsg.bind(this), { noAck: false });
+        ch.consume(this.queue, this.processMsg.bind(this), {noAck: false});
       });
     });
   }
@@ -669,8 +659,7 @@ class Webhooks {
     channel.bindQueue(queue, this.exchange, topic, {}, function (err, oka) {
       if (err) {
         logger.error("Webooks.Error:", err, " binding on queue:", queue, "topic:", topic)
-      }
-      else {
+      } else {
         logger.info("Webhooks.bind: '" + queue + "' on topic: " + topic);
       }
     });
@@ -682,8 +671,7 @@ class Webhooks {
       try {
         if (ok) {
           this.channel.ack(msg);
-        }
-        else {
+        } else {
           this.channel.reject(msg, true);
         }
       } catch (e) {
@@ -692,4 +680,5 @@ class Webhooks {
       }
     });
   }
+}
 
