@@ -7,38 +7,46 @@ class GroupService {
     this.redis_enabled = options.redis_enabled;
   }
 
-  getGroup(group_id, callback) {
+  async getGroup(group_id, callback) {
     logger.log("**** getGroup:", group_id);
-    this.groupFromCache(group_id, (group) => {
+    try {
+      const group = await this.groupFromCache(group_id);
       if (group) {
         logger.log("--GROUP", group_id, "FOUND IN CACHE:", group);
-        callback(null, group);
+        if (callback) callback(null, group);
+        return group;
       } else {
         logger.log("--GROUP", group_id, "NO CACHE! GET FROM DB...");
-        this.chatdb.getGroup(group_id, (err, group) => {
-          if (!err && group) {
-            this.saveGroupInCache(group, group_id);
-          }
-          logger.log("group from db:", group);
-          callback(err, group);
-        });
+        const dbGroup = await this.chatdb.getGroup(group_id);
+        if (dbGroup) {
+          this.saveGroupInCache(dbGroup, group_id);
+        }
+        logger.log("group from db:", dbGroup);
+        if (callback) callback(null, dbGroup);
+        return dbGroup;
       }
-    });
+    } catch (err) {
+      if (callback) callback(err);
+      throw err;
+    }
   }
 
-  groupFromCache(group_id, callback) {
-    if (this.redis_enabled && this.tdcache && this.tdcache.client) {
+  async groupFromCache(group_id, callback) {
+    if (this.redis_enabled && this.tdcache) {
       const group_key = "chat21:messages:groups:" + group_id;
-      this.tdcache.client.get(group_key, (err, group) => {
-        if (err) {
-          logger.error("Error during groupFromCache():", err);
-          callback(null);
-        } else {
-          callback(group ? JSON.parse(group) : null);
-        }
-      });
+      try {
+        const group = await this.tdcache.get(group_key);
+        const parsedGroup = group ? JSON.parse(group) : null;
+        if (callback) callback(parsedGroup);
+        return parsedGroup;
+      } catch (err) {
+        logger.error("Error during groupFromCache():", err);
+        if (callback) callback(null);
+        return null;
+      }
     } else {
-      callback(null);
+      if (callback) callback(null);
+      return null;
     }
   }
 

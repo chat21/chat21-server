@@ -62,85 +62,93 @@ class ChatDB {
     );
   }
 
-  saveOrUpdateMessage(message, callback) {
+  async saveOrUpdateMessage(message, callback) {
     // logger.debug("saving message...", message)
     delete message['_id'] // if present (message is coming from a mongodb query?) it is illegal. It produces: MongoError: E11000 duplicate key error collection: tiledesk-dialogflow-proxy.messages index: _id_ dup key: { : "5ef72c2494e08ffec88a033a" }
-    this.db.collection(this.messages_collection).updateOne({timelineOf: message.timelineOf, message_id: message.message_id}, { $set: message }, { upsert: true }, function(err, doc) {
-      if (err) {
-        console.error("db error...", err)
-        if (callback) {
-          callback(err, null)
-        }
+    try {
+      const doc = await this.db.collection(this.messages_collection).updateOne({ timelineOf: message.timelineOf, message_id: message.message_id }, { $set: message }, { upsert: true });
+      if (callback) {
+        callback(null, doc)
       }
-      else {
-        if (callback) {
-          callback(null, doc)
-        }
-      }
-    });
-  }
-
-  saveOrUpdateConversation(conversation, callback) {
-    // logger.debug("saving conversation...", conversation)
-    this.db.collection(this.conversations_collection).updateOne({timelineOf: conversation.timelineOf, conversWith: conversation.conversWith}, { $set: conversation}, { upsert: true }, function(err, doc) {
-      if (err) {
-        logger.error("error saveOrUpdateConversation", err)
-        if (callback) {
-          callback(err, null)
-        }
-      }
-      else {
-        if (callback) {
-          // logger.debug("Conversation saved.")
-          callback(null, doc)
-        }
-      }
-    });
-  }
-
-  saveOrUpdateGroup(group, callback) {
-    logger.debug("saving group...", group)
-    this.db.collection(this.groups_collection).updateOne( { uid: group.uid }, { $set: group }, { upsert: true }, function(err, doc) {
+      return doc;
+    }
+    catch (err) {
+      console.error("db error...", err)
       if (callback) {
         callback(err, null)
       }
-      else {
-        if (callback) {
-          callback(null, doc)
-        }
-      }
-    });
+      throw err;
+    }
   }
 
-  getGroup(group_id, callback) {
-    this.db.collection(this.groups_collection).findOne( { uid: group_id }, function(err, doc) {
-      if (err) {
-        if (callback) {
-          callback(err, null)
-        }
+  async saveOrUpdateConversation(conversation, callback) {
+    // logger.debug("saving conversation...", conversation)
+    try {
+      const doc = await this.db.collection(this.conversations_collection).updateOne({ timelineOf: conversation.timelineOf, conversWith: conversation.conversWith }, { $set: conversation }, { upsert: true });
+      if (callback) {
+        // logger.debug("Conversation saved.")
+        callback(null, doc)
       }
-      else {
-        if (callback) {
-          callback(null, doc)
-        }
+      return doc;
+    }
+    catch (err) {
+      logger.error("error saveOrUpdateConversation", err)
+      if (callback) {
+        callback(err, null)
       }
-    });
+      throw err;
+    }
   }
 
-  lastConversations(appid, userid, archived, callback) {
+  async saveOrUpdateGroup(group, callback) {
+    logger.debug("saving group...", group)
+    try {
+      const doc = await this.db.collection(this.groups_collection).updateOne({ uid: group.uid }, { $set: group }, { upsert: true });
+      if (callback) {
+        callback(null, doc)
+      }
+      return doc;
+    }
+    catch (err) {
+      logger.error("error saveOrUpdateGroup", err)
+      if (callback) {
+        callback(err, null)
+      }
+      throw err;
+    }
+  }
+
+  async getGroup(group_id, callback) {
+    try {
+      const doc = await this.db.collection(this.groups_collection).findOne({ uid: group_id });
+      if (callback) {
+        callback(null, doc)
+      }
+      return doc;
+    }
+    catch (err) {
+      if (callback) {
+        callback(err, null)
+      }
+      throw err;
+    }
+  }
+
+  async lastConversations(appid, userid, archived, callback) {
     logger.debug("DB. app:", appid, "user:", userid, "archived:", archived)
-    this.db.collection(this.conversations_collection).find( { timelineOf: userid, app_id: appid, archived: archived } ).limit(200).sort( { timestamp: -1 } ).toArray(function(err, docs) {
-      if (err) {
-        if (callback) {
-          callback(err, null)
-        }
+    try {
+      const docs = await this.db.collection(this.conversations_collection).find({ timelineOf: userid, app_id: appid, archived: archived }).limit(200).sort({ timestamp: -1 }).toArray();
+      if (callback) {
+        callback(null, docs)
       }
-      else {
-        if (callback) {
-          callback(null, docs)
-        }
+      return docs;
+    }
+    catch (err) {
+      if (callback) {
+        callback(err, null)
       }
-    });
+      throw err;
+    }
   }
 
   // DEPRECATED? //
@@ -159,36 +167,38 @@ class ChatDB {
   //   });
   // }
 
-  conversationDetail(appid, timelineOf, conversWith, archived, callback) {
-    logger.debug("DB. app: "+ appid+ " user: " + timelineOf + " conversWith: "+ conversWith);
-    this.db.collection(this.conversations_collection).find( { timelineOf: timelineOf, app_id: appid, conversWith: conversWith, archived: archived } ).limit(1).toArray(function(err, docs) {
-      if (err) {
-        if (callback) {
-          callback(err, null)
-        }
+  async conversationDetail(appid, timelineOf, conversWith, archived, callback) {
+    logger.debug("DB. app: " + appid + " user: " + timelineOf + " conversWith: " + conversWith);
+    try {
+      const docs = await this.db.collection(this.conversations_collection).find({ timelineOf: timelineOf, app_id: appid, conversWith: conversWith, archived: archived }).limit(1).toArray();
+      if (callback) {
+        callback(null, docs)
       }
-      else {
-        if (callback) {
-          callback(null, docs)
-        }
+      return docs;
+    }
+    catch (err) {
+      if (callback) {
+        callback(err, null)
       }
-    });
+      throw err;
+    }
   }
 
-  lastMessages(appid, userid, convid, sort, limit, callback) {
+  async lastMessages(appid, userid, convid, sort, limit, callback) {
     logger.debug("DB. app:", appid, "user:", userid, "convid", convid)
-    this.db.collection(this.messages_collection).find( { timelineOf: userid, app_id: appid, conversWith: convid } ).limit(limit).sort( { timestamp: sort } ).toArray(function(err, docs) {
-      if (err) {
-        if (callback) {
-          callback(err, null)
-        }
+    try {
+      const docs = await this.db.collection(this.messages_collection).find({ timelineOf: userid, app_id: appid, conversWith: convid }).limit(limit).sort({ timestamp: sort }).toArray();
+      if (callback) {
+        callback(null, docs)
       }
-      else {
-        if (callback) {
-          callback(null, docs)
-        }
+      return docs;
+    }
+    catch (err) {
+      if (callback) {
+        callback(err, null)
       }
-    });
+      throw err;
+    }
   }
 
 }

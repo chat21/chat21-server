@@ -70,7 +70,7 @@ async function startServer(config = {}) {
     persist: [`apps.observer.${app_id}.users.*.messages.*.persist`]
   };
 
-  mqService.startWorker(topics, (msg, callback) => messageService.processMsg(msg, callback));
+  mqService.startWorker(topics, (msg) => messageService.processMsg(msg));
   logger.info("Observer started.");
 }
 

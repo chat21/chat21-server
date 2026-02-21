@@ -81,7 +81,7 @@ class Chat21Client {
         this.connected = false
     }
 
-    subscribeToMyConversations(subscribedCallback) { // MESSAGES ETC.
+    async subscribeToMyConversations(subscribedCallback) { // MESSAGES ETC.
         // WILDCARS:
         // MQTT: https://www.hivemq.com/blog/mqtt-essentials-part-5-mqtt-topics-best-practices/
         // RABBITMQ: https://www.cloudamqp.com/blog/2015-09-03-part4-rabbitmq-for-beginners-exchanges-routing-keys-bindings.html#topic-exchange
@@ -89,18 +89,23 @@ class Chat21Client {
         // if (this.log) {
             console.log("subscribing to:", this.user_id, "topic", this.topic_inbox);
         // }
-        this.client.subscribe(this.topic_inbox, (err)  => {
-            if (err) {
-                console.error("An error occurred while subscribing user", this.user_id, "on topic:", this.topic_inbox, "Error:", err);
-            }
-            // if (this.log) {
-                console.log("subscribed to:", this.topic_inbox, " with err", err)
-            // }
-            subscribedCallback();
+        return new Promise((resolve, reject) => {
+            this.client.subscribe(this.topic_inbox, (err)  => {
+                if (err) {
+                    console.error("An error occurred while subscribing user", this.user_id, "on topic:", this.topic_inbox, "Error:", err);
+                    if (subscribedCallback) subscribedCallback(err);
+                    return reject(err);
+                }
+                // if (this.log) {
+                    console.log("subscribed to:", this.topic_inbox, " with err", err)
+                // }
+                if (subscribedCallback) subscribedCallback();
+                resolve();
+            });
         });
     }
 
-    sendMessage(text, type, recipient_id, recipient_fullname, sender_fullname, attributes, metadata, channel_type, callback) {
+    async sendMessage(text, type, recipient_id, recipient_fullname, sender_fullname, attributes, metadata, channel_type, callback) {
         // console.log("sendMessage sattributes:", attributes);
         let dest_topic = `apps/${this.appid}/outgoing/users/${this.user_id}/messages/${recipient_id}/outgoing`
         // console.log("dest_topic:", dest_topic)
@@ -115,9 +120,18 @@ class Chat21Client {
         }
         // console.log("outgoing_message:", outgoing_message)
         const payload = JSON.stringify(outgoing_message)
-        this.client.publish(dest_topic, payload, null, (err) => {
-            callback(err, outgoing_message)
-        })
+        return new Promise((resolve, reject) => {
+            this.client.publish(dest_topic, payload, { qos: 0, retain: false }, (err) => {
+                if (err) {
+                    if (callback) callback(err);
+                    return reject(err);
+                }
+                if (callback) {
+                    callback(err, outgoing_message)
+                }
+                resolve(outgoing_message);
+            })
+        });
     }
 
     basicMessageBuilder(text, type, recipient_fullname, sender_fullname, attributes, metadata, channel_type) {
@@ -133,7 +147,7 @@ class Chat21Client {
         return outgoing_message;
     }
 
-    sendMessageRaw(outgoing_message, recipient_id, callback) {
+    async sendMessageRaw(outgoing_message, recipient_id, callback) {
         // callback - function (err)
         // console.log("recipient_id:", recipient_id)
         let dest_topic = `apps/${this.appid}/outgoing/users/${this.user_id}/messages/${recipient_id}/outgoing`
@@ -151,12 +165,21 @@ class Chat21Client {
         // }
         // console.log("outgoing_message:", outgoing_message)
         const payload = JSON.stringify(outgoing_message)
-        this.client.publish(dest_topic, payload, null, (err) => {
-            callback(err, outgoing_message)
+        return new Promise((resolve, reject) => {
+            this.client.publish(dest_topic, payload, { qos: 0, retain: false }, (err) => {
+                if (err) {
+                    if (callback) callback(err);
+                    return reject(err);
+                }
+                if (callback) {
+                    callback(err, outgoing_message)
+                }
+                resolve(outgoing_message);
+            });
         });
     }
 
-    updateMessageStatus(messageId, conversWith, status, callback) {
+    async updateMessageStatus(messageId, conversWith, status, callback) {
         // callback - function (err)
         if (this.log) {
             console.log("updating recipient_id:", messageId, "on conversWith", conversWith, "status", status)
@@ -173,14 +196,21 @@ class Chat21Client {
         if (this.log) {
             console.log("payload:", payload)
         }
-        this.client.publish(dest_topic, payload, null, (err) => {
-            if (callback) {
-                callback(err, message_patch)
-            }
-        })
+        return new Promise((resolve, reject) => {
+            this.client.publish(dest_topic, payload, { qos: 0, retain: false }, (err) => {
+                if (err) {
+                    if (callback) callback(err);
+                    return reject(err);
+                }
+                if (callback) {
+                    callback(err, message_patch)
+                }
+                resolve(message_patch);
+            })
+        });
     }
 
-    updateConversationIsNew(conversWith, is_new, callback) {
+    async updateConversationIsNew(conversWith, is_new, callback) {
         // callback - function (err)
         if (this.log) {
             console.log("updating conversation with:", conversWith, "is_new", is_new);
@@ -197,45 +227,25 @@ class Chat21Client {
         if (this.log) {
             console.log("payload:", payload);
         }
-        this.client.publish(dest_topic, payload, null, (err) => {
-            if (callback) {
-                callback(err)
-            }
-        })
+        return new Promise((resolve, reject) => {
+            this.client.publish(dest_topic, payload, { qos: 0, retain: false }, (err) => {
+                if (err) {
+                    if (callback) callback(err);
+                    return reject(err);
+                }
+                if (callback) {
+                    callback(err)
+                }
+                resolve();
+            })
+        });
     }
 
-    groupCreate(name, group_id, members, callback) {
-        // example:
-        // {
-        //     "group_id":"group-tiledeskteam",
-        //     "group_name":"Tiledesk Team",
-        //     "group_members":{
-        //         "608bc83b3d0b3e494f4d0578":1,
-        //         "608bc81f3d0b3e494f4d0575":1,
-        //         "6067513cb64a9b1ba259839c":1
-        //     }
-        // }
-
-        // callback - function (err)
+    async groupCreate(name, group_id, members, callback) {
         if (this.log) {
             console.log("creating group:", name, "id", group_id, "members", members)
         }
-        // who creates the group is also group-owner
-        // ex.: http://localhost:8004/api/tilechat/04-ANDREASPONZIELLO/groups
-        // let data = {
-        //     group_name: name,
-        //     group_id: group_id,
-        //     group_members: members
-        // }
-        // let headers = {
-        //     "authorization": this.jwt,
-        //     "Content-Type": "application/json;charset=UTF-8"
-        // }
-
-        const URL = `${this.APIendpoint}/${this.appid}/groups`
-        if (this.log) {
-            // console.log("creating group...", URL)
-        }
+        const URL = `${this.APIendpoint}/tilechat/groups`
         let options = {
             url: URL,
             headers: {
@@ -249,19 +259,19 @@ class Chat21Client {
             },
             method: 'POST'
         }
-        Chat21Client.myrequest(options, (err, response, json) => {
-            if (err) {
-                callback(err, null);
-            }
-            else if (json && callback) {
-                callback(null, json);
-            }
-        }, this.log);
+        try {
+            const response = await Chat21Client.myrequest(options, null, this.log);
+            const json = response.data;
+            if (callback) callback(null, json);
+            return json;
+        } catch (err) {
+            if (callback) callback(err, null);
+            throw err;
+        }
     }
 
-    groupData(group_id, callback) {
-        const URL = `${this.APIendpoint}/${this.appid}/groups/${group_id}`
-        // console.log("creating group...", URL)
+    async groupData(group_id, callback) {
+        const URL = `${this.APIendpoint}/tilechat/groups/${group_id}`
         let options = {
             url: URL,
             headers: {
@@ -270,39 +280,22 @@ class Chat21Client {
             },
             method: 'GET'
         }
-        Chat21Client.myrequest(options, (err, response, json) => {
-            if (err) {
-                callback(err, null);
-            }
-            else if (json && callback) {
-                callback(null, json);
-            }
-        }, this.log);
-        // const URL = `${this.APIendpoint}/${this.appid}/groups/${group_id}`
-        // console.log("getting group...", URL)
-        // var xmlhttp = new XMLHttpRequest();
-        // xmlhttp.open("GET", URL, true);
-        // xmlhttp.setRequestHeader("authorization", this.jwt);
-        // xmlhttp.onreadystatechange = function() {
-        //     if (callback && xmlhttp.readyState == 4 && xmlhttp.status == 200 && xmlhttp.responseText) {
-        //         try {
-        //             const json = JSON.parse(xmlhttp.responseText)
-        //             callback(null, json.result)
-        //         }
-        //         catch (err) {
-        //             console.error("parsing json ERROR", err)
-        //             callback(err, null)
-        //         }
-        //     }
-        // };
-        // xmlhttp.send(null);
+        try {
+            const response = await Chat21Client.myrequest(options, null, this.log);
+            const json = response.data;
+            if (callback) callback(null, json);
+            return json;
+        } catch (err) {
+            if (callback) callback(err, null);
+            throw err;
+        }
     }
 
-    groupLeave(group_id, member_id, callback) {
+    async groupLeave(group_id, member_id, callback) {
         if (this.log) {
             console.log("leaving group:", group_id);
         }
-        const URL = `${this.APIendpoint}/${this.appid}/groups/${group_id}/members/${member_id}`
+        const URL = `${this.APIendpoint}/tilechat/groups/${group_id}/members/${member_id}`
         if (this.log) {
             console.log("leaving group:", URL)
         }
@@ -314,21 +307,19 @@ class Chat21Client {
             },
             method: 'DELETE'
         }
-        Chat21Client.myrequest(options, (err, response, json) => {
-            if (err) {
-                callback(err, null);
-            }
-            else if (callback) {
-                callback(null, json);
-            }
-        }, this.log);
+        try {
+            const response = await Chat21Client.myrequest(options, null, this.log);
+            const json = response.data;
+            if (callback) callback(null, json);
+            return json;
+        } catch (err) {
+            if (callback) callback(err, null);
+            throw err;
+        }
     }
 
-    groupJoin(group_id, member_id, callback) {
-        if (this.log) {
-            console.log("leaving group:", group_id);
-        }
-        const URL = `${this.APIendpoint}/${this.appid}/groups/${group_id}/members`
+    async groupJoin(group_id, member_id, callback) {
+        const URL = `${this.APIendpoint}/tilechat/groups/${group_id}/members`
         if (this.log) {
             console.log("joining group:", URL)
         }
@@ -343,29 +334,22 @@ class Chat21Client {
             },
             method: 'POST'
         }
-        Chat21Client.myrequest(options, (err, response, json) => {
-            if (err) {
-                callback(err, null);
-            }
-            else if (callback) {
-                callback(null, json);
-            }
-        }, this.log);
+        try {
+            const response = await Chat21Client.myrequest(options, null, this.log);
+            const json = response.data;
+            if (callback) callback(null, json);
+            return json;
+        } catch (err) {
+            if (callback) callback(err, null);
+            throw err;
+        }
     }
 
-    groupSetMembers(group_id, members, callback) {
-        // example:
-        // {
-        //     "members":{
-        //         "608bc83b3d0b3e494f4d0578":1,
-        //         "608bc81f3d0b3e494f4d0575":1,
-        //         "6067513cb64a9b1ba259839c":1
-        //     }
-        // }
+    async groupSetMembers(group_id, members, callback) {
         if (this.log) {
             console.log("setting group members of", group_id, "members", members)
         }
-        const URL = `${this.APIendpoint}/${this.appid}/groups/${group_id}/members`
+        const URL = `${this.APIendpoint}/tilechat/groups/${group_id}/members`
         if (this.log) {
             console.log("setting group members...", URL)
         }
@@ -380,17 +364,18 @@ class Chat21Client {
             },
             method: 'PUT'
         }
-        Chat21Client.myrequest(options, (err, response, json) => {
-            if (err) {
-                callback(err, null);
-            }
-            else if (json && callback) {
-                callback(null, json);
-            }
-        }, this.log);
+        try {
+            const response = await Chat21Client.myrequest(options, null, this.log);
+            const json = response.data;
+            if (callback) callback(null, json);
+            return json;
+        } catch (err) {
+            if (callback) callback(err, null);
+            throw err;
+        }
     }
 
-    saveInstance(instance_id, data, callback) {
+    async saveInstance(instance_id, data, callback) {
         if (this.log) {
             console.log("saving instance_id:", instance_id, "data", data);
         }
@@ -409,17 +394,18 @@ class Chat21Client {
             data: data,
             method: 'POST'
         }
-        Chat21Client.myrequest(options, (err, response, json) => {
-            if (err) {
-                callback(err, null);
-            }
-            else if (json && callback) {
-                callback(null, json);
-            }
-        }, this.log);
+        try {
+            const response = await Chat21Client.myrequest(options, null, this.log);
+            const json = response.data;
+            if (callback) callback(null, json);
+            return json;
+        } catch (err) {
+            if (callback) callback(err, null);
+            throw err;
+        }
     }
 
-    archiveConversation(conversWith, callback) {
+    async archiveConversation(conversWith, callback) {
         // callback - function (err) 
         if (this.log) {
             console.log("archiving conversation with:", conversWith)
@@ -429,16 +415,19 @@ class Chat21Client {
         if (this.log) {
             console.log("archive dest_topic:", dest_topic)
         }
-        // let patch = {
-        //     action: 'archive'
-        // }
         const payload = JSON.stringify({})
-        // console.log("payload:", payload)
-        this.client.publish(dest_topic, payload, null, (err) => {
-            if (callback) {
-                callback(err)
-            }
-        })
+        return new Promise((resolve, reject) => {
+            this.client.publish(dest_topic, payload, { qos: 0, retain: false }, (err) => {
+                if (err) {
+                    if (callback) callback(err);
+                    return reject(err);
+                }
+                if (callback) {
+                    callback(err)
+                }
+                resolve();
+            })
+        });
     }
 
     // onMessage(callback) {
@@ -541,15 +530,15 @@ class Chat21Client {
         this.onGroupUpdatedCallbacks.delete(handler);
     }
 
-    start(subscribedCallback) {
+    async start(subscribedCallback) {
         if (this.on_message_handler) {
             if (this.log) {
                 console.log("this.on_message_handler already subscribed. Reconnected num", this.reconnections)
             }
-            callbsubscribedCallbackack();
+            if (subscribedCallback) subscribedCallback();
             return
         }
-        this.subscribeToMyConversations(() => {
+        await this.subscribeToMyConversations(() => {
             // no more than one "on_message" handler, thanks.
             console.log("Subscribed to MyConversations.");
             this.on_message_handler = this.client.on('message', (topic, message) => {
@@ -713,7 +702,7 @@ class Chat21Client {
                     console.error("ERROR:", err)
                 }
             })
-            subscribedCallback();
+            if (subscribedCallback) subscribedCallback();
         })
         
         // console.log("HANDLER_:", this.on_message_handler)
@@ -736,68 +725,66 @@ class Chat21Client {
         return null;
     }
 
-    lastArchivedConversations(callback) {
+    async lastArchivedConversations(callback) {
         // ex.: http://localhost:8004/tilechat/04-ANDREASPONZIELLO/archived_conversations
         const URL = `${this.APIendpoint}/${this.appid}/${this.user_id}/archived_conversations`
         if (this.log) {console.log("getting last archived conversations...", URL)}
-        var xmlhttp = new XMLHttpRequest();
-        xmlhttp.open("GET", URL, true);
-        xmlhttp.setRequestHeader("authorization", this.jwt);
-        xmlhttp.onreadystatechange = function() {
-            // console.log("onreadystatechange!")
-            if (callback && xmlhttp.readyState == 4 && xmlhttp.status == 200 && xmlhttp.responseText) {
-                try {
-                    const json = JSON.parse(xmlhttp.responseText)
-                    callback(null, json.result)
-                }
-                catch (err) {
-                    console.error("parsing json ERROR", err)
-                    callback(err, null)
-                }
-            }
-        };
-        xmlhttp.send(null);
+        let options = {
+            url: URL,
+            headers: {
+                "Authorization": this.jwt
+            },
+            method: 'GET'
+        }
+        try {
+            const response = await Chat21Client.myrequest(options, null, this.log);
+            const json = response.data;
+            if (callback) callback(null, json.result);
+            return json.result;
+        } catch (err) {
+            if (callback) callback(err, null);
+            throw err;
+        }
     }
 
-    lastConversations(archived, callback) {
+    async lastConversations(archived, callback) {
         // ex.: http://localhost:8004/tilechat/04-ANDREASPONZIELLO/conversations
         const archived_url_part = archived ? '/archived' : '';
         const URL = `${this.APIendpoint}/${this.appid}/${this.user_id}/conversations` + archived_url_part;
         if (this.log) {console.log("getting last convs...", URL);}
-        var xmlhttp = new XMLHttpRequest();
-        xmlhttp.open("GET", URL, true);
-        xmlhttp.setRequestHeader("authorization", this.jwt);
-        xmlhttp.onreadystatechange = function() {
-            // console.log("onreadystatechange!")
-            if (callback && xmlhttp.readyState == 4 && xmlhttp.status == 200 && xmlhttp.responseText) {
-                try {
-                    const json = JSON.parse(xmlhttp.responseText)
-                    callback(null, json.result)
-                }
-                catch (err) {
-                    console.error("parsing json ERROR", err)
-                    callback(err, null)
-                }
-            }
-        };
-        xmlhttp.send(null);
+        let options = {
+            url: URL,
+            headers: {
+                "Authorization": this.jwt
+            },
+            method: 'GET'
+        }
+        try {
+            const response = await Chat21Client.myrequest(options, null, this.log);
+            const json = response.data;
+            if (callback) callback(null, json.result);
+            return json.result;
+        } catch (err) {
+            if (callback) callback(err, null);
+            throw err;
+        }
     }
 
-    conversationDetail(conversWith, callback) {
+    async conversationDetail(conversWith, callback) {
         if (this.log) {
             console.log("conversationDetail(). searching on user:", this.user_id, " - conversWith:", conversWith)
         }
-        this.crossConversationDetail(conversWith, false, callback);
+        return await this.crossConversationDetail(conversWith, false, callback);
     }
 
-    archivedConversationDetail(conversWith, callback) {
+    async archivedConversationDetail(conversWith, callback) {
         if (this.log) {
             console.log("archivedConversationDetail(). searching on user:", this.user_id, " - conversWith:", conversWith)
         }
-        this.crossConversationDetail(conversWith, true, callback);
+        return await this.crossConversationDetail(conversWith, true, callback);
     }
 
-    crossConversationDetail(conversWith, archived, callback) {
+    async crossConversationDetail(conversWith, archived, callback) {
         if (this.log) {
             console.log("searching on user:", this.user_id, " - conv of conversWith:", conversWith, " - archived:", archived)
         }
@@ -821,69 +808,51 @@ class Chat21Client {
             },
             method: 'GET'
         }
-        Chat21Client.myrequest(options, (err, response, json) => {
+        try {
+            const response = await Chat21Client.myrequest(options, null, this.log);
+            const json = response.data;
             if (this.log) {
                 console.log("JSON...", json);
             }
-            if (json && json.result && Array.isArray(json.result) && json.result.length ==1) {
-                callback(null, json.result[0]);
+            if (json && json.result && Array.isArray(json.result) && json.result.length == 1) {
+                if (callback) callback(null, json.result[0]);
+                return json.result[0];
             }
             else {
-                callback(null, null);
+                if (callback) callback(null, null);
+                return null;
             }
-        }, this.log);
-        
-        // var xmlhttp = new XMLHttpRequest();
-        // xmlhttp.open("GET", URL, true);
-        // xmlhttp.setRequestHeader("authorization", this.jwt);
-        // xmlhttp.onreadystatechange = function() {
-        //     if (callback && xmlhttp.readyState == 4 && xmlhttp.status == 200 && xmlhttp.responseText) {
-        //         try {
-        //             const json = JSON.parse(xmlhttp.responseText);
-        //             if (json && json.result && Array.isArray(json.result) && json.result.length ==1) {
-        //                 callback(null, json.result[0]);
-        //             }
-        //             else {
-        //                 callback({"message": "Incorrect conversation result."}, null);
-        //             }
-        //         }
-        //         catch (err) {
-        //             console.error("parsing json ERROR", err);
-        //             callback(err, null);
-        //         }
-        //     }
-        // };
-        // xmlhttp.send(null);
+        } catch (err) {
+            if (callback) callback(err, null);
+            throw err;
+        }
     }
 
-    lastMessages(convers_with, callback) {
+    async lastMessages(convers_with, callback) {
         // console.log("START: ", this.user_id)
         // ex.: http://localhost:8004/tilechat/04-ANDREASPONZIELLO/conversations
         const URL = this.APIendpoint + "/" + this.appid + "/" + this.user_id + "/conversations/" + convers_with + "/messages"
         // console.log("getting last messages", URL)
         // console.log("END")
-        var xmlhttp = new XMLHttpRequest();
-        xmlhttp.open("GET", URL, true);
-        xmlhttp.setRequestHeader("authorization", this.jwt);
-        xmlhttp.onreadystatechange = function() {
-            // console.log("onreadystatechange messages!")
-            if (callback && xmlhttp.readyState == 4 && xmlhttp.status == 200 && xmlhttp.responseText) {
-                // console.log("xmlhttp...", xmlhttp.responseText)
-                try {
-                    // console.log("parsing json messages")
-                    const json = JSON.parse(xmlhttp.responseText)
-                    callback(null, json.result)
-                }
-                catch (err) {
-                    console.error("parsing json messages ERROR", err)
-                    callback(err, null)
-                }
-            }
-        };
-        xmlhttp.send(null);
+        let options = {
+            url: URL,
+            headers: {
+                "Authorization": this.jwt
+            },
+            method: 'GET'
+        }
+        try {
+            const response = await Chat21Client.myrequest(options, null, this.log);
+            const json = response.data;
+            if (callback) callback(null, json.result);
+            return json.result;
+        } catch (err) {
+            if (callback) callback(err, null);
+            throw err;
+        }
     }
 
-    static myrequest(options, callback, log) {
+    static async myrequest(options, callback, log) {
         // url: options.url,
         // headers: options.headers,
         // data: options.data,
@@ -891,78 +860,29 @@ class Chat21Client {
         if (log) {
           //console.log("HTTP Request:", options);
         }
-        if (isBrowser()) {
-            let xmlhttp = new XMLHttpRequest();
-            xmlhttp.open(options.method, options.url, true);
-            Object.keys(options.headers).forEach((key) => {
-                xmlhttp.setRequestHeader(key, options.headers[key]);
-            });
-            xmlhttp.onreadystatechange = function() {
-                if (callback && xmlhttp.readyState == 4 && xmlhttp.status == 200 && xmlhttp.responseText) {
-                    try {
-                        const json = JSON.parse(xmlhttp.responseText)
-                        callback(null, null, json)
-                    }
-                    catch (err) {
-                        console.error("parsing json ERROR", err)
-                        callback(err, null)
-                    }
-                }
-            };
-            if (options.method === 'POST') {
-                xmlhttp.send(JSON.stringify(options.data));
-            }
-            else {
-                xmlhttp.send(null);
-            }
-        }
-        else {
-            axios(
-                {
-                  url: options.url,
-                  method: options.method,
-                  data: options.data,
-                  headers: options.headers
-                })
-              .then(function (response) {
-                if (log) {console.log("response.status:", response.status);}
-                // if (log) {console.log("response.data:", response.data);}
-                if (callback) {
-                    callback(null, response.headers, response.data);
-                }
-              })
-              .catch(function (error) {
-                console.error("Axios call error:", error);
-                if (callback) {
-                    callback(error, null, null);
-                }
-              });
-
-            // request(
-            //     {
-            //       url: options.url,
-            //       headers: options.headers,
-            //       json: options.json,
-            //       method: options.method
-            //     },
-            //     function(err, res, resbody) {
-            //       if (log) {
-            //         console.log("** For url:", options.url);
-            //         console.log("** Options:", options);
-            //         console.log("** Err:", err);
-            //         console.log("** Response headers:\n", res.headers);
-            //         console.log("** Response body:\n", res.body);
-            //       }
-            //       if (callback) {
-            //         callback(err, res, resbody);
-            //       }
-            //     }
-            // );
-        }
         
+        try {
+            const response = await axios({
+                url: options.url,
+                method: options.method,
+                data: options.data,
+                headers: options.headers
+            });
+            if (log) { console.log("response.status:", response.status); }
+            if (callback) {
+                callback(null, response.headers, response.data);
+            }
+            return response;
+        } catch (error) {
+            console.error("Axios call error:", error);
+            if (callback) {
+                callback(error, null, null);
+            }
+            throw error;
+        }
     }
 
-    connect(user_id, jwt, callback) {
+    async connect(user_id, jwt, callback) {
         this.user_id = user_id;
         // console.log("userid:", this.user_id)
         this.jwt = jwt
@@ -998,88 +918,100 @@ class Chat21Client {
         //console.log("starting mqtt connection with LWT on:", this.presence_topic, this.endpoint)
         this.client = mqtt.connect(this.endpoint,options)
         
-        this.client.on('connect', // TODO if token is wrong it must reply with an error!
-            () => {
-                // if (this.log) {
-                    console.log("Client connected. User:" + user_id)
-                // }
-                if (!this.connected) {
-                    if (this.log) {console.log("Chat client first connection for:" + user_id)}
-                    this.connected = true
-                    // callback();
-                    this.start( () => {
-                        callback();
-                    });
+        return new Promise((resolve) => {
+            this.client.on('connect', // TODO if token is wrong it must reply with an error!
+                async () => {
+                    // if (this.log) {
+                        console.log("Client connected. User:" + user_id)
+                    // }
+                    if (!this.connected) {
+                        if (this.log) {console.log("Chat client first connection for:" + user_id)}
+                        this.connected = true
+                        // callback();
+                        await this.start( () => {
+                            if (callback) callback();
+                            resolve();
+                        });
+                    } else {
+                        resolve();
+                    }
+                    this.client.publish(
+                        this.presence_topic,
+                        JSON.stringify({connected: true}),
+                        { qos: 0, retain: false }, (err) => {
+                            if (err) {
+                                console.error("Error con presence publish:", err);
+                            }
+                        }
+                    );
                 }
+            );
+            this.client.on('reconnect',
+                () => {
+                    if (this.log) {console.log("Chat client reconnect event");}
+                }
+            );
+            this.client.on('close',
+                () => {
+                    if (this.log) {console.log("Chat client close event");}
+                }
+            );
+            this.client.on('offline',
+                () => {
+                    if (this.log) {console.log("Chat client offline event");}
+                }
+            );
+            this.client.on('error',
+                (error) => {
+                    console.error("Chat client error event", error);
+                }
+            );
+        });
+    }
+
+    async ImHere() {
+        if (this.client) {
+            return new Promise((resolve, reject) => {
                 this.client.publish(
                     this.presence_topic,
                     JSON.stringify({connected: true}),
-                    null, (err) => {
+                    { qos: 0, retain: false }, (err) => {
                         if (err) {
-                            console.error("Error con presence publish:", err);
+                            console.error("Error on presence publish:", err);
+                            return reject(err);
                         }
+                        resolve();
                     }
                 );
-            }
-        );
-        this.client.on('reconnect',
-            () => {
-                if (this.log) {console.log("Chat client reconnect event");}
-            }
-        );
-        this.client.on('close',
-            () => {
-                if (this.log) {console.log("Chat client close event");}
-            }
-        );
-        this.client.on('offline',
-            () => {
-                if (this.log) {console.log("Chat client offline event");}
-            }
-        );
-        this.client.on('error',
-            (error) => {
-                console.error("Chat client error event", error);
-            }
-        );
-    }
-
-    ImHere() {
-        if (this.client) {
-            this.client.publish(
-                this.presence_topic,
-                JSON.stringify({connected: true}),
-                null, (err) => {
-                    if (err) {
-                        console.error("Error on presence publish:", err);
-                    }
-                }
-            );
+            });
         }
     }
 
-    close(callback) {
+    async close(callback) {
         if (this.topic_inbox) {
-            this.client.unsubscribe(this.topic_inbox, (err)  => {
-                if (this.log) {console.log("unsubscribed from", this.topic_inbox);}
-                this.client.end(() => {
-                    this.connected = false
-                    // reset all subscriptions
-                    this.onConversationAddedCallbacks = new Map();
-                    this.onConversationUpdatedCallbacks = new Map();
-                    this.onConversationDeletedCallbacks = new Map();
-                    this.onArchivedConversationAddedCallbacks = new Map();
-                    this.onArchivedConversationDeletedCallbacks = new Map();
-                    this.onMessageAddedCallbacks = new Map();
-                    this.onMessageUpdatedCallbacks = new Map();
-                    this.onGroupUpdatedCallbacks = new Map();
-                    this.callbackHandlers = new Map();
-                    this.on_message_handler = null
-                    this.topic_inbox = null;
-                    if (callback) {
-                        callback();
-                    }
-                })
+            return new Promise((resolve) => {
+                this.client.unsubscribe(this.topic_inbox, (err)  => {
+                    if (this.log) {console.log("unsubscribed from", this.topic_inbox);}
+                    this.client.end(() => {
+                        this.connected = false
+                        // reset all subscriptions
+                        this.onConversationAddedCallbacks = new Map();
+                        this.onConversationUpdatedCallbacks = new Map();
+                        this.onConversationDeletedCallbacks = new Map();
+                        this.onArchivedConversationAddedCallbacks = new Map();
+                        this.onArchivedConversationDeletedCallbacks = new Map();
+                        this.onMessageAddedCallbacks = new Map();
+                        this.onMessageUpdatedCallbacks = new Map();
+                        this.onGroupUpdatedCallbacks = new Map();
+                        this.callbackHandlers = new Map();
+                        this.on_message_handler = null
+                        this.topic_inbox = null;
+                        if (callback) {
+                            callback();
+                        }
+                        resolve();
+                    })
+                });
             });
         }
     }

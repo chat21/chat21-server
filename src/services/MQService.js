@@ -1,4 +1,4 @@
-const amqp = require('amqplib/callback_api');
+const amqp = require('amqplib');
 const logger = require('../tiledesk-logger').logger;
 
 class MQService {
@@ -17,145 +17,129 @@ class MQService {
   }
 
   async connect() {
-    return new Promise((resolve, reject) => {
-      logger.debug("(MQService) Connecting to RabbitMQ...");
-      amqp.connect(this.rabbitmq_uri, (err, conn) => {
-        if (err) {
-          logger.error("[MQService AMQP]", err);
-          if (this.autoRestart) {
-            logger.error("[MQService AMQP] reconnecting");
-            return setTimeout(() => { this.connect().then(resolve).catch(reject) }, 1000);
-          } else {
-            process.exit(1);
-          }
+    logger.debug("(MQService) Connecting to RabbitMQ...");
+    try {
+      this.amqpConn = await amqp.connect(this.rabbitmq_uri);
+      this.amqpConn.on("error", (err) => {
+        if (err.message !== "Connection closing") {
+          logger.error("[MQService AMQP] conn error", err);
         }
-        conn.on("error", (err) => {
-          if (err.message !== "Connection closing") {
-            logger.error("[MQService AMQP] conn error", err);
-            return reject(err);
-          }
-        });
-        conn.on("close", () => {
-          logger.info("[MQService AMQP] close");
-          if (this.autoRestart) {
-            logger.info("[MQService AMQP] reconnecting because of a disconnection");
-            return setTimeout(() => { this.connect().then(resolve).catch(reject) }, 1000);
-          }
-        });
-        this.amqpConn = conn;
-        this.startPublisher()
-          .then(() => resolve(conn))
-          .catch(reject);
       });
-    });
+      this.amqpConn.on("close", () => {
+        logger.info("[MQService AMQP] close");
+        if (this.autoRestart) {
+          logger.info("[MQService AMQP] reconnecting because of a disconnection");
+          setTimeout(() => this.connect(), 1000);
+        }
+      });
+      await this.startPublisher();
+      return this.amqpConn;
+    } catch (err) {
+      logger.error("[MQService AMQP]", err);
+      if (this.autoRestart) {
+        logger.error("[MQService AMQP] reconnecting");
+        setTimeout(() => this.connect(), 1000);
+      } else {
+        process.exit(1);
+      }
+    }
   }
 
-  startPublisher() {
-    return new Promise((resolve, reject) => {
-      this.amqpConn.createConfirmChannel((err, ch) => {
-        if (err) {
-          logger.error("[MQService AMQP] publisher error", err);
-          return reject(err);
-        }
-        ch.on("error", (err) => {
-          logger.error("[MQService AMQP] channel error", err);
-          process.exit(0);
-        });
-        this.pubChannel = ch;
-        resolve(ch);
+  async startPublisher() {
+    try {
+      this.pubChannel = await this.amqpConn.createConfirmChannel();
+      this.pubChannel.on("error", (err) => {
+        logger.error("[MQService AMQP] channel error", err);
+        process.exit(0);
       });
-    });
+      return this.pubChannel;
+    } catch (err) {
+      logger.error("[MQService AMQP] publisher error", err);
+      throw err;
+    }
   }
 
-  publish(exchange, routingKey, content, callback) {
+  async publish(exchange, routingKey, content, callback) {
     if (routingKey.length > 255) {
       logger.error("routingKey invalid length (> 255).", routingKey.length);
       if (callback) callback(null);
       return;
     }
     try {
-      this.pubChannel.publish(exchange, routingKey, content, { persistent: true }, (err, ok) => {
-        if (err) {
-          logger.error("[MQService AMQP] publish error:", err);
-          this.offlinePubQueue.push([exchange, routingKey, content]);
-          this.pubChannel.connection.close();
-          if (callback) callback(err);
-        } else if (callback) {
-          callback(null);
-        }
-      });
-    } catch (e) {
-      logger.error("[MQService AMQP] publish catch:", e.message);
+      if (!this.pubChannel) {
+        throw new Error("Publisher channel not initialized");
+      }
+      await this.pubChannel.publish(exchange, routingKey, content, { persistent: true });
+      if (callback) callback(null);
+      return true;
+    } catch (err) {
+      logger.error("[MQService AMQP] publish error:", err);
       this.offlinePubQueue.push([exchange, routingKey, content]);
-      if (callback) callback(e);
+      if (callback) callback(err);
+      throw err;
     }
   }
 
-  publishAsync(exchange, routingKey, content) {
-    return new Promise((resolve, reject) => {
-      this.publish(exchange, routingKey, content, (err) => {
-        if (err) return reject(err);
-        resolve();
-      });
-    });
+  async publishAsync(exchange, routingKey, content) {
+    return await this.publish(exchange, routingKey, content);
   }
 
-  startWorker(topics, processMsg) {
-    this.amqpConn.createChannel((err, ch) => {
-      if (err) {
-        logger.error("[MQService AMQP] worker channel error", err);
-        return;
-      }
-      this.channel = ch;
-      ch.on("error", (err) => {
+  async startWorker(topics, processMsg) {
+    try {
+      this.channel = await this.amqpConn.createChannel();
+      this.channel.on("error", (err) => {
         logger.error("[MQService AMQP] channel error", err);
         process.exit(0);
       });
       
-      ch.prefetch(this.prefetch_messages);
-      ch.assertExchange(this.exchange, 'topic', { durable: this.durable_enabled });
+      this.channel.prefetch(this.prefetch_messages);
+      await this.channel.assertExchange(this.exchange, 'topic', { durable: this.durable_enabled });
 
       if (this.active_queues['messages']) {
-        ch.assertQueue("messages", { durable: this.durable_enabled }, (err, _ok) => {
-          if (err) return;
-          const queue = _ok.queue;
-          topics.messages.forEach(topic => this.subscribeTo(topic, ch, queue));
-          ch.consume(queue, (msg) => this.handleMsg(msg, processMsg), { noAck: false });
-        });
+        const ok = await this.channel.assertQueue("messages", { durable: this.durable_enabled });
+        const queue = ok.queue;
+        topics.messages.forEach(topic => this.subscribeTo(topic, this.channel, queue));
+        await this.channel.consume(queue, (msg) => this.handleMsg(msg, processMsg), { noAck: false });
       }
       if (this.active_queues['persist']) {
-        ch.assertQueue("persist", { durable: this.durable_enabled }, (err, _ok) => {
-          if (err) return;
-          const queue = _ok.queue;
-          topics.persist.forEach(topic => this.subscribeTo(topic, ch, queue));
-          ch.consume(queue, (msg) => this.handleMsg(msg, processMsg), { noAck: false });
-        });
+        const ok = await this.channel.assertQueue("persist", { durable: this.durable_enabled });
+        const queue = ok.queue;
+        topics.persist.forEach(topic => this.subscribeTo(topic, this.channel, queue));
+        await this.channel.consume(queue, (msg) => this.handleMsg(msg, processMsg), { noAck: false });
       }
-    });
+    } catch (err) {
+      logger.error("[MQService AMQP] worker channel error", err);
+    }
   }
 
-  subscribeTo(topic, channel, queue) {
-    channel.bindQueue(queue, this.exchange, topic, {}, (err) => {
-      if (err) logger.error("Error binding queue:", queue, "topic:", topic, err);
-      else logger.info("Bound queue: '" + queue + "' on topic: " + topic);
-    });
+  async subscribeTo(topic, channel, queue) {
+    try {
+      await channel.bindQueue(queue, this.exchange, topic, {});
+      logger.info("Bound queue: '" + queue + "' on topic: " + topic);
+    } catch (err) {
+      logger.error("Error binding queue:", queue, "topic:", topic, err);
+    }
   }
 
-  handleMsg(msg, processMsg) {
+  async handleMsg(msg, processMsg) {
     if (!msg) return;
-    processMsg(msg, (ok) => {
-      try {
-        if (ok) this.channel.ack(msg);
-        else this.channel.reject(msg, true);
-      } catch (e) {
-        logger.error("handleMsg error", e);
-      }
-    });
+    try {
+      const ok = await processMsg(msg);
+      if (ok) this.channel.ack(msg);
+      else this.channel.reject(msg, true);
+    } catch (e) {
+      logger.error("handleMsg error", e);
+    }
   }
 
-  close(callback) {
+  async close(callback) {
     if (this.amqpConn) {
-      this.amqpConn.close(callback);
+      try {
+        await this.amqpConn.close();
+        if (callback) callback();
+      } catch (err) {
+        if (callback) callback(err);
+      }
     } else if (callback) {
       callback();
     }
