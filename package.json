@@ -1,22 +1,25 @@
 {
   "name": "@chat21/chat21-server",
-  "version": "0.2.55",
+  "version": "0.3.0",
   "description": "Chat21 AMQP/MQTT messages dispatcher",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "dependencies": {
-    "aedes": "^0.40.1",
-    "amqplib": "^0.10.3",
-    "app-root-path": "^3.0.0",
-    "body-parser": "^1.19.0",
-    "dotenv": "^8.2.0",
-    "express": "^4.17.1",
-    "mocha": "^9.0.0",
-    "mongodb": "^3.5.6",
-    "mongoose": "^5.9.10",
-    "mqtt": "^4.3.7",
-    "rhea": "^1.0.20",
-    "uuid": "^8.3.2",
+    "aedes": "^0.51.3",
+    "amqplib": "^0.10.4",
+    "app-root-path": "^3.1.0",
+    "body-parser": "^1.20.3",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mocha": "^11.1.0",
+    "mongodb": "^6.13.0",
+    "mongoose": "^8.10.1",
+    "mqtt": "^5.10.3",
+    "rhea": "^3.0.4",
+    "uuid": "^11.0.5",
     "websocket-stream": "^5.5.2",
-    "redis": "^3.1.2"
+    "redis": "^4.7.0"
   },
   "devDependencies": {
     "@chat21/chat21-http-server": "^0.2.37",
@@ -27,7 +30,8 @@
   "scripts": {
     "test": "mocha ./test/*.js --timeout 10000 --exit",
     "benchmarks": "node ./benchmarks/index.js",
-    "start": "node chatservermq.js"
+    "start": "node src/chatservermq.js",
+    "dev": "node --watch src/chatservermq.js"
   },
   "author": "",
   "license": "MIT"

@@ -240,7 +240,7 @@ function startWorker() {
       logger.debug("[AMQP] channel closed");
     });
     logger.info("(Observer) Prefetch messages:", prefetch_messages);
-    // ch.prefetch(prefetch_messages);
+    ch.prefetch(prefetch_messages);
     ch.assertExchange(exchange, 'topic', {
       durable: durable_enabled
     });
@@ -271,7 +271,7 @@ function startWorker() {
         // if (subscription_topics['delivered']) {
           subscribeTo(topic_delivered, ch, queue, exchange)
         // }
-        ch.consume(queue, processMsg, { noAck: true });
+        ch.consume(queue, processMsg, { noAck: false });
       });
     }
     if (active_queues['persist']) {
@@ -282,7 +282,7 @@ function startWorker() {
         // if (subscription_topics['persist']) {
           subscribeTo(topic_persist, ch, queue, exchange)
         // }
-        ch.consume(queue, processMsg, { noAck: true });
+        ch.consume(queue, processMsg, { noAck: false });
       });
     }
   });
@@ -306,18 +306,18 @@ function processMsg(msg) {
     return;
   }
   work(msg, function (ok) {
-    // try {
-    //   if (ok) {
-    //     channel.ack(msg);
-    //   }
-    //   else {
-    //     logger.debug("channel.reject(msg, true)");
-    //     channel.reject(msg, true);
-    //   }
-    // } catch (e) {
-    //   logger.debug("processMsgwork error ", e)
-    //   closeOnErr(e);
-    // }
+    try {
+      if (ok) {
+        channel.ack(msg);
+      }
+      else {
+        logger.debug("channel.reject(msg, true)");
+        channel.reject(msg, true);
+      }
+    } catch (e) {
+      logger.debug("processMsgwork error ", e)
+      closeOnErr(e);
+    }
   });
 }
 
@@ -663,73 +663,53 @@ function deliverMessage(message, app_id, inbox_of, convers_with_id, callback) {
   const mstatus = message.status;
   logger.log("mstatus:", mstatus)
   const message_payload = JSON.stringify(message)
-  // notifies to the client (on MQTT client topic)
-  publish(exchange, added_topic, Buffer.from(message_payload), function(err, msg) { // .clientadded
-    if (err) {
-      logger.error("Error on topic: ", added_topic, " Err:", err);
-      callback(true);
-      return;
-    }
-    logger.debug("NOTIFY VIA WHnotifyMessageStatusDelivered, topic: " + added_topic);
-    if (webhooks && webhook_enabled) {
+
+  const tasks = [];
+
+  // 1. notifies to the client (on MQTT client topic)
+  tasks.push(new Promise((resolve) => {
+    publish(exchange, added_topic, Buffer.from(message_payload), function(err, msg) {
+      if (err) {
+        logger.error("Error on topic: ", added_topic, " Err:", err);
+      }
+      resolve();
+    });
+  }));
+
+  // 2. publish to 'persist' topic
+  tasks.push(new Promise((resolve) => {
+    publish(exchange, persist_topic, Buffer.from(message_payload), function(err, msg) {
+      if (err) {
+        logger.error("Error PUBLISH TO 'persist' TOPIC:", err);
+      } else {
+        logger.debug("SUCCESSFULLY PUBLISHED ON:", persist_topic);
+      }
+      resolve();
+    });
+  }));
+
+  // 3. Webhooks
+  if (webhooks && webhook_enabled) {
+    tasks.push(new Promise((resolve) => {
       logger.debug("webhooks && webhook_enabled ON, processing webhooks, message:", message);
-      webhooks.WHnotifyMessageStatusSentOrDelivered(message_payload, added_topic, (err) => {
+      // Optimized: passing 'message' object instead of 'message_payload' string
+      webhooks.WHnotifyMessageStatusSentOrDelivered(message, added_topic, (err) => {
         if (err) {
           logger.error("WHnotifyMessageStatusSentOrDelivered with err (noack):"+ err);
         }
         else {
           logger.debug("WHnotifyMessageStatusSentOrDelivered ok");
         }
+        resolve();
       });
+    }));
+  }
+
+  Promise.all(tasks).then(() => {
+    if (callback) {
+      callback(true);
     }
-    logger.debug("ADDED. NOW PUBLISH TO 'persist' TOPIC: " + persist_topic);
-    publish(exchange, persist_topic, Buffer.from(message_payload), function(err, msg) { // .persist
-      if (err) {
-        logger.error("Error PUBLISH TO 'persist' TOPIC (noack):", err);
-        callback(true);
-      }
-      else {
-        logger.debug("(WEBHOOK ENABLED) SUCCESSFULLY PUBLISHED ON:", persist_topic);
-        callback(true);
-      }
-    });
-    // if (webhooks && webhook_enabled) {
-    //   logger.debug("webhooks && webhook_enabled ON, processing webhooks, message:", message);
-    //   webhooks.WHnotifyMessageStatusSentOrDelivered(message_payload, added_topic, (err) => {
-    //     if (err) {
-    //       logger.error("WHnotifyMessageStatusSentOrDelivered with err (noack):"+ err);
-    //       callback(false);
-    //     }
-    //     else {
-    //       logger.debug("WHnotifyMessageStatusSentOrDelivered ok");
-    //       logger.debug("ADDED. NOW PUBLISH TO 'persist' TOPIC: " + persist_topic);
-    //       publish(exchange, persist_topic, Buffer.from(message_payload), function(err, msg) { // .persist
-    //         if (err) {
-    //           logger.error("Error PUBLISH TO 'persist' TOPIC (noack):", err);
-    //           callback(false);
-    //         }
-    //         else {
-    //           logger.debug("(WEBHOOK ENABLED) SUCCESSFULLY PUBLISHED ON:", persist_topic);
-    //           callback(true);
-    //         }
-    //       })
-    //     }
-    //   });
-    // }
-    // else {
-    //   logger.debug("ADDED. NOW PUBLISH TO 'persist' TOPIC: " + persist_topic);
-    //   publish(exchange, persist_topic, Buffer.from(message_payload), function(err, msg) { // .persist
-    //     if (err) {
-    //       logger.error("Error PUBLISH TO 'persist' TOPIC (noack):", err);
-    //       callback(false);
-    //     }
-    //     else {
-    //       logger.debug("(NO WEBHOOK) SUCCESSFULLY PUBLISHED ON::", persist_topic);
-    //       callback(true);
-    //     }
-    //   })
-    // }
-  })
+  });
 }
 
 // delivers messages to inboxes with rabbitmq queues
@@ -995,7 +975,7 @@ function process_archive(topic, payload, callback) {
       });
     }
     logger.debug(">>> ON DISK... ARCHIVE CONVERSATION ON TOPIC: " + topic)
-    logger.debug("Updating conversation 3.")
+    logger.debug("Updating conversation 3.");
     chatdb.saveOrUpdateConversation(conversation_archive_patch, function(err, msg) {
       logger.debug(">>> CONVERSATION ON TOPIC:", topic, "ARCHIVED!")
       if (err) {
@@ -1142,7 +1122,7 @@ async function startServer(config) {
 
   var db;
   logger.debug("(Observer) connecting to mongodb:", mongouri);
-  var client = await mongodb.MongoClient.connect(mongouri, { useNewUrlParser: true, useUnifiedTopology: true });
+  var client = await mongodb.MongoClient.connect(mongouri);
   db = client.db();
   logger.debug("(Observer) Mongodb connected.");
 

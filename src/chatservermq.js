@@ -59,7 +59,7 @@ else if (active_queues_env_string === "none") {
 else {
   let active_queues_env_array = active_queues_env_string.split(",");
   logger.info("(Observer) ACTIVE_QUEUES found:", active_queues_env_array);
-  if (active_queues_env_array.length == 0) {
+  if (active_queues_env_array.length === 0) {
     logger.error("(Observer) Not ACTIVE_QUEUES enabled.");
     logger.error("(Observer) To activate queues use syntax: active_queues=messages,persist (valid topics: messages | persist | messages,persist)");
     process.exit(1);
@@ -80,7 +80,7 @@ else {
 }
 
 var webhook_enabled = process.env.WEBHOOK_ENABLED;
-if (webhook_enabled == undefined || webhook_enabled === "true" || webhook_enabled === true ) {
+if (webhook_enabled === undefined || webhook_enabled === "true" || webhook_enabled === true ) {
   webhook_enabled = true;
 }else {
   webhook_enabled = false;

@@ -1,6 +1,6 @@
 const axios = require('axios');
 require('dotenv').config();
-const { Chat21Client } = require('../mqttclient/chat21client.js');
+const { Chat21Client } = require('../src/mqttclient/chat21client.js');
 
 let TILEDESK_PROJECT_ID = "";
 if (process.env && process.env.PERFORMANCE_TEST_TILEDESK_PROJECT_ID) {

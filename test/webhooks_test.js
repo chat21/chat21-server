@@ -1,16 +1,16 @@
 var assert = require('assert');
 const { v4: uuidv4 } = require('uuid');
-const { Chat21Client } = require('../mqttclient/chat21client.js');
+const { Chat21Client } = require('../src/mqttclient/chat21client.js');
 var chat21HttpServer = require('@chat21/chat21-http-server');
-let observer = require('../index').observer;
+let observer = require('../src/index').observer;
 let express = require('express');
 //const { Logger } = require('mongodb');
-const loggers = require('../tiledesk-logger');
+const loggers = require('../src/tiledesk-logger');
 let logger = new loggers.TiledeskLogger("debug");
 // logger.setLog('DEBUG');
 // let bodyParser = require('body-parser');
 const bodyParser = require('body-parser');
-const messageConstants = require('../models/messageConstants.js');
+const messageConstants = require('../src/models/messageConstants.js');
 
 const user1 =  { userid: 'USER1',
   fullname: 'User 1',

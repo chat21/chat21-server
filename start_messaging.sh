@@ -1,1 +1,1 @@
-ACTIVE_QUEUES=messages node chatservermq.js
+ACTIVE_QUEUES=messages node src/chatservermq.js

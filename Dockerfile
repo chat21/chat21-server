@@ -1,16 +1,17 @@
-FROM node:16
+FROM node:22-alpine
 
 # Create app directory
 WORKDIR /usr/src/app
 
 # Install app dependencies
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
-# where available (npm@5+)
 COPY package*.json ./
 
-RUN npm install
+RUN npm install --production
 
 # Bundle app source
 COPY . .
 
-CMD [ "node", "chatservermq.js" ]
+# Environment variables
+ENV NODE_ENV=production
+
+CMD [ "node", "src/chatservermq.js" ]

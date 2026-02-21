@@ -2,7 +2,7 @@ var assert = require('assert');
 // const { uuid } = require('uuidv4');
 const { v4: uuidv4 } = require('uuid');
 
-const { Chat21Client } = require('../mqttclient/chat21client.js');
+const { Chat21Client } = require('../src/mqttclient/chat21client.js');
 
 const user1 = {
 	userid: 'USER1',

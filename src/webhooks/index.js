@@ -86,6 +86,10 @@ class Webhooks {
       MessageConstants.WEBHOOK_EVENTS.CONVERSATION_UNARCHIVED,
     ]
     this.webhook_events_array = options.webhook_events || DEFAULT_WEBHOOK_EVENTS;
+    const http = require('http');
+    const https = require('https');
+    this.httpAgent = new http.Agent({ keepAlive: true });
+    this.httpsAgent = new https.Agent({ keepAlive: true });
     logger.debug("webhooks inizialized: this.exchange:", this.exchange, "this.offlinePubQueue:", this.offlinePubQueue)
   }
 
@@ -117,11 +121,18 @@ class Webhooks {
   WHnotifyMessageStatusSentOrDelivered(message_payload, topic, callback) {
     if (this.enabled === false) {
       logger.debug("webhooks disabled");
-      callback(null);
+      if (callback) {
+        callback(null);
+      }
       return;
     }
     logger.log("WHnotifyMessageStatusSentOrDelivered()", message_payload)
-    let message = JSON.parse(message_payload);
+    let message;
+    if (typeof message_payload === 'string') {
+        message = JSON.parse(message_payload);
+    } else {
+        message = message_payload;
+    }
     message['temp_field_chat_topic'] = topic;
     if (message.status == MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT) {
       logger.log("SENT...")
@@ -533,6 +544,7 @@ class Webhooks {
     // }
     var q = url.parse(endpoint, true);
     var protocol = (q.protocol == "http:") ? require('http') : require('https');
+    let agent = (q.protocol == "http:") ? this.httpAgent : this.httpsAgent;
     let options = {
       path:  q.pathname,
       host: q.hostname,
@@ -540,7 +552,8 @@ class Webhooks {
       method: 'POST',
       headers: {
         "Content-Type": "application/json"
-      }
+      },
+      agent: agent
     };
     if (q.protocol == "https:") {
       // process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"
@@ -636,7 +649,7 @@ class Webhooks {
       ch.on("close", function () {
         logger.debug("[Webooks.AMQP] channel closed");
       });
-      // ch.prefetch(this.prefetch_messages);
+      ch.prefetch(this.prefetch_messages);
       ch.assertExchange(this.exchange, 'topic', {
         durable: this.durable_enabled
       });
@@ -647,7 +660,7 @@ class Webhooks {
         this.subscribeTo(this.topic_webhook_message_update, ch, _ok.queue)
         this.subscribeTo(this.topic_webhook_conversation_archived, ch, _ok.queue)
         this.subscribeTo(this.topic_webhook_presence, ch, _ok.queue)
-        ch.consume(this.queue, this.processMsg.bind(this), { noAck: true });
+        ch.consume(this.queue, this.processMsg.bind(this), { noAck: false });
       });
     });
   }
@@ -666,124 +679,17 @@ class Webhooks {
   processMsg(msg) {
     this.work(msg, (ok) => {
       logger.debug("Webhooks.worked.");
-      // try {
-      //   if (ok) {
-      //     this.channel.ack(msg);
-      //   }
-      //   else {
-      //     this.channel.reject(msg, true);
-      //   }
-      // } catch (e) {
-      //   logger.debug("gin2:", e)
-      //   this.closeOnErr(e);
-      // }
-    });
-  }
-
-  work(msg, callback) {
-    logger.debug("Webhooks.NEW TOPIC..." + msg.fields.routingKey) //, " message:", msg.content.toString());
-    const topic = msg.fields.routingKey //.replace(/[.]/g, '/');
-    const message_string = msg.content.toString();
-    if (topic.startsWith('observer.webhook.') && topic.endsWith('.message_deliver')) {
-      // if (this.enabled === false) {
-      //    logger.debug("work observer.webhook....message_received notification. webhook_enabled is false.");
-      //    callback(true);
-      // } else {
-        this.WHprocess_webhook_message_deliver(topic, message_string, callback);
-      // }
-    }
-    else if (topic.startsWith('observer.webhook.') && topic.endsWith('.message_update')) {
-      // if (this.enabled === false) {
-      //    logger.debug("work observer.webhook....message_update notification. webhook_enabled is false.");
-      //    callback(true);
-      // } else {
-        this.WHprocess_webhook_message_update(topic, message_string, callback);
-      // }
-    }
-    // else if (topic.startsWith('observer.webhook.') && topic.endsWith('.message_received')) {
-    //   if (this.enabled === false) {
-    //      logger.debug("work observer.webhook....message_received notification. webhook_enabled is false.");
-    //      callback(true);
-    //   } else {
-    //     this.WHprocess_webhook_message_received(topic, message_string, callback);
-    //   }
-    // }
-    else if (topic.startsWith('observer.webhook.') && topic.endsWith('.conversation_archived')) {
-    //   if (this.enabled === false) {
-    //     logger.debug("work observer.webhook....conversation_archived notification. webhook_enabled is false.");
-    //     callback(true);
-    //  } else {
-      this.WHprocess_webhook_conversation_archived(topic, message_string, callback);
-    //  }
-    }
-    else if (topic.startsWith('observer.webhook.') && topic.endsWith('.presence')) {
-      this.WHprocess_webhook_presence(topic, message_string, callback);
-    }
-    else {
-      logger.error("Webooks.unhandled topic:", topic)
-      callback(true);
-    }
-  }
-
-  start() {
-    const that = this;
-    logger.info("Webhook config: ", this);
-    return new Promise(function (resolve, reject) {
-      return that.startMQ(resolve, reject);
-    });
-  }
-
-  startMQ(resolve, reject) {
-    const that = this;
-    
-    logger.debug("Webooks. Connecting to RabbitMQ...")
-    amqp.connect(that.RABBITMQ_URI, (err, conn) => {
-        if (err) {
-            logger.error("[Webooks.AMQP]", err);                    
-            return setTimeout(() => { that.startMQ(resolve, reject) }, 1000);
+      try {
+        if (ok) {
+          this.channel.ack(msg);
         }
-        conn.on("error", (err) => {
-            if (err.message !== "Connection closing") {
-              logger.error("[Webooks.AMQP] conn error", err);
-                return reject(err);
-            }
-        });
-        conn.on("close", () => {
-            logger.error("[Webooks.AMQP] reconnecting");
-            return setTimeout(() => { that.startMQ(resolve, reject) }, 1000);
-        });
-        logger.info("Webooks. AMQP connected.")
-        that.amqpConn = conn;
-        that.whenConnected().then(function(ch) {
-          logger.debug("Webooks. whenConnected() returned")
-          resolve({conn: conn, ch: ch});
-        });
+        else {
+          this.channel.reject(msg, true);
+        }
+      } catch (e) {
+        logger.debug("gin2:", e)
+        this.closeOnErr(e);
+      }
     });
-    
   }
 
-  publish(exchange, routingKey, content, callback) {
-    try {
-      logger.debug("Webooks.TRYING TO PUB...")
-      this.pubChannel.publish(exchange, routingKey, content, { persistent: true }, (err, ok) => {
-          if (err) {
-            logger.error("[Webooks.AMQP] publish ERROR:", err);
-            this.offlinePubQueue.push([exchange, routingKey, content]);
-            this.pubChannel.connection.close();
-            callback(err)
-          }
-          else {
-            callback(null)
-          }
-        });
-    } catch (e) {
-      logger.error("[Webooks.AMQP] publish CATCHED ERROR:", e);
-      this.offlinePubQueue.push([exchange, routingKey, content]);
-      callback(e)
-    }
-  }
-
-  
-}
-
-module.exports = { Webhooks };

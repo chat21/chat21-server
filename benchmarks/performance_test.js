@@ -5,7 +5,7 @@ var should = require('should');
 // var http = require('http');
 const { send } = require('process');
 const { v4: uuidv4 } = require('uuid');
-const { Chat21Client } = require('../mqttclient/chat21client.js');
+const { Chat21Client } = require('../src/mqttclient/chat21client.js');
 // const { Console } = require('console');
 
 // *******************************

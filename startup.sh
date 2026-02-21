@@ -1,1 +1,1 @@
-LOG_LEVEL=DEBUG node chatservermq.js
+LOG_LEVEL=DEBUG node src/chatservermq.js

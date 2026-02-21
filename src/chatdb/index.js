@@ -46,9 +46,19 @@ class ChatDB {
     this.db.collection(this.messages_collection).createIndex(
       { 'timelineOf':1, 'message_id': 1 }
     );
-    
+
+    // Optimized index for lastMessages query
+    this.db.collection(this.messages_collection).createIndex(
+      { 'app_id': 1, 'timelineOf': 1, 'conversWith': 1, 'timestamp': -1 }
+    );
+
     this.db.collection(this.groups_collection).createIndex(
       { 'uid':1 }
+    );
+
+    // Optimized index for lastConversations query
+    this.db.collection(this.conversations_collection).createIndex(
+      { 'app_id': 1, 'timelineOf': 1, 'archived': 1, 'timestamp': -1 }
     );
   }
 

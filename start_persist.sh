@@ -1,1 +1,1 @@
-ACTIVE_QUEUES=persist node chatservermq.js PRST
+ACTIVE_QUEUES=persist node src/chatservermq.js PRST
