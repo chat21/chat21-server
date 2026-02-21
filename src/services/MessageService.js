@@ -145,6 +145,12 @@ class MessageService {
     persist_message.conversWith = convers_with;
 
     let update_conversation = !(persist_message.attributes && persist_message.attributes.updateconversation === false);
+    let is_streamed = (persist_message.attributes && persist_message.attributes.stream === true);
+    
+    if (is_streamed) {
+      logger.debug("Message is streamed. Skipping persistence.");
+      return true;
+    }
     
     try {
       await this.chatdb.saveOrUpdateMessage(persist_message);
