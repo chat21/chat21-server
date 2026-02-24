@@ -502,7 +502,7 @@ class Webhooks {
         agent: agent
       };
       
-      logger.debug("Using request options:" + JSON.stringify(options));
+      // logger.debug("Using request options:" + JSON.stringify(options));
       try {
         const req = protocol.request(options, (response) => {
           logger.debug("statusCode: " + response.statusCode + " for webhook_endpoint: " + endpoint);
