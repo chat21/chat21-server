@@ -8,6 +8,7 @@ const TILEDESK_PROJECT_ID = process.env.PERFORMANCE_TEST_TILEDESK_PROJECT_ID || 
 const MQTT_ENDPOINT = process.env.PERFORMANCE_TEST_MQTT_ENDPOINT || process.env.TEST_MQTT_ENDPOINT || 'ws://localhost:15675/ws';
 const API_ENDPOINT = process.env.PERFORMANCE_TEST_API_ENDPOINT || process.env.TEST_API_ENDPOINT || 'http://localhost:8004';
 const CHAT_API_ENDPOINT = process.env.PERFORMANCE_TEST_CHAT_API_ENDPOINT || process.env.TEST_CHAT_API_ENDPOINT || 'http://localhost:8004';
+const NUM_MESSAGE = process.env.NUM_MESSAGE || 10;
 const APPID = process.env.APP_ID || 'tilechat';
 
 if (!TILEDESK_PROJECT_ID) {
@@ -22,7 +23,7 @@ const config = {
     APPID,
     TILEDESK_PROJECT_ID,
     MESSAGE_PREFIX: "Conv-bench",
-    NUM_MESSAGES: 10
+    NUM_MESSAGES: NUM_MESSAGE
 };
 
 async function createAnonymousUser(tiledeskProjectId) {
@@ -95,7 +96,7 @@ async function runBenchmark() {
         const group_members = {};
         group_members[userData1.userid] = 1;
         group_members[userData2.userid] = 1;
-        
+
         await userClient.groupCreate(group_name, group_id, group_members);
         console.log("Group created successfully.");
 
@@ -134,7 +135,7 @@ async function runBenchmark() {
                     const latency = now - last_message_sent_time;
                     latencies.push(latency);
                     messages_exchanged++;
-                    
+
                     console.log(`Exchange ${messages_exchanged}/${config.NUM_MESSAGES} completed. Latency: ${latency}ms`);
 
                     if (messages_exchanged < config.NUM_MESSAGES) {
@@ -173,7 +174,7 @@ async function runBenchmark() {
         console.log("\n--- Benchmark Results ---");
         console.log("Total messages exchanged:", messages_exchanged);
         console.log("Total time:", totalTime, "ms");
-        
+
         const avgLatency = latencies.reduce((a, b) => a + b, 0) / latencies.length;
         console.log("Average Round-trip Latency:", avgLatency.toFixed(2), "ms");
         console.log("Min Latency:", Math.min(...latencies), "ms");
