@@ -3,16 +3,16 @@
 /**
  * Module dependencies.
  */
- 
-require('dotenv').config(); 
 
-const logger = require('./tiledesk-logger').logger;
+import dotenv from 'dotenv';
+dotenv.config();
 
-var observer = require('./observer');
-var startServer = observer.startServer;
+import { logger } from './tiledesk-logger';
+import * as observer from './observer';
+const startServer = observer.startServer;
 
 
-let active_queues_env_string = null;
+let active_queues_env_string: string | null = null;
 
 if (process.env.ACTIVE_QUEUES) {
   logger.debug("Found process.env.ACTIVE_QUEUES:", process.env.ACTIVE_QUEUES);
@@ -32,7 +32,7 @@ if (process.env.ACTIVE_QUEUES) {
 //   'update_group',
 //   'delivered'
 // ];
-let active_queues = {};
+let active_queues: any = {};
 // let ALL_SUBSCRIPTIONS_TOPICS = {
 //   'outgoing': true,
 //   'update': true,
@@ -65,42 +65,42 @@ else {
     process.exit(1);
   }
   else {
-    active_queues_env_array.forEach((e,i) => {
-      topic = e.trim();
-      if (!ALL_SUBSCRIPTIONS_TOPICS[topic]) {
+    active_queues_env_array.forEach((e: string) => {
+      let topic = e.trim();
+      if (!(ALL_SUBSCRIPTIONS_TOPICS as any)[topic]) {
         logger.error("Invalid subscription topic:", topic);
         logger.error("Use syntax: active_queues=outgoing,persist (valid topics: outgoing,update,persist,archive,presence,update_group,delivered)");
         process.exit(1);
       }
       else {
-        active_queues[topic] = true;
+        (active_queues as any)[topic] = true;
       }
     });
   }
 }
 
-var webhook_enabled = process.env.WEBHOOK_ENABLED;
-if (webhook_enabled === undefined || webhook_enabled === "true" || webhook_enabled === true ) {
+let webhook_enabled: any = process.env.WEBHOOK_ENABLED;
+if (webhook_enabled === undefined || webhook_enabled === "true" || webhook_enabled === true) {
   webhook_enabled = true;
-}else {
+} else {
   webhook_enabled = false;
 }
 logger.debug("webhook_enabled: " + webhook_enabled);
 
-let webhook_endpoints_array = null;
+let webhook_endpoints_array: string[] | null = null;
 let env_webhook_endpoints = process.env.WEBHOOK_ENDPOINTS;
 if (env_webhook_endpoints) {
   webhook_endpoints_array = env_webhook_endpoints.split(/\s*[,]\s*/);
 }
 logger.debug("webhook_endpoints_array: ", webhook_endpoints_array);
 
-let webhook_events_array = null;
+let webhook_events_array: string[] | null = null;
 if (process.env.WEBHOOK_EVENTS) {
   // logger.log(typeof process.env.WEBHOOK_EVENTS);
   const webhook_events = process.env.WEBHOOK_EVENTS;
   webhook_events_array = webhook_events.split(",");
 }
-logger.info("(Observer) webhook_events_array: " , webhook_events_array);
+logger.info("(Observer) webhook_events_array: ", webhook_events_array);
 
 let presence_enabled = false;
 logger.debug("process.env.PRESENCE_ENABLED:", process.env.PRESENCE_ENABLED)
@@ -124,12 +124,12 @@ logger.info("Starting observer (DURABLE_ENABLED disabled)");
 async function start() {
   observer.setPresenceEnabled(presence_enabled);
   observer.setDurableEnabled(durable_enabled);
-  observer.setWebHookEnabled(webhook_enabled);
-  observer.setWebHookEndpoints(webhook_endpoints_array);
-  observer.setWebHookEvents(webhook_events_array);
+  observer.setWebHookEnabled(webhook_enabled as boolean);
+  observer.setWebHookEndpoints(webhook_endpoints_array as string[]);
+  observer.setWebHookEvents(webhook_events_array as string[]);
   observer.setActiveQueues(active_queues);
   if (process.env.PREFETCH_MESSAGES) {// && process.env.PREFETCH_MESSAGES > 0) {
-    prefetch = parseInt(process.env.PREFETCH_MESSAGES);
+    let prefetch = parseInt(process.env.PREFETCH_MESSAGES);
     if (prefetch > 0) {
       logger.log("Set prefetch messages number:", prefetch);
       observer.setPrefetchMessages(prefetch);
@@ -143,7 +143,7 @@ async function start() {
   await startServer({
     app_id: process.env.APP_ID,
     exchange: 'amq.topic',
-    rabbitmq_uri:process.env.RABBITMQ_URI,
+    rabbitmq_uri: process.env.RABBITMQ_URI,
     mongo_uri: process.env.MONGODB_URI,
     redis_enabled: process.env.CACHE_ENABLED,
     redis_host: process.env.CACHE_REDIS_HOST,
@@ -153,5 +153,5 @@ async function start() {
 }
 start();
 
-module.exports = { observer: observer};
+export { observer };
 

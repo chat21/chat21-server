@@ -16,22 +16,31 @@
     "mongodb": "^6.13.0",
     "mongoose": "^8.10.1",
     "mqtt": "^5.10.3",
+    "redis": "^4.7.0",
     "rhea": "^3.0.4",
     "uuid": "^11.0.5",
-    "websocket-stream": "^5.5.2",
-    "redis": "^4.7.0"
+    "websocket-stream": "^5.5.2"
   },
   "devDependencies": {
     "@chat21/chat21-http-server": "^0.2.37",
+    "@types/amqplib": "^0.10.8",
+    "@types/express": "^5.0.6",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^25.3.2",
+    "@types/uuid": "^10.0.0",
     "axios": "^0.21.1",
     "loadtest": "^1.4.3",
-    "should": "^9.0.2"
+    "should": "^9.0.2",
+    "ts-mocha": "^11.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   },
   "scripts": {
-    "test": "mocha ./test/*.js --timeout 10000 --exit",
+    "test": "ts-mocha ./test/*.ts --timeout 10000 --exit",
     "benchmarks": "node ./benchmarks/index.js",
-    "start": "node src/chatservermq.js",
-    "dev": "node --watch src/chatservermq.js"
+    "build": "tsc",
+    "start": "node dist/chatservermq.js",
+    "dev": "ts-node src/chatservermq.ts"
   },
   "author": "",
   "license": "MIT"

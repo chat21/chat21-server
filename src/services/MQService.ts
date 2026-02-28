@@ -1,15 +1,26 @@
-const amqp = require('amqplib');
-const logger = require('../tiledesk-logger').logger;
+import * as amqp from 'amqplib';
+import { logger } from '../tiledesk-logger';
 
 class MQService {
-  constructor(options = {}) {
+  rabbitmq_uri: string;
+  exchange: string;
+  autoRestart: boolean;
+  prefetch_messages: number;
+  durable_enabled: boolean;
+  active_queues: any;
+  amqpConn: any;
+  pubChannel: any;
+  channel: any;
+  offlinePubQueue: any[];
+
+  constructor(options: any = {}) {
     this.rabbitmq_uri = options.rabbitmq_uri;
     this.exchange = options.exchange || 'amq.topic';
     this.autoRestart = options.autoRestart !== false;
     this.prefetch_messages = options.prefetch_messages || 10;
     this.durable_enabled = options.durable_enabled !== false;
     this.active_queues = options.active_queues || { 'messages': true, 'persist': true };
-    
+
     this.amqpConn = null;
     this.pubChannel = null;
     this.channel = null;
@@ -59,7 +70,7 @@ class MQService {
     }
   }
 
-  async publish(exchange, routingKey, content, callback) {
+  async publish(exchange, routingKey, content, callback?: any) {
     if (routingKey.length > 255) {
       logger.error("routingKey invalid length (> 255).", routingKey.length);
       if (callback) callback(null);
@@ -91,7 +102,7 @@ class MQService {
         logger.error("[MQService AMQP] channel error", err);
         process.exit(0);
       });
-      
+
       this.channel.prefetch(this.prefetch_messages);
       await this.channel.assertExchange(this.exchange, 'topic', { durable: this.durable_enabled });
 
@@ -146,4 +157,4 @@ class MQService {
   }
 }
 
-module.exports = MQService;
+export default MQService;

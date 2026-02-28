@@ -3,22 +3,18 @@
     Andrea Sponziello - (c) Tiledesk.com
 */
 
-const logger = require('../tiledesk-logger').logger;
+import { logger } from '../tiledesk-logger';
 
 /**
  * This is the class that manages DB persistence
  */
-class ChatDB {
+export class ChatDB {
+  db: any;
+  messages_collection: string;
+  groups_collection: string;
+  conversations_collection: string;
 
-  /**
-   * Constructor for Persistence object
-   *
-   * @example
-   * const { ChatDB } = require('chatdb');
-   * const chatdb = new ChatDB({database: db});
-   *
-   */
-  constructor(options) {
+  constructor(options: any) {
     if (!options.database) {
       throw new Error('database option can NOT be empty.');
     }
@@ -44,7 +40,7 @@ class ChatDB {
     // }
     // OTHER INDEXES
     this.db.collection(this.messages_collection).createIndex(
-      { 'timelineOf':1, 'message_id': 1 }
+      { 'timelineOf': 1, 'message_id': 1 }
     );
 
     // Optimized index for lastMessages query
@@ -53,7 +49,7 @@ class ChatDB {
     );
 
     this.db.collection(this.groups_collection).createIndex(
-      { 'uid':1 }
+      { 'uid': 1 }
     );
 
     // Optimized index for lastConversations query
@@ -62,7 +58,7 @@ class ChatDB {
     );
   }
 
-  async saveOrUpdateMessage(message, callback) {
+  async saveOrUpdateMessage(message: any, callback?: any) {
     // logger.debug("saving message...", message)
     delete message['_id'] // if present (message is coming from a mongodb query?) it is illegal. It produces: MongoError: E11000 duplicate key error collection: tiledesk-dialogflow-proxy.messages index: _id_ dup key: { : "5ef72c2494e08ffec88a033a" }
     try {
@@ -81,7 +77,7 @@ class ChatDB {
     }
   }
 
-  async saveOrUpdateConversation(conversation, callback) {
+  async saveOrUpdateConversation(conversation: any, callback?: any) {
     // logger.debug("saving conversation...", conversation)
     try {
       const doc = await this.db.collection(this.conversations_collection).updateOne({ timelineOf: conversation.timelineOf, conversWith: conversation.conversWith }, { $set: conversation }, { upsert: true });
@@ -100,7 +96,7 @@ class ChatDB {
     }
   }
 
-  async saveOrUpdateGroup(group, callback) {
+  async saveOrUpdateGroup(group: any, callback?: any) {
     logger.debug("saving group...", group)
     try {
       const doc = await this.db.collection(this.groups_collection).updateOne({ uid: group.uid }, { $set: group }, { upsert: true });
@@ -118,7 +114,7 @@ class ChatDB {
     }
   }
 
-  async getGroup(group_id, callback) {
+  async getGroup(group_id: string, callback?: any) {
     try {
       const doc = await this.db.collection(this.groups_collection).findOne({ uid: group_id });
       if (callback) {
@@ -134,7 +130,7 @@ class ChatDB {
     }
   }
 
-  async lastConversations(appid, userid, archived, callback) {
+  async lastConversations(appid: string, userid: string, archived: boolean, callback?: any) {
     logger.debug("DB. app:", appid, "user:", userid, "archived:", archived)
     try {
       const docs = await this.db.collection(this.conversations_collection).find({ timelineOf: userid, app_id: appid, archived: archived }).limit(200).sort({ timestamp: -1 }).toArray();
@@ -167,7 +163,7 @@ class ChatDB {
   //   });
   // }
 
-  async conversationDetail(appid, timelineOf, conversWith, archived, callback) {
+  async conversationDetail(appid: string, timelineOf: string, conversWith: string, archived: boolean, callback?: any) {
     logger.debug("DB. app: " + appid + " user: " + timelineOf + " conversWith: " + conversWith);
     try {
       const docs = await this.db.collection(this.conversations_collection).find({ timelineOf: timelineOf, app_id: appid, conversWith: conversWith, archived: archived }).limit(1).toArray();
@@ -184,7 +180,7 @@ class ChatDB {
     }
   }
 
-  async lastMessages(appid, userid, convid, sort, limit, callback) {
+  async lastMessages(appid: string, userid: string, convid: string, sort: number, limit: number, callback?: any) {
     logger.debug("DB. app:", appid, "user:", userid, "convid", convid)
     try {
       const docs = await this.db.collection(this.messages_collection).find({ timelineOf: userid, app_id: appid, conversWith: convid }).limit(limit).sort({ timestamp: sort }).toArray();
@@ -203,4 +199,3 @@ class ChatDB {
 
 }
 
-module.exports = { ChatDB };

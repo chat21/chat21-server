@@ -1,79 +1,91 @@
-var assert = require('assert');
-const { v4: uuidv4 } = require('uuid');
-const { Chat21Client } = require('../src/mqttclient/chat21client.js');
-var chat21HttpServer = require('@chat21/chat21-http-server');
-let observer = require('../src/index').observer;
-let express = require('express');
+export { };
+import assert from 'assert';
+import { v4 as uuidv4 } from 'uuid';
+import { Chat21Client } from '../src/mqttclient/chat21client.js';
+import chat21HttpServer from '@chat21/chat21-http-server';
+import { observer } from '../src/index';
+import express from 'express';
 //const { Logger } = require('mongodb');
-const loggers = require('../src/tiledesk-logger');
-let logger = new loggers.TiledeskLogger("debug");
+import { TiledeskLogger } from '../src/tiledesk-logger/index';
+let logger = new TiledeskLogger("debug");
 // logger.setLog('DEBUG');
 // let bodyParser = require('body-parser');
-const bodyParser = require('body-parser');
-const messageConstants = require('../src/models/messageConstants.js');
+import bodyParser from 'body-parser';
+import * as messageConstants from '../src/models/messageConstants';
 
-const user1 =  { userid: 'USER1',
-  fullname: 'User 1',
-  firstname: 'User',
-  lastname: '1',
-  token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxNzkwNDBkNy00NzdiLTQ5NmUtYjA0NS0zMTdhM2JiYzY4NjUiLCJzdWIiOiJVU0VSMSIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjEuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVIxLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSMS4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVIxIiwiY2lkIjoiVVNFUjEiLCJhenAiOiJVU0VSMSIsInVzZXJfaWQiOiJVU0VSMSIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjM5MjE0NDE4LCJleHAiOjE5NTAyNTQ0MTgsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVIxIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.0qLEOVWY0iN7polG9HU33yC7YHRmFNkB1WPruXmHxJ8'
+const user1 = {
+	userid: 'USER1',
+	fullname: 'User 1',
+	firstname: 'User',
+	lastname: '1',
+	token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxNzkwNDBkNy00NzdiLTQ5NmUtYjA0NS0zMTdhM2JiYzY4NjUiLCJzdWIiOiJVU0VSMSIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjEuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVIxLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSMS4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVIxIiwiY2lkIjoiVVNFUjEiLCJhenAiOiJVU0VSMSIsInVzZXJfaWQiOiJVU0VSMSIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjM5MjE0NDE4LCJleHAiOjE5NTAyNTQ0MTgsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVIxIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.0qLEOVWY0iN7polG9HU33yC7YHRmFNkB1WPruXmHxJ8'
 }
 
-const user2 =  {
-  userid: 'USER2',
-  fullname: 'User 2',
-  firstname: 'User',
-  lastname: '2',
-  token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzMWY0NGFmMy0zOGVmLTRkZmMtODM2Yi05YTI5ZjQ3Y2VmMTgiLCJzdWIiOiJVU0VSMiIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjIuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVIyLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSMi4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVIyIiwiY2lkIjoiVVNFUjIiLCJhenAiOiJVU0VSMiIsInVzZXJfaWQiOiJVU0VSMiIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjM5MjE0NDE4LCJleHAiOjE5NTAyNTQ0MTgsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVIyIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.zARfYud7bbRIfK4l9rFrHVrXA6CRlTcol_KJv9yL1q4'
+const user2 = {
+	userid: 'USER2',
+	fullname: 'User 2',
+	firstname: 'User',
+	lastname: '2',
+	token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzMWY0NGFmMy0zOGVmLTRkZmMtODM2Yi05YTI5ZjQ3Y2VmMTgiLCJzdWIiOiJVU0VSMiIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjIuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVIyLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSMi4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVIyIiwiY2lkIjoiVVNFUjIiLCJhenAiOiJVU0VSMiIsInVzZXJfaWQiOiJVU0VSMiIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjM5MjE0NDE4LCJleHAiOjE5NTAyNTQ0MTgsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVIyIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.zARfYud7bbRIfK4l9rFrHVrXA6CRlTcol_KJv9yL1q4'
 }
 
-const user3 =  {
-  userid: 'USER3',
-  fullname: 'User 3',
-  firstname: 'User',
-  lastname: '3',
-  token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyM2Q4Yjk3YS1jNzU4LTQxNTUtYTM2NC0wYTZiYjY4OTE5MTIiLCJzdWIiOiJVU0VSMyIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjMuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVIzLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSMy4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVIzIiwiY2lkIjoiVVNFUjMiLCJhenAiOiJVU0VSMyIsInVzZXJfaWQiOiJVU0VSMyIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjM5MjE0NDE4LCJleHAiOjE5NTAyNTQ0MTgsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVIzIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.eS1FVzg5DIfBbRRX08LlmIS1sHm0Lh2HqA1nq3jLwgM'
+const user3 = {
+	userid: 'USER3',
+	fullname: 'User 3',
+	firstname: 'User',
+	lastname: '3',
+	token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyM2Q4Yjk3YS1jNzU4LTQxNTUtYTM2NC0wYTZiYjY4OTE5MTIiLCJzdWIiOiJVU0VSMyIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjMuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVIzLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSMy4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVIzIiwiY2lkIjoiVVNFUjMiLCJhenAiOiJVU0VSMyIsInVzZXJfaWQiOiJVU0VSMyIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjM5MjE0NDE4LCJleHAiOjE5NTAyNTQ0MTgsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVIzIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.eS1FVzg5DIfBbRRX08LlmIS1sHm0Lh2HqA1nq3jLwgM'
 }
 
-const user4 =  {
-  userid: 'USER4',
-  fullname: 'User 4',
-  firstname: 'User',
-  lastname: '4',
-  token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlMGM2Y2ZiOC1mODQwLTQxZTYtOWM2OS1mOWE5OTM2OTA3ODkiLCJzdWIiOiJVU0VSNCIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjQuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVI0LioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSNC4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVI0IiwiY2lkIjoiVVNFUjQiLCJhenAiOiJVU0VSNCIsInVzZXJfaWQiOiJVU0VSNCIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjM5MjE0NDE4LCJleHAiOjE5NTAyNTQ0MTgsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVI0Il0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.7bDSCmMYSB8fCFFNuFim846KB_owkIl9oHX32N3j-rs'
+const user4 = {
+	userid: 'USER4',
+	fullname: 'User 4',
+	firstname: 'User',
+	lastname: '4',
+	token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlMGM2Y2ZiOC1mODQwLTQxZTYtOWM2OS1mOWE5OTM2OTA3ODkiLCJzdWIiOiJVU0VSNCIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjQuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVI0LioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSNC4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVI0IiwiY2lkIjoiVVNFUjQiLCJhenAiOiJVU0VSNCIsInVzZXJfaWQiOiJVU0VSNCIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjM5MjE0NDE4LCJleHAiOjE5NTAyNTQ0MTgsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVI0Il0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.7bDSCmMYSB8fCFFNuFim846KB_owkIl9oHX32N3j-rs'
 }
 
-const user5 =  { userid: 'USER5',
-fullname: 'User 5',
-firstname: 'User',
-lastname: 'Fifth',
-token:
- 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxMmRkZGNhMi02YmY0LTRmY2UtOGE1OS1hOTY1YmQ3ODMzZTkiLCJzdWIiOiJVU0VSNSIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjUuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVI1LioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSNS4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVI1IiwiY2lkIjoiVVNFUjUiLCJhenAiOiJVU0VSNSIsInVzZXJfaWQiOiJVU0VSNSIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjY2OTg3NTM2LCJleHAiOjE5NzgwMjc1MzYsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVI1Il0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.FZmbVPqdW2pZfTpyJ9y2HqD3GZIOri2kWD5F6SKepEk' }
+const user5 = {
+	userid: 'USER5',
+	fullname: 'User 5',
+	firstname: 'User',
+	lastname: 'Fifth',
+	token:
+		'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxMmRkZGNhMi02YmY0LTRmY2UtOGE1OS1hOTY1YmQ3ODMzZTkiLCJzdWIiOiJVU0VSNSIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjUuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVI1LioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSNS4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVI1IiwiY2lkIjoiVVNFUjUiLCJhenAiOiJVU0VSNSIsInVzZXJfaWQiOiJVU0VSNSIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjY2OTg3NTM2LCJleHAiOjE5NzgwMjc1MzYsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVI1Il0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.FZmbVPqdW2pZfTpyJ9y2HqD3GZIOri2kWD5F6SKepEk'
+}
 
- const user6 =  { userid: 'USER6',
- fullname: 'User 6',
- firstname: 'User',
- lastname: '6th',
- token:
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMTFjNjM2MC02NDI5LTQyNzYtYjg0Zi1iNjEzMjQ5OTU5YWUiLCJzdWIiOiJVU0VSNiIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjYuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVI2LioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSNi4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVI2IiwiY2lkIjoiVVNFUjYiLCJhenAiOiJVU0VSNiIsInVzZXJfaWQiOiJVU0VSNiIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjY2OTg3NTk5LCJleHAiOjE5NzgwMjc1OTksImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVI2Il0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.tU5qeQvGnrHGvaK3rvUjBG-tAIzKHznsXTQTSGjFgrY' }
-const user7 =  { userid: 'USER7',
- fullname: 'User 7',
- firstname: 'User',
- lastname: '7th',
- token:
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlYzc0YmE4OS04MTRlLTRhMjYtYWRkMy05YTYyN2YwZThiMjMiLCJzdWIiOiJVU0VSNyIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjcuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVI3LioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSNy4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVI3IiwiY2lkIjoiVVNFUjciLCJhenAiOiJVU0VSNyIsInVzZXJfaWQiOiJVU0VSNyIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjY2OTg3NTk5LCJleHAiOjE5NzgwMjc1OTksImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVI3Il0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.AFiUXZTLlaiGdY9f1qjxwpIZrnLwYwN9htQmHmPW09Y' }
-  const user8 =  { userid: 'USER8',
-  fullname: 'User 8',
-  firstname: 'User',
-  lastname: '8th',
-  token:
-   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyNjE3ZTEzMi1jNWUyLTQ1MWYtYTY5YS0wNWY2YjI3ZmQyM2IiLCJzdWIiOiJVU0VSOCIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjguKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVI4LioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSOC4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVI4IiwiY2lkIjoiVVNFUjgiLCJhenAiOiJVU0VSOCIsInVzZXJfaWQiOiJVU0VSOCIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjY3MDYzNTMwLCJleHAiOjE5NzgxMDM1MzAsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVI4Il0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.DH3HtelGdIk6qlAGFVbzUgj-mJz_AFB2KXYC53KOcvg' }
-const user9 =  { userid: 'USER9',
-  fullname: 'User 9',
-  firstname: 'User',
-  lastname: '9th',
-  token:
-   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI5NTY1Yjg5Mi1hMDI0LTRiNjAtOWY5Ny0xNDljNTUwYzMyNGQiLCJzdWIiOiJVU0VSOSIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjkuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVI5LioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSOS4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVI5IiwiY2lkIjoiVVNFUjkiLCJhenAiOiJVU0VSOSIsInVzZXJfaWQiOiJVU0VSOSIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjY3MDYzNTMwLCJleHAiOjE5NzgxMDM1MzAsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVI5Il0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.472NDDTcr9gOWP5-pS8FrrLr0XV_hMnzJJ3hAZ7AOT0' }
+const user6 = {
+	userid: 'USER6',
+	fullname: 'User 6',
+	firstname: 'User',
+	lastname: '6th',
+	token:
+		'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMTFjNjM2MC02NDI5LTQyNzYtYjg0Zi1iNjEzMjQ5OTU5YWUiLCJzdWIiOiJVU0VSNiIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjYuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVI2LioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSNi4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVI2IiwiY2lkIjoiVVNFUjYiLCJhenAiOiJVU0VSNiIsInVzZXJfaWQiOiJVU0VSNiIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjY2OTg3NTk5LCJleHAiOjE5NzgwMjc1OTksImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVI2Il0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.tU5qeQvGnrHGvaK3rvUjBG-tAIzKHznsXTQTSGjFgrY'
+}
+const user7 = {
+	userid: 'USER7',
+	fullname: 'User 7',
+	firstname: 'User',
+	lastname: '7th',
+	token:
+		'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlYzc0YmE4OS04MTRlLTRhMjYtYWRkMy05YTYyN2YwZThiMjMiLCJzdWIiOiJVU0VSNyIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjcuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVI3LioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSNy4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVI3IiwiY2lkIjoiVVNFUjciLCJhenAiOiJVU0VSNyIsInVzZXJfaWQiOiJVU0VSNyIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjY2OTg3NTk5LCJleHAiOjE5NzgwMjc1OTksImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVI3Il0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.AFiUXZTLlaiGdY9f1qjxwpIZrnLwYwN9htQmHmPW09Y'
+}
+const user8 = {
+	userid: 'USER8',
+	fullname: 'User 8',
+	firstname: 'User',
+	lastname: '8th',
+	token:
+		'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyNjE3ZTEzMi1jNWUyLTQ1MWYtYTY5YS0wNWY2YjI3ZmQyM2IiLCJzdWIiOiJVU0VSOCIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjguKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVI4LioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSOC4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVI4IiwiY2lkIjoiVVNFUjgiLCJhenAiOiJVU0VSOCIsInVzZXJfaWQiOiJVU0VSOCIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjY3MDYzNTMwLCJleHAiOjE5NzgxMDM1MzAsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVI4Il0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.DH3HtelGdIk6qlAGFVbzUgj-mJz_AFB2KXYC53KOcvg'
+}
+const user9 = {
+	userid: 'USER9',
+	fullname: 'User 9',
+	firstname: 'User',
+	lastname: '9th',
+	token:
+		'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI5NTY1Yjg5Mi1hMDI0LTRiNjAtOWY5Ny0xNDljNTUwYzMyNGQiLCJzdWIiOiJVU0VSOSIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjkuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVI5LioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSOS4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVI5IiwiY2lkIjoiVVNFUjkiLCJhenAiOiJVU0VSOSIsInVzZXJfaWQiOiJVU0VSOSIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjY3MDYzNTMwLCJleHAiOjE5NzgxMDM1MzAsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVI5Il0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.472NDDTcr9gOWP5-pS8FrrLr0XV_hMnzJJ3hAZ7AOT0'
+}
 
 // const user1 = {
 // 	userid: 'USER1',
@@ -203,8 +215,8 @@ YOU ONLY NEED TO START                   *******************
 ************************************************************
 ************************************************************
 ************************************************************`);
-describe('Main', function() {
-	before(function(done) {
+describe('Main', function () {
+	before(function (done) {
 		chatClient1 = new Chat21Client(
 			{
 				appId: config.APPID,
@@ -245,70 +257,70 @@ describe('Main', function() {
 					logger.log("chatClient3 Connected...");
 					// chatClient4.connect(user4.userid, user4.token, async () => {
 					// 	logger.log("chatClient4 Connected...");
-						// **************************
-						// STARTS ALL STACK:
-						// 0. RABBITMQ (start separately with docker)
-						// 1. HTTP-API-SERVER
-						// 2. OBSERVER
-						// 3. WEBHOOK ENDPOINT APPLICATION
-						// **************************
-						if (config.LOCAL_STACK) {
-							chat21HttpServer.logger.setLog(config.HTTP_SERVER_LOG_LEVEL);
-							http_api_server = chat21HttpServer.app.listen(8010, async() => {
-								logger.log('HTTP server started.');
-								logger.log('Starting AMQP publisher...');
-								await chat21HttpServer.startAMQP(
-									{
-										rabbitmq_uri: process.env.RABBITMQ_URI,
-										mongodb_uri: process.env.MONGODB_URI
-									}
-								);
-								logger.log('HTTP server AMQP connection started.');
-								observer.logger.setLog(config.OBSERVER_LOG_LEVEL);//(config.OBSERVER_LOG_LEVEL);
-								// const webhook_endpoints = ["http://localhost:8002/postdata","http://localhost:8002/postdata2"];
-								// observer.setWebHookEndpoints();
-								observer.setWebHookEnabled(false);
-								// observer_config = {rabbitmq_uri: process.env.RABBITMQ_URI};
-								observer.setAutoRestart(false);
-								await observer.startServer(
-									{
-										rabbitmq_uri: process.env.RABBITMQ_URI,
-										mongodb_uri: process.env.MONGODB_URI,
-										redis_enabled: process.env.CACHE_ENABLED,
-										redis_host: process.env.CACHE_REDIS_HOST,
-										redis_port: process.env.CACHE_REDIS_PORT
-									}
-								);
-								logger.log("Observer ready.");
-								// THE SERVER CLIENT FOR WEBHOOKS
-								// logger.log("Setting webhooks endpoint...");
-								// var webhooksServer = express();
-								// webhooksServer.post('/postdata', function (req, res) {
-								// 	res.status(200).send({success: true})
-								// });
-								// webhooksServer.post('/postdata2', function (req, res) {
-								// 	res.status(200).send({success: true})
-								// });
-								// let webhook_app = webhooksServer.listen(8002, async function() {
-								// 	logger.log('Webhooks App started.', webhook_app.address());
-									logger.log("Ready to start tests in 2 seconds...");
-									await new Promise(resolve => setTimeout(resolve, 2000));
-								// 	logger.log("Ready!");
-								// 	done();
-								// });
-								done();
-							});
-						}
-						else {
+					// **************************
+					// STARTS ALL STACK:
+					// 0. RABBITMQ (start separately with docker)
+					// 1. HTTP-API-SERVER
+					// 2. OBSERVER
+					// 3. WEBHOOK ENDPOINT APPLICATION
+					// **************************
+					if (config.LOCAL_STACK) {
+						chat21HttpServer.logger.setLog(config.HTTP_SERVER_LOG_LEVEL);
+						http_api_server = chat21HttpServer.app.listen(8010, async () => {
+							logger.log('HTTP server started.');
+							logger.log('Starting AMQP publisher...');
+							await chat21HttpServer.startAMQP(
+								{
+									rabbitmq_uri: process.env.RABBITMQ_URI,
+									mongodb_uri: process.env.MONGODB_URI
+								}
+							);
+							logger.log('HTTP server AMQP connection started.');
+							observer.logger.setLog(config.OBSERVER_LOG_LEVEL);//(config.OBSERVER_LOG_LEVEL);
+							// const webhook_endpoints = ["http://localhost:8002/postdata","http://localhost:8002/postdata2"];
+							// observer.setWebHookEndpoints();
+							observer.setWebHookEnabled(false);
+							// observer_config = {rabbitmq_uri: process.env.RABBITMQ_URI};
+							observer.setAutoRestart(false);
+							await observer.startServer(
+								{
+									rabbitmq_uri: process.env.RABBITMQ_URI,
+									mongodb_uri: process.env.MONGODB_URI,
+									redis_enabled: process.env.CACHE_ENABLED,
+									redis_host: process.env.CACHE_REDIS_HOST,
+									redis_port: process.env.CACHE_REDIS_PORT
+								}
+							);
+							logger.log("Observer ready.");
+							// THE SERVER CLIENT FOR WEBHOOKS
+							// logger.log("Setting webhooks endpoint...");
+							// var webhooksServer = express();
+							// webhooksServer.post('/postdata', function (req, res) {
+							// 	res.status(200).send({success: true})
+							// });
+							// webhooksServer.post('/postdata2', function (req, res) {
+							// 	res.status(200).send({success: true})
+							// });
+							// let webhook_app = webhooksServer.listen(8002, async function() {
+							// 	logger.log('Webhooks App started.', webhook_app.address());
+							logger.log("Ready to start tests in 2 seconds...");
+							await new Promise(resolve => setTimeout(resolve, 2000));
+							// 	logger.log("Ready!");
+							// 	done();
+							// });
 							done();
-						}
+						});
+					}
+					else {
+						done();
+					}
 					// });
 				});
 			});
 		});
 	});
-	
-	after(function(done) {
+
+	after(function (done) {
 		logger.log("after - Ending test...");
 		chatClient1.close(async () => {
 			logger.log("after - ...chatClient1 successfully disconnected.");
@@ -317,62 +329,62 @@ describe('Main', function() {
 				chatClient3.close(async () => {
 					logger.log("after - ...chatClient3 successfully disconnected.");
 					// chatClient4.close(async () => {
-						// logger.log("after - ...chatClient4 successfully disconnected.");
-						if (config.LOCAL_STACK) {
-							http_api_server.close(async () => {
-								logger.log("after - HTTP Server closed.");
-								logger.log("after - Waiting 2s before stopping observer (allowing completion of pending publish->ack).");
+					// logger.log("after - ...chatClient4 successfully disconnected.");
+					if (config.LOCAL_STACK) {
+						http_api_server.close(async () => {
+							logger.log("after - HTTP Server closed.");
+							logger.log("after - Waiting 2s before stopping observer (allowing completion of pending publish->ack).");
+							await new Promise(resolve => setTimeout(resolve, 2000));
+							observer.stopServer(async () => {
+								logger.log("after - Connection to AMQP closed.");
+								logger.log("after - Waiting 2s after observer stop.");
 								await new Promise(resolve => setTimeout(resolve, 2000));
-								observer.stopServer(async () => {
-									logger.log("after - Connection to AMQP closed.");
-									logger.log("after - Waiting 2s after observer stop.");
-									await new Promise(resolve => setTimeout(resolve, 2000));
-									done();
-								});
+								done();
 							});
-							
-							// logger.log("after - Waiting 5 second after observer stops.");
-							// NON RISPONDONO QUESTI TIMEOUT! Ovvio: sull'evento close l'observer lanciava una process.exit(1)!!!!!!!!!
-							// setTimeout(function() {
-							// 	logger.log("************************************");
-							// 	// done();
-							// }, 5000)
-							// await new Promise(resolve => setTimeout(resolve, 5000));
-							// logger.log("after() - end (ALL-IN-ONE STACK).");
-							// done();
-						}
-						else {
-							logger.log("after() - end.");
-							done();
-						}
+						});
+
+						// logger.log("after - Waiting 5 second after observer stops.");
+						// NON RISPONDONO QUESTI TIMEOUT! Ovvio: sull'evento close l'observer lanciava una process.exit(1)!!!!!!!!!
+						// setTimeout(function() {
+						// 	logger.log("************************************");
+						// 	// done();
+						// }, 5000)
+						// await new Promise(resolve => setTimeout(resolve, 5000));
+						// logger.log("after() - end (ALL-IN-ONE STACK).");
+						// done();
+					}
+					else {
+						logger.log("after() - end.");
+						done();
+					}
 					// });
 				});
 			});
 		});
 	});
-  
-	beforeEach(function() {
-	  // runs before each test in this block
+
+	beforeEach(function () {
+		// runs before each test in this block
 	});
-  
-	afterEach(function() {
-	  // runs after each test in this block
+
+	afterEach(function () {
+		// runs after each test in this block
 	});
-  
+
 	// *********************************************
 	// **************** TEST CASES *****************
-    // *********************************************
+	// *********************************************
 
-	describe('TiledeskClient - test 0', function() {
-		it('Test 0', function(done) {
+	describe('TiledeskClient - test 0', function () {
+		it('Test 0', function (done) {
 			logger.log("test 0 - start.");
 			done();
 		});
 	});
 
-	describe('TiledeskClient - Direct _test 1_', function() {
+	describe('TiledeskClient - Direct _test 1_', function () {
 		it('User1 sends a direct message to User2 using client.sendMessage() \
-REUSE SHARED CHAT CLIENTS', function(done) {
+REUSE SHARED CHAT CLIENTS', function (done) {
 			logger.log("test 1 - start.");
 			let SENT_MESSAGE = 'FIRST MESSAGE 1';
 			chatClient1.sendMessage(
@@ -392,9 +404,9 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 		});
 	});
 
-	describe('TiledeskClient - Direct _test 2_', function() {
+	describe('TiledeskClient - Direct _test 2_', function () {
 		it('User1 sends a direct message and User2 receives the message \
-REUSE SHARED CHAT CLIENTS', function(done) {
+REUSE SHARED CHAT CLIENTS', function (done) {
 			logger.log("test 2 - start.");
 			let SENT_MESSAGE = 'FIRST MESSAGE 2';
 			let handler = chatClient2.onMessageAdded((message, topic) => {
@@ -407,8 +419,8 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 					message.text === SENT_MESSAGE &&
 					message.sender === user1.userid &&
 					topic.conversWith === user1.userid) {
-						chatClient2.removeOnMessageAddedHandler(handler);
-						done();
+					chatClient2.removeOnMessageAddedHandler(handler);
+					done();
 				}
 			});
 			chatClient1.sendMessage(
@@ -427,9 +439,9 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 		});
 	});
 
-	describe('TiledeskClient - Groups _test 3_', function() {
+	describe('TiledeskClient - Groups _test 3_', function () {
 		it('test 3 - Creates a group \
-REUSE SHARED CHAT CLIENTS', function(done) {
+REUSE SHARED CHAT CLIENTS', function (done) {
 			logger.log("test 3 - start.");
 			const group_id = "group-test3_" + uuidv4();
 			const group_name = "test3 group " + group_id;
@@ -466,11 +478,11 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 		});
 	});
 
-	describe('TiledeskClient - Groups _test 4_', function() {
+	describe('TiledeskClient - Groups _test 4_', function () {
 		it('test 4 - Create group info messages. \
 User1 creates a group with 2 members (user1, user2). \
 User2 receives all the group info messages(user1.GROUP_CREATED, user1.MEMBER_JOINED_GROUP, user2.MEMBER_JOINED_GROUP) \
-REUSE SHARED CHAT CLIENTS', function(done) {
+REUSE SHARED CHAT CLIENTS', function (done) {
 			logger.log("test 4 - start.");
 			const group_id = "group-test4_" + uuidv4();
 			const group_name = "Test Group " + group_id;
@@ -492,8 +504,8 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 					message.attributes.messagelabel.parameters.creator &&
 					message.attributes.messagelabel.key === 'GROUP_CREATED' &&
 					message.attributes.messagelabel.parameters.creator === user1.userid) {
-						logger.log("test 4 - GROUP_CREATED (user1) message added");
-						messages[GROUP_CREATED_KEY] = true;
+					logger.log("test 4 - GROUP_CREATED (user1) message added");
+					messages[GROUP_CREATED_KEY] = true;
 				}
 				else if (
 					message &&
@@ -505,8 +517,8 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 					message.attributes.messagelabel.parameters.member_id &&
 					message.attributes.messagelabel.key === 'MEMBER_JOINED_GROUP' &&
 					message.attributes.messagelabel.parameters.member_id === user2.userid) {
-						logger.log("test 4 - MEMBER_JOINED_GROUP (user2) message added");
-						messages[USER2_JOINED_KEY] = true;
+					logger.log("test 4 - MEMBER_JOINED_GROUP (user2) message added");
+					messages[USER2_JOINED_KEY] = true;
 				}
 				else if (
 					message &&
@@ -518,8 +530,8 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 					message.attributes.messagelabel.parameters.member_id &&
 					message.attributes.messagelabel.key === 'MEMBER_JOINED_GROUP' &&
 					message.attributes.messagelabel.parameters.member_id === user1.userid) {
-						logger.log("test 4 - MEMBER_JOINED_GROUP (user1) message added");
-						messages[USER1_JOINED_KEY] = true;
+					logger.log("test 4 - MEMBER_JOINED_GROUP (user1) message added");
+					messages[USER1_JOINED_KEY] = true;
 				}
 				if (Object.keys(messages).length == 3) { // all 3 messages were successfully received
 					logger.log("test4 - all messages received.");
@@ -540,15 +552,15 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 					assert(result.group.members != null);
 					assert(result.group.members[user2.userid] == 1);
 					logger.log("test4 - Group created:", result);
-			});
+				});
 		});
 	});
 
-	describe('TiledeskClient - Groups _test 5_', function() {
+	describe('TiledeskClient - Groups _test 5_', function () {
 		it('test 5 - Send message to group. \
 User1 creates a group. \
 Group creator (User1) sends a message to the group and receives the sent message back. \
-NEW CHAT CLIENTS', function(done) {
+NEW CHAT CLIENTS', function (done) {
 			logger.log("test 5 - start.");
 			const group_id = "group-test5_" + uuidv4();
 			const group_name = "Test Group " + group_id;
@@ -574,14 +586,14 @@ NEW CHAT CLIENTS', function(done) {
 						message.text &&
 						!message.attributes &&
 						message.text === SENT_MESSAGE
-						) {
-							logger.log("test 5 - removing handler:", handler_message_added_client1);
-							_chatClient1.removeOnMessageAddedHandler(handler_message_added_client1);
-							_chatClient1.close(() => {
-								logger.log("test 5 - _chatClient1 successfully disconnected.");
-								logger.log("test 5 -> done()");
-								done();
-							});
+					) {
+						logger.log("test 5 - removing handler:", handler_message_added_client1);
+						_chatClient1.removeOnMessageAddedHandler(handler_message_added_client1);
+						_chatClient1.close(() => {
+							logger.log("test 5 - _chatClient1 successfully disconnected.");
+							logger.log("test 5 -> done()");
+							done();
+						});
 					}
 				});
 				logger.log("test 5 - Creating group:", group_id);
@@ -615,10 +627,10 @@ NEW CHAT CLIENTS', function(done) {
 		});
 	});
 
-	describe('TiledeskClient - Groups _test 5.1_', function() {
+	describe('TiledeskClient - Groups _test 5.1_', function () {
 		it('test 5.1 - Send message to a volatile-group. \
 (User1) sends a message to a volatile-group with User2 and User3. Both receive the sent message back. \
-NEW CHAT CLIENTS', function(done) {
+NEW CHAT CLIENTS', function (done) {
 			logger.log("test 5.1 - start.");
 			const group_id = "group-test5_1_" + uuidv4();
 			const group_name = "Test Group " + group_id;
@@ -630,92 +642,92 @@ NEW CHAT CLIENTS', function(done) {
 			inlineGroup.members[user3.userid] = 1;
 			let update_notifications = {};
 			const SENT_MESSAGE = 'test 5.1, Hello volatile-guys';
-			
-						let handler_message_added_client1 = chatClient1.onMessageAdded((message, topic) => {
-							logger.log("message added USER1:", JSON.stringify(message));
-							if (
-									message &&
-									message.text === SENT_MESSAGE
-									) {
-								logger.log("test 5.1 - removing handler:", handler_message_added_client1);
-								chatClient1.removeOnMessageAddedHandler(handler_message_added_client1);
-								// chatClient1.close(() => {
-									// logger.log("test 5.1 - _chatClient1 successfully disconnected.");
-									update_notifications[user1.userid] = 1;
-									// if (update_notifications[user1.userid] === 1) {
-									// 	logger.log("test 5.1 - chatClient1 - update -> done()");
-									// 	done();
-									// }
-									if (update_notifications[user1.userid] === 1 && update_notifications[user2.userid] === 1
-										&& update_notifications[user3.userid] === 1) {
-										logger.log("test 5.1 - chatClient1 OK -> done()");
-										done();
-									}
-								// });
-							}
-						});
-						let handler_message_added_client2 = chatClient2.onMessageAdded((message, topic) => {
-							logger.log("message added USER2:", JSON.stringify(message));
-							if (
-									message &&
-									message.text === SENT_MESSAGE
-									) {
-								logger.log("test 5.1 - removing handler:", handler_message_added_client2);
-								chatClient2.removeOnMessageAddedHandler(handler_message_added_client2);
-								// _chatClient2.close(() => {
-									logger.log("test 5.1 - _chatClient2 successfully disconnected.");
-									update_notifications[user2.userid] = 1;
-									if (update_notifications[user1.userid] === 1 && update_notifications[user2.userid] === 1
-										&& update_notifications[user3.userid] === 1) {
-										logger.log("test 5.1 - chatClient2 OK -> done()");
-										done();
-									}
-								// });
-							}
-						});
-						let handler_message_added_client3 = chatClient3.onMessageAdded((message, topic) => {
-							logger.log("message added USER3:", JSON.stringify(message));
-							if (
-									message &&
-									message.text === SENT_MESSAGE
-									) {
-								logger.log("test 5.1 - removing handler:", handler_message_added_client3);
-								chatClient3.removeOnMessageAddedHandler(handler_message_added_client3);
-									logger.log("test 5.1 - _chatClient3 successfully disconnected.");
-									update_notifications[user3.userid] = 1;
-									if (update_notifications[user1.userid] === 1 && update_notifications[user2.userid] === 1
-										&& update_notifications[user3.userid] === 1) {
-										logger.log("test 5.1 - chatClient3 OK -> done()");
-										done();
-									}
-							}
-						});
-						logger.log("test 5.1 - Sending message to inline group:", inlineGroup);
-						const message = {
-							text: SENT_MESSAGE,
-							type: TYPE_TEXT,
-							recipient_fullname: group_name,
-							sender_fullname: user1.fullname,
-							attributes: null,
-							metadata: null,
-							channel_type: 'group',
-							group: inlineGroup
-						};
-						chatClient1.sendMessageRaw(
-							message, group_id, () => {
-								logger.log("test 5.1 - Message sent to inline-group", JSON.stringify(message));
-							}
-						);
+
+			let handler_message_added_client1 = chatClient1.onMessageAdded((message, topic) => {
+				logger.log("message added USER1:", JSON.stringify(message));
+				if (
+					message &&
+					message.text === SENT_MESSAGE
+				) {
+					logger.log("test 5.1 - removing handler:", handler_message_added_client1);
+					chatClient1.removeOnMessageAddedHandler(handler_message_added_client1);
+					// chatClient1.close(() => {
+					// logger.log("test 5.1 - _chatClient1 successfully disconnected.");
+					update_notifications[user1.userid] = 1;
+					// if (update_notifications[user1.userid] === 1) {
+					// 	logger.log("test 5.1 - chatClient1 - update -> done()");
+					// 	done();
+					// }
+					if (update_notifications[user1.userid] === 1 && update_notifications[user2.userid] === 1
+						&& update_notifications[user3.userid] === 1) {
+						logger.log("test 5.1 - chatClient1 OK -> done()");
+						done();
+					}
+					// });
+				}
+			});
+			let handler_message_added_client2 = chatClient2.onMessageAdded((message, topic) => {
+				logger.log("message added USER2:", JSON.stringify(message));
+				if (
+					message &&
+					message.text === SENT_MESSAGE
+				) {
+					logger.log("test 5.1 - removing handler:", handler_message_added_client2);
+					chatClient2.removeOnMessageAddedHandler(handler_message_added_client2);
+					// _chatClient2.close(() => {
+					logger.log("test 5.1 - _chatClient2 successfully disconnected.");
+					update_notifications[user2.userid] = 1;
+					if (update_notifications[user1.userid] === 1 && update_notifications[user2.userid] === 1
+						&& update_notifications[user3.userid] === 1) {
+						logger.log("test 5.1 - chatClient2 OK -> done()");
+						done();
+					}
+					// });
+				}
+			});
+			let handler_message_added_client3 = chatClient3.onMessageAdded((message, topic) => {
+				logger.log("message added USER3:", JSON.stringify(message));
+				if (
+					message &&
+					message.text === SENT_MESSAGE
+				) {
+					logger.log("test 5.1 - removing handler:", handler_message_added_client3);
+					chatClient3.removeOnMessageAddedHandler(handler_message_added_client3);
+					logger.log("test 5.1 - _chatClient3 successfully disconnected.");
+					update_notifications[user3.userid] = 1;
+					if (update_notifications[user1.userid] === 1 && update_notifications[user2.userid] === 1
+						&& update_notifications[user3.userid] === 1) {
+						logger.log("test 5.1 - chatClient3 OK -> done()");
+						done();
+					}
+				}
+			});
+			logger.log("test 5.1 - Sending message to inline group:", inlineGroup);
+			const message = {
+				text: SENT_MESSAGE,
+				type: TYPE_TEXT,
+				recipient_fullname: group_name,
+				sender_fullname: user1.fullname,
+				attributes: null,
+				metadata: null,
+				channel_type: 'group',
+				group: inlineGroup
+			};
+			chatClient1.sendMessageRaw(
+				message, group_id, () => {
+					logger.log("test 5.1 - Message sent to inline-group", JSON.stringify(message));
+				}
+			);
 		});
 	});
 
-	describe('TiledeskClient - Groups _test 6_', function() {
+	describe('TiledeskClient - Groups _test 6_', function () {
 		it('test 6 - Leave group. \
 Creates group with 3 members, \
 user1 creates group, \
 user1 removes user3 from the group, \
 user1 & user2 receive e group/clientupdate notification \
-REUSE SHARED CHAT CLIENTS', function(done) {
+REUSE SHARED CHAT CLIENTS', function (done) {
 			logger.log("test 6 - start.");
 			const group_id = "group-test6_" + uuidv4();
 			const group_name = "group-update test 8";
@@ -775,11 +787,11 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 		});
 	});
 
-	describe('TiledeskClient - Groups _test 7_ Join group with group-updated callback', function() {
+	describe('TiledeskClient - Groups _test 7_ Join group with group-updated callback', function () {
 		it('test 7 - Join group (group/clientupdate notification subscription). \
 Creates group with 2 members. \
 User1 creates group, user1 (owner) adds user3 to the group, user1 & user2 receive e group/clientupdate notification \
-REUSE SHARED CHAT CLIENTS', function(done) {
+REUSE SHARED CHAT CLIENTS', function (done) {
 			logger.log("test 7 - start.");
 			const group_id = "group-test7_" + uuidv4();
 			const group_name = "group-update test 7";
@@ -834,11 +846,11 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 		});
 	});
 
-	describe('TiledeskClient _test 8_ Join group with JOINED_MEMBER message notification', function() {
+	describe('TiledeskClient _test 8_ Join group with JOINED_MEMBER message notification', function () {
 		it('test 8 - Join group (group info messages). \
 User1 (owner) creates a group with 2 members (User1, User2). \
 User1 adds User3 to the group, user1 & user2 receive e MEMBER_JOINED_GROUP message \
-REUSE SHARED CHAT CLIENTS', function(done) {
+REUSE SHARED CHAT CLIENTS', function (done) {
 			logger.log("test 8 - start.");
 			const group_id = "group-test8_" + uuidv4();
 			const group_name = "group-update test 8";
@@ -859,14 +871,14 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 						message.attributes.messagelabel.parameters.member_id &&
 						message.attributes.messagelabel.key === 'MEMBER_JOINED_GROUP' &&
 						message.attributes.messagelabel.parameters.member_id === user3.userid) {
-							logger.log("test 8 - MEMBER_JOINED_GROUP user3 (chatClient1)");
-							update_notifications[user1.userid] = 1;
-							if (update_notifications[user1.userid] === 1 && update_notifications[user2.userid] === 1) {
-								logger.log("test 8 - MEMBER_JOINED_GROUP (user3) messages received.");
-								chatClient1.removeOnMessageAddedHandler(handler1);
-								logger.log("test 8 chatClient1 -> done()");
-								done();
-							}
+						logger.log("test 8 - MEMBER_JOINED_GROUP user3 (chatClient1)");
+						update_notifications[user1.userid] = 1;
+						if (update_notifications[user1.userid] === 1 && update_notifications[user2.userid] === 1) {
+							logger.log("test 8 - MEMBER_JOINED_GROUP (user3) messages received.");
+							chatClient1.removeOnMessageAddedHandler(handler1);
+							logger.log("test 8 chatClient1 -> done()");
+							done();
+						}
 					}
 				}
 			});
@@ -883,14 +895,14 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 						message.attributes.messagelabel.parameters.member_id &&
 						message.attributes.messagelabel.key === 'MEMBER_JOINED_GROUP' &&
 						message.attributes.messagelabel.parameters.member_id === user3.userid) {
-							logger.log("test 8 - MEMBER_JOINED_GROUP user3 (chatClient2)");
-							update_notifications[user2.userid] = 1;
-							if (update_notifications[user1.userid] === 1 && update_notifications[user2.userid] === 1) {
-								logger.log("test 8 - MEMBER_JOINED_GROUP (user3) messages received.");
-								chatClient2.removeOnMessageAddedHandler(handler2);
-								logger.log("test 8 chatClient2 -> done()");
-								done();
-							}
+						logger.log("test 8 - MEMBER_JOINED_GROUP user3 (chatClient2)");
+						update_notifications[user2.userid] = 1;
+						if (update_notifications[user1.userid] === 1 && update_notifications[user2.userid] === 1) {
+							logger.log("test 8 - MEMBER_JOINED_GROUP (user3) messages received.");
+							chatClient2.removeOnMessageAddedHandler(handler2);
+							logger.log("test 8 chatClient2 -> done()");
+							done();
+						}
 					}
 				}
 			});
@@ -913,12 +925,12 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 		});
 	});
 
-	describe('TiledeskClient - Groups _test 9_ Join group - full notifications (group-update, JOINED_MEMBER messages)', function() {
+	describe('TiledeskClient - Groups _test 9_ Join group - full notifications (group-update, JOINED_MEMBER messages)', function () {
 		it('test 9 - Join group, complete notifications (testing receiving of both info-messages & group-update notifications). \
 User1 creates a group with 2 members. \
 User1 adds user3 to the group.\
 User1 & user2 receive e MEMBER_JOINED_GROUP message & group-updated notification \
-REUSE SHARED CHAT CLIENTS', function(done) {
+REUSE SHARED CHAT CLIENTS', function (done) {
 			logger.log("test 9 - start.");
 			const group_id = "group-test9_" + uuidv4();
 			const group_name = "group-update test 9";
@@ -939,8 +951,8 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 						message.attributes.messagelabel.parameters.member_id &&
 						message.attributes.messagelabel.key === 'MEMBER_JOINED_GROUP' &&
 						message.attributes.messagelabel.parameters.member_id === user3.userid) {
-							update_notifications['message_' + user1.userid] = 1;
-							check_if_done();
+						update_notifications['message_' + user1.userid] = 1;
+						check_if_done();
 					}
 				}
 			});
@@ -957,8 +969,8 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 						message.attributes.messagelabel.parameters.member_id &&
 						message.attributes.messagelabel.key === 'MEMBER_JOINED_GROUP' &&
 						message.attributes.messagelabel.parameters.member_id === user3.userid) {
-							update_notifications['message_' + user2.userid] = 1;
-							check_if_done();
+						update_notifications['message_' + user2.userid] = 1;
+						check_if_done();
 					}
 				}
 			});
@@ -970,8 +982,8 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 						group.notification.messagelabel.key === "MEMBER_JOINED_GROUP" &&
 						group.notification.messagelabel.parameters &&
 						group.notification.messagelabel.parameters.member_id === "USER3") {
-							update_notifications['group_update_notification_' + user1.userid] = 1;
-							check_if_done();
+						update_notifications['group_update_notification_' + user1.userid] = 1;
+						check_if_done();
 					}
 				}
 			});
@@ -983,8 +995,8 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 						group.notification.messagelabel.key === "MEMBER_JOINED_GROUP" &&
 						group.notification.messagelabel.parameters &&
 						group.notification.messagelabel.parameters.member_id === "USER3") {
-							update_notifications['group_update_notification_' + user2.userid] = 1;
-							check_if_done();
+						update_notifications['group_update_notification_' + user2.userid] = 1;
+						check_if_done();
 					}
 				}
 			});
@@ -993,19 +1005,19 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 					update_notifications['message_' + user2.userid] === 1 &&
 					update_notifications['group_update_notification_' + user1.userid] === 1 &&
 					update_notifications['group_update_notification_' + user2.userid] === 1) {
-						logger.log("test 9 - ALL NOTIFICATIONS RECEIVED");
-						chatClient1.removeOnMessageAddedHandler(handler_message_added_client1);
-						logger.log("test 9 - chatClient1.removeOnMessageAddedHandler(handler_message_added_client1) OK.", handler_message_added_client1);
-						chatClient1.removeOnMessageAddedHandler(handler_message_added_client2);
-						logger.log("test 9 - chatClient1.removeOnMessageAddedHandler(handler_message_added_client2) OK.", handler_message_added_client2);
-						chatClient1.removeOnGroupUpdatedHandler(handler_group_updated_client1);
-						logger.log("test 9 - chatClient1.removeOnGroupUpdatedHandler(handler_group_updated_client1) OK.", handler_group_updated_client1);
-						chatClient1.removeOnGroupUpdatedHandler(handler_group_updated_client2);
-						logger.log("test 9 - chatClient1.removeOnGroupUpdatedHandler(handler_group_updated_client2) OK.", handler_group_updated_client2);
-						
-						done();
-						logger.log("test 9 - done()");
-						
+					logger.log("test 9 - ALL NOTIFICATIONS RECEIVED");
+					chatClient1.removeOnMessageAddedHandler(handler_message_added_client1);
+					logger.log("test 9 - chatClient1.removeOnMessageAddedHandler(handler_message_added_client1) OK.", handler_message_added_client1);
+					chatClient1.removeOnMessageAddedHandler(handler_message_added_client2);
+					logger.log("test 9 - chatClient1.removeOnMessageAddedHandler(handler_message_added_client2) OK.", handler_message_added_client2);
+					chatClient1.removeOnGroupUpdatedHandler(handler_group_updated_client1);
+					logger.log("test 9 - chatClient1.removeOnGroupUpdatedHandler(handler_group_updated_client1) OK.", handler_group_updated_client1);
+					chatClient1.removeOnGroupUpdatedHandler(handler_group_updated_client2);
+					logger.log("test 9 - chatClient1.removeOnGroupUpdatedHandler(handler_group_updated_client2) OK.", handler_group_updated_client2);
+
+					done();
+					logger.log("test 9 - done()");
+
 				}
 			}
 			chatClient1.groupCreate(
@@ -1030,12 +1042,12 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 		});
 	});
 
-	describe('TiledeskClient _test 10_ Join group - history messages 1', function() {
+	describe('TiledeskClient _test 10_ Join group - history messages 1', function () {
 		it('test 10 - Join group (get group messages history, 1 message). User1 (owner) creates a group with 2 members (User1, User2). \
 User1 sends 1 message. \
 User1 adds User3 to the group. \
 User3 receives the (only) message previously sent by User1 to the group \
-REUSE SHARED CHAT CLIENTS', function(done) {
+REUSE SHARED CHAT CLIENTS', function (done) {
 			this.timeout(10000);
 			logger.log("test 10 - start.");
 			const group_id = "group-test10_" + uuidv4();
@@ -1045,15 +1057,15 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 			// group_members[user1.userid] = 1;
 			group_members[user2.userid] = 1;
 			chatClient3.onMessageAdded((message, topic) => {
-				if ( message.recipient === group_id ) {
+				if (message.recipient === group_id) {
 					logger.log("test 10 - Client3 - message added:", JSON.stringify(message));
 					if (
 						message &&
 						message.recipient === group_id &&
 						message.text === MESSAGE1_USER1) {
-							logger.log("test 10 - MESSAGE1_USER1 message received:", message.text);
-							logger.log("test 10 -> done()");
-							done();
+						logger.log("test 10 - MESSAGE1_USER1 message received:", message.text);
+						logger.log("test 10 -> done()");
+						done();
 					}
 				}
 			});
@@ -1101,182 +1113,182 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 		});
 	});
 
-// 	describe('TiledeskClient _test 11_ history messages 2 (full history)', function() {
-// 		it('\
-// test 11 - Join group (get FULL group messages history). \
-// User1 (owner) creates a group with 2 members (User1, User2). \
-// User1 sends 1 message. \
-// User1 adds User3 to the group. \
-// User3 receives 5 messages. grouped as follows:\
-// 1. All the 4 group info messages: FIRST_MESSAGE, GROUP_CREATED, USER1 MEMBER_JOINED_GROUP, USER2 MEMBER_JOINED_GROUP, USER3 MEMBER_JOINED_GROUP \
-// 2. The message sent by USER1. \
-// NEW CHAT CLIENTS', function(done) {
-// 			this.timeout(20000);
-// 			console.log("test 11 - start.");
-// 			const group_id = "group-test11_" + uuidv4();
-// 			const group_name = "group-join test11";
-// 			const MESSAGE1_USER1 = "test 11, user1, first message";
-// 			let group_members = {};
-// 			group_members[user1.userid] = 1;
-// 			group_members[user2.userid] = 1;
-// 			let history_messages = {};
-// 			let _chatClient1 = new Chat21Client(
-// 				{
-// 					appId: config.APPID,
-// 					MQTTendpoint: config.MQTT_ENDPOINT,
-// 					APIendpoint: config.API_ENDPOINT,
-// 					log: config.CLIENT_API_LOG
-// 				}
-// 			);
-// 			let _chatClient3 = new Chat21Client(
-// 				{
-// 					appId: config.APPID,
-// 					MQTTendpoint: config.MQTT_ENDPOINT,
-// 					APIendpoint: config.API_ENDPOINT,
-// 					log: config.CLIENT_API_LOG
-// 				}
-// 			);
-// 			_chatClient1.connect(user1.userid, user1.token, () => {
-// 				console.log("test 11 - _chatClient1 connected.");
-// 				_chatClient3.connect(user3.userid, user3.token, () => { // TODO if token is wrong it must reply with an error!
-// 					console.log("test 11 - _chatClient3 connected.");
-// 					let added_handler3 = _chatClient3.onMessageAdded((message, topic) => {
-// 						if (message.recipient === group_id) {
-// 							console.log("test 11 - Client3 - message added:", JSON.stringify(message));
-// 							if (
-// 								message &&
-// 								message.recipient === group_id &&
-// 								message.text === MESSAGE1_USER1) {
-// 									console.log("test 11 - MESSAGE1_USER1 message received:", message.text);
-// 									history_messages['MESSAGE1_USER1'] = 1;
-// 							}
-// 							else if (
-// 								message &&
-// 								message.recipient === group_id &&
-// 								message.attributes &&
-// 								message.attributes.messagelabel &&
-// 								message.attributes.messagelabel.key &&
-// 								message.attributes.messagelabel.parameters &&
-// 								message.attributes.messagelabel.parameters.creator &&
-// 								message.attributes.messagelabel.key === 'GROUP_CREATED' &&
-// 								message.attributes.messagelabel.parameters.creator === user1.userid) {
-// 									console.log("test 11 - GROUP_CREATED message received:", message.text);
-// 									history_messages['GROUP_CREATED'] = 1;
-// 							}
-// 							else if (
-// 								message &&
-// 								message.recipient === group_id &&
-// 								message.attributes &&
-// 								message.attributes.messagelabel &&
-// 								message.attributes.messagelabel.key &&
-// 								message.attributes.messagelabel.parameters &&
-// 								message.attributes.messagelabel.parameters.member_id &&
-// 								message.attributes.messagelabel.key === 'MEMBER_JOINED_GROUP' &&
-// 								message.attributes.messagelabel.parameters.member_id === user1.userid) {
-// 									console.log("test 11 - MEMBER_JOINED_GROUP_user1 message received:", message.text);
-// 									history_messages['MEMBER_JOINED_GROUP_user1'] = 1;
-// 							}
-// 							else if (
-// 								message &&
-// 								message.recipient === group_id &&
-// 								message.attributes &&
-// 								message.attributes.messagelabel &&
-// 								message.attributes.messagelabel.key &&
-// 								message.attributes.messagelabel.parameters &&
-// 								message.attributes.messagelabel.parameters.member_id &&
-// 								message.attributes.messagelabel.key === 'MEMBER_JOINED_GROUP' &&
-// 								message.attributes.messagelabel.parameters.member_id === user2.userid) {
-// 									console.log("test 11 - MEMBER_JOINED_GROUP_user2 message received:", message.text);
-// 									history_messages['MEMBER_JOINED_GROUP_user2'] = 1;
-// 							}
-// 							else if (
-// 								message &&
-// 								message.recipient === group_id &&
-// 								message.attributes &&
-// 								message.attributes.messagelabel &&
-// 								message.attributes.messagelabel.key &&
-// 								message.attributes.messagelabel.parameters &&
-// 								message.attributes.messagelabel.parameters.member_id &&
-// 								message.attributes.messagelabel.key === 'MEMBER_JOINED_GROUP' &&
-// 								message.attributes.messagelabel.parameters.member_id === user3.userid) {
-// 									console.log("test 11 - MEMBER_JOINED_GROUP_user3 message received:", message.text);
-// 									history_messages["MEMBER_JOINED_GROUP_user3"] = 1;
-// 							}
-// 							if (message &&
-// 								message.recipient === group_id &&
-// 								history_messages['MESSAGE1_USER1'] === 1 &&
-// 								history_messages['GROUP_CREATED'] === 1 &&
-// 								history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
-// 								history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
-// 								history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
-// 									console.log("test 11 - FULL HISTORY RECEIVED.");
-// 								_chatClient3.removeOnMessageAddedHandler(added_handler3);
-// 								_chatClient1.close(() => {
-// 									console.log("test 11 - _chatClient1 successfully disconnected.");
-// 									_chatClient3.close(() => {
-// 										console.log("test 11 - _chatClient3 successfully disconnected.");
-// 										console.log("test 11 -> done()");
-// 										done();
-// 									});
-// 								});
-// 							}
-// 						}
-// 					});
-// 					console.log("test 11 - creating group:", group_id);
-// 					_chatClient1.groupCreate(
-// 						group_name,
-// 						group_id,
-// 						group_members,
-// 						async (err, result) => {
-// 							assert(err == null);
-// 							assert(result != null);
-// 							assert(result.success == true);
-// 							assert(result.group.name === group_name);
-// 							console.log("test 11 - group:", group_id, "created");
-// 							_chatClient1.sendMessageRaw(
-// 								{
-// 									text: MESSAGE1_USER1,
-// 									type: TYPE_TEXT,
-// 									recipient_fullname: group_name,
-// 									sender_fullname: user1.fullname,
-// 									attributes: null,
-// 									metadata: null,
-// 									channel_type: CHANNEL_TYPE_GROUP
-// 								},
-// 								group_id, // recipient
-// 								async (err, msg) => {
-// 									if (err) {
-// 										logger.log("test 11 - Error sending message:", err);
-// 									}
-// 									assert(err == null);
-// 									console.log("test 11 - message sent:", msg);
-// 									console.log("test 11 - waiting some time to allow the sent message to reach the 'persistent' status...");
-// 									await new Promise(resolve => setTimeout(resolve, 4000)); // it gives time to join message to reach the "persistent" status
-// 									console.log("test 11 - end waiting.");
-// 									_chatClient1.groupJoin(group_id, user3.userid, (err, json) => {
-// 										if (err) {
-// 											console.error("test 11 - member user3 joined error:", err);
-// 										}
-// 										assert(err == null);
-// 										console.log("test 11 - member user3 joined json:", json);
-// 									});
-// 								}
-// 							);
-// 						}
-// 					);
-// 				});
-// 			});
-// 		});
-// 	});
+	// 	describe('TiledeskClient _test 11_ history messages 2 (full history)', function() {
+	// 		it('\
+	// test 11 - Join group (get FULL group messages history). \
+	// User1 (owner) creates a group with 2 members (User1, User2). \
+	// User1 sends 1 message. \
+	// User1 adds User3 to the group. \
+	// User3 receives 5 messages. grouped as follows:\
+	// 1. All the 4 group info messages: FIRST_MESSAGE, GROUP_CREATED, USER1 MEMBER_JOINED_GROUP, USER2 MEMBER_JOINED_GROUP, USER3 MEMBER_JOINED_GROUP \
+	// 2. The message sent by USER1. \
+	// NEW CHAT CLIENTS', function(done) {
+	// 			this.timeout(20000);
+	// 			console.log("test 11 - start.");
+	// 			const group_id = "group-test11_" + uuidv4();
+	// 			const group_name = "group-join test11";
+	// 			const MESSAGE1_USER1 = "test 11, user1, first message";
+	// 			let group_members = {};
+	// 			group_members[user1.userid] = 1;
+	// 			group_members[user2.userid] = 1;
+	// 			let history_messages = {};
+	// 			let _chatClient1 = new Chat21Client(
+	// 				{
+	// 					appId: config.APPID,
+	// 					MQTTendpoint: config.MQTT_ENDPOINT,
+	// 					APIendpoint: config.API_ENDPOINT,
+	// 					log: config.CLIENT_API_LOG
+	// 				}
+	// 			);
+	// 			let _chatClient3 = new Chat21Client(
+	// 				{
+	// 					appId: config.APPID,
+	// 					MQTTendpoint: config.MQTT_ENDPOINT,
+	// 					APIendpoint: config.API_ENDPOINT,
+	// 					log: config.CLIENT_API_LOG
+	// 				}
+	// 			);
+	// 			_chatClient1.connect(user1.userid, user1.token, () => {
+	// 				console.log("test 11 - _chatClient1 connected.");
+	// 				_chatClient3.connect(user3.userid, user3.token, () => { // TODO if token is wrong it must reply with an error!
+	// 					console.log("test 11 - _chatClient3 connected.");
+	// 					let added_handler3 = _chatClient3.onMessageAdded((message, topic) => {
+	// 						if (message.recipient === group_id) {
+	// 							console.log("test 11 - Client3 - message added:", JSON.stringify(message));
+	// 							if (
+	// 								message &&
+	// 								message.recipient === group_id &&
+	// 								message.text === MESSAGE1_USER1) {
+	// 									console.log("test 11 - MESSAGE1_USER1 message received:", message.text);
+	// 									history_messages['MESSAGE1_USER1'] = 1;
+	// 							}
+	// 							else if (
+	// 								message &&
+	// 								message.recipient === group_id &&
+	// 								message.attributes &&
+	// 								message.attributes.messagelabel &&
+	// 								message.attributes.messagelabel.key &&
+	// 								message.attributes.messagelabel.parameters &&
+	// 								message.attributes.messagelabel.parameters.creator &&
+	// 								message.attributes.messagelabel.key === 'GROUP_CREATED' &&
+	// 								message.attributes.messagelabel.parameters.creator === user1.userid) {
+	// 									console.log("test 11 - GROUP_CREATED message received:", message.text);
+	// 									history_messages['GROUP_CREATED'] = 1;
+	// 							}
+	// 							else if (
+	// 								message &&
+	// 								message.recipient === group_id &&
+	// 								message.attributes &&
+	// 								message.attributes.messagelabel &&
+	// 								message.attributes.messagelabel.key &&
+	// 								message.attributes.messagelabel.parameters &&
+	// 								message.attributes.messagelabel.parameters.member_id &&
+	// 								message.attributes.messagelabel.key === 'MEMBER_JOINED_GROUP' &&
+	// 								message.attributes.messagelabel.parameters.member_id === user1.userid) {
+	// 									console.log("test 11 - MEMBER_JOINED_GROUP_user1 message received:", message.text);
+	// 									history_messages['MEMBER_JOINED_GROUP_user1'] = 1;
+	// 							}
+	// 							else if (
+	// 								message &&
+	// 								message.recipient === group_id &&
+	// 								message.attributes &&
+	// 								message.attributes.messagelabel &&
+	// 								message.attributes.messagelabel.key &&
+	// 								message.attributes.messagelabel.parameters &&
+	// 								message.attributes.messagelabel.parameters.member_id &&
+	// 								message.attributes.messagelabel.key === 'MEMBER_JOINED_GROUP' &&
+	// 								message.attributes.messagelabel.parameters.member_id === user2.userid) {
+	// 									console.log("test 11 - MEMBER_JOINED_GROUP_user2 message received:", message.text);
+	// 									history_messages['MEMBER_JOINED_GROUP_user2'] = 1;
+	// 							}
+	// 							else if (
+	// 								message &&
+	// 								message.recipient === group_id &&
+	// 								message.attributes &&
+	// 								message.attributes.messagelabel &&
+	// 								message.attributes.messagelabel.key &&
+	// 								message.attributes.messagelabel.parameters &&
+	// 								message.attributes.messagelabel.parameters.member_id &&
+	// 								message.attributes.messagelabel.key === 'MEMBER_JOINED_GROUP' &&
+	// 								message.attributes.messagelabel.parameters.member_id === user3.userid) {
+	// 									console.log("test 11 - MEMBER_JOINED_GROUP_user3 message received:", message.text);
+	// 									history_messages["MEMBER_JOINED_GROUP_user3"] = 1;
+	// 							}
+	// 							if (message &&
+	// 								message.recipient === group_id &&
+	// 								history_messages['MESSAGE1_USER1'] === 1 &&
+	// 								history_messages['GROUP_CREATED'] === 1 &&
+	// 								history_messages['MEMBER_JOINED_GROUP_user1'] === 1 &&
+	// 								history_messages['MEMBER_JOINED_GROUP_user2'] === 1 &&
+	// 								history_messages['MEMBER_JOINED_GROUP_user3'] === 1) {
+	// 									console.log("test 11 - FULL HISTORY RECEIVED.");
+	// 								_chatClient3.removeOnMessageAddedHandler(added_handler3);
+	// 								_chatClient1.close(() => {
+	// 									console.log("test 11 - _chatClient1 successfully disconnected.");
+	// 									_chatClient3.close(() => {
+	// 										console.log("test 11 - _chatClient3 successfully disconnected.");
+	// 										console.log("test 11 -> done()");
+	// 										done();
+	// 									});
+	// 								});
+	// 							}
+	// 						}
+	// 					});
+	// 					console.log("test 11 - creating group:", group_id);
+	// 					_chatClient1.groupCreate(
+	// 						group_name,
+	// 						group_id,
+	// 						group_members,
+	// 						async (err, result) => {
+	// 							assert(err == null);
+	// 							assert(result != null);
+	// 							assert(result.success == true);
+	// 							assert(result.group.name === group_name);
+	// 							console.log("test 11 - group:", group_id, "created");
+	// 							_chatClient1.sendMessageRaw(
+	// 								{
+	// 									text: MESSAGE1_USER1,
+	// 									type: TYPE_TEXT,
+	// 									recipient_fullname: group_name,
+	// 									sender_fullname: user1.fullname,
+	// 									attributes: null,
+	// 									metadata: null,
+	// 									channel_type: CHANNEL_TYPE_GROUP
+	// 								},
+	// 								group_id, // recipient
+	// 								async (err, msg) => {
+	// 									if (err) {
+	// 										logger.log("test 11 - Error sending message:", err);
+	// 									}
+	// 									assert(err == null);
+	// 									console.log("test 11 - message sent:", msg);
+	// 									console.log("test 11 - waiting some time to allow the sent message to reach the 'persistent' status...");
+	// 									await new Promise(resolve => setTimeout(resolve, 4000)); // it gives time to join message to reach the "persistent" status
+	// 									console.log("test 11 - end waiting.");
+	// 									_chatClient1.groupJoin(group_id, user3.userid, (err, json) => {
+	// 										if (err) {
+	// 											console.error("test 11 - member user3 joined error:", err);
+	// 										}
+	// 										assert(err == null);
+	// 										console.log("test 11 - member user3 joined json:", json);
+	// 									});
+	// 								}
+	// 							);
+	// 						}
+	// 					);
+	// 				});
+	// 			});
+	// 		});
+	// 	});
 
-	describe('TiledeskClient _test 12_', function() {
+	describe('TiledeskClient _test 12_', function () {
 		it('\
 test 12 - Set Members (not testing messages history). \
 User1 (owner) creates a group with 2 members: User1, User2 \
 User1 re-sets the whole members to: User1, User3, User4. \
 User1, stays, will receive group-update notification (original member)\
 User2, removed, will receive group-update notification (original member) \
-NEW CHAT CLIENTS', function(done) {
+NEW CHAT CLIENTS', function (done) {
 			logger.log("test 12 - start.");
 			const group_id = "group-test12_" + uuidv4();
 			const group_name = "group-set-members test";
@@ -1347,15 +1359,15 @@ NEW CHAT CLIENTS', function(done) {
 		});
 	});
 
-	describe('TiledeskClient - Save app instance _test 13_', function() {
+	describe('TiledeskClient - Save app instance _test 13_', function () {
 		it('test 13 - Saves an app instance \
-REUSE SHARED CHAT CLIENTS', function(done) {
+REUSE SHARED CHAT CLIENTS', function (done) {
 			logger.log("test 13 - start.");
 			const instance_id = uuidv4();
 			chatClient1.saveInstance(
 				instance_id,
 				{
-					"device_model":  "Postman",
+					"device_model": "Postman",
 					"language": "en-US",
 					"platform": "ionic",
 					"platform_version": "3.0.55"
@@ -1375,25 +1387,25 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 	// ************** CONVERSATIONS **************
 	// *******************************************
 
-	describe('TiledeskClient - Direct _test 17_', function() {
+	describe('TiledeskClient - Direct _test 17_', function () {
 		it('\
 User6 sends a direct message and User7 receives the conversation update by callback \
-User 7 checks conversationDetail. Got the conversation', function(done) {
+User 7 checks conversationDetail. Got the conversation', function (done) {
 			logger.log("test 17 - start.");
 			let chatClient6 = new Chat21Client(
-			{
-				appId: config.APPID,
-				MQTTendpoint: config.MQTT_ENDPOINT,
-				APIendpoint: config.API_ENDPOINT,
-				log: config.CLIENT_API_LOG
-			});
+				{
+					appId: config.APPID,
+					MQTTendpoint: config.MQTT_ENDPOINT,
+					APIendpoint: config.API_ENDPOINT,
+					log: config.CLIENT_API_LOG
+				});
 			let chatClient7 = new Chat21Client(
 				{
 					appId: config.APPID,
 					MQTTendpoint: config.MQTT_ENDPOINT,
 					APIendpoint: config.API_ENDPOINT,
 					log: config.CLIENT_API_LOG
-			});
+				});
 			let SENT_MESSAGE = 'FIRST MESSAGE 17';
 			logger.log("(Test 17) connecting user6...");
 			chatClient6.connect(user6.userid, user6.token, () => {
@@ -1410,8 +1422,8 @@ User 7 checks conversationDetail. Got the conversation', function(done) {
 							conv.text === SENT_MESSAGE &&
 							conv.sender === user6.userid && // user6 sent the message to user7
 							topic.conversWith === user6.userid) { // user7 is conversing with user6 (and recevice his conversation message-update)
-								logger.log("test 17 - Done!");
-								done();
+							logger.log("test 17 - Done!");
+							done();
 
 							// WARING! DON'T CHECK THIS. PERSISTENCE IS ON ANOTHER QUEUE!
 							// YOU CAN'T SYNCHRONOULSY GET THE PERSISTED COPY OF ANY
@@ -1441,7 +1453,7 @@ User 7 checks conversationDetail. Got the conversation', function(done) {
 		});
 	});
 
-	describe('TiledeskClient - Direct _test 18_', function() {
+	describe('TiledeskClient - Direct _test 18_', function () {
 		it('\
 User8 sends a direct message and User9 receives the conversation update by callback \
 User9 checks conversationDetail. Got the conversation \
@@ -1450,23 +1462,23 @@ User9 archives the conversation \
 User9 receives the conversation-archived event \
 User9 checks archivedConversationDetail. Got the conversation \
 User9 checks conversationDetail. Not available \
-REUSE SHARED CHAT CLIENTS', function(done) {
-	// 6 => 8 7 => 9
+REUSE SHARED CHAT CLIENTS', function (done) {
+			// 6 => 8 7 => 9
 			logger.log("test 18 - start.");
 			let chatClient8 = new Chat21Client(
-			{
-				appId: config.APPID,
-				MQTTendpoint: config.MQTT_ENDPOINT,
-				APIendpoint: config.API_ENDPOINT,
-				log: config.CLIENT_API_LOG
-			});
+				{
+					appId: config.APPID,
+					MQTTendpoint: config.MQTT_ENDPOINT,
+					APIendpoint: config.API_ENDPOINT,
+					log: config.CLIENT_API_LOG
+				});
 			let chatClient9 = new Chat21Client(
 				{
 					appId: config.APPID,
 					MQTTendpoint: config.MQTT_ENDPOINT,
 					APIendpoint: config.API_ENDPOINT,
 					log: config.CLIENT_API_LOG
-			});
+				});
 			let SENT_MESSAGE = 'FIRST MESSAGE 18';
 			logger.log("(Test 18) connecting user8...");
 			chatClient8.connect(user8.userid, user8.token, () => {
@@ -1483,7 +1495,7 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 							conv.text === SENT_MESSAGE &&
 							conv.sender === user8.userid && // user8 sent the message to user9
 							topic.conversWith === user8.userid) { // user9 is conversing with user8 (and receives his conversation message-update)
-								logger.log("test 18 - got new conversation");
+							logger.log("test 18 - got new conversation");
 							// WARING! DON'T CHECK THIS. PERSISTENCE IS ON ANOTHER QUEUE!
 							// YOU CAN'T SYNCHRONOULSY GET THE PERSISTED COPY OF ANY
 							// MESSAGE/CONVERSATION SAVED!
@@ -1503,7 +1515,7 @@ REUSE SHARED CHAT CLIENTS', function(done) {
 									assert(err == null);
 								});
 							}, 1000);
-							
+
 							// 	});
 							// });
 						}

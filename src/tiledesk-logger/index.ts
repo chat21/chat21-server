@@ -3,29 +3,32 @@
     Andrea Sponziello - (c) Tiledesk.com
 */
 
-require('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
 
 const LogLevel = {
   'ERROR': 0,
   'WARN': 1,
   'INFO': 2,
   'VERBOSE': 3,
-  'DEBUG':4
+  'DEBUG': 4
 }
 
 /**
  * Tiledesk logger
  */
-class TiledeskLogger {
+export class TiledeskLogger {
+  levels: { [key: string]: number };
+  logLevel: number;
   /**
    * Constructor
    *
    * @example
    * const logger = require('tiledesk-logger');
    */
-  
-  constructor(log_level) {
-    this.levels = {'ERROR': LogLevel.ERROR, 'WARN': LogLevel.WARN, 'INFO': LogLevel.INFO, 'VERBOSE':LogLevel.VERBOSE, 'DEBUG': LogLevel.DEBUG };
+
+  constructor(log_level?: string) {
+    this.levels = { 'ERROR': LogLevel.ERROR, 'WARN': LogLevel.WARN, 'INFO': LogLevel.INFO, 'VERBOSE': LogLevel.VERBOSE, 'DEBUG': LogLevel.DEBUG };
     if (log_level) {
       this.logLevel = this.levels[log_level.toUpperCase()]
     }
@@ -42,7 +45,7 @@ class TiledeskLogger {
     }
   }
 
-  setLog(log_level) {
+  setLog(log_level: string) {
     if (log_level) {
       this.logLevel = this.levels[log_level.toUpperCase()];
     }
@@ -50,48 +53,48 @@ class TiledeskLogger {
 
   error(...args) {
     if (this.logLevel >= LogLevel.ERROR) {
-      console.error.apply(console,args)
+      console.error.apply(console, args)
     }
   }
 
   warn(...args) {
     if (this.logLevel >= LogLevel.WARN) {
-      console.warn.apply(console,args)
+      console.warn.apply(console, args)
     }
   }
 
   info(...args) {
     if (this.logLevel >= LogLevel.INFO) {
-      console.info.apply(console,args)
+      console.info.apply(console, args)
     }
   }
 
   verbose(...args) {
     if (this.logLevel >= LogLevel.VERBOSE) {
-      console.log.apply(console,args)
+      console.log.apply(console, args)
     }
   }
 
   debug(...args) {
     if (this.logLevel === LogLevel.DEBUG) {
-      console.debug.apply(console,args)
+      console.debug.apply(console, args)
     }
   }
 
   log(...args) {
     if (this.logLevel === LogLevel.DEBUG) {
-      console.log.apply(console,args)
+      console.log.apply(console, args)
     }
   }
 
 
 
-  
 
-  
 
-  
+
+
+
 
 }
 
-module.exports = {logger: new TiledeskLogger(), TiledeskLogger: TiledeskLogger};
+export const logger = new TiledeskLogger();

@@ -1,13 +1,17 @@
-const logger = require('../tiledesk-logger').logger;
+import { logger } from '../tiledesk-logger';
 
 class GroupService {
-  constructor(options = {}) {
+  chatdb: any;
+  tdcache: any;
+  redis_enabled: boolean;
+
+  constructor(options: any = {}) {
     this.chatdb = options.chatdb;
     this.tdcache = options.tdcache;
     this.redis_enabled = options.redis_enabled;
   }
 
-  async getGroup(group_id, callback) {
+  async getGroup(group_id, callback?: any) {
     logger.log("**** getGroup:", group_id);
     try {
       const group = await this.groupFromCache(group_id);
@@ -31,7 +35,7 @@ class GroupService {
     }
   }
 
-  async groupFromCache(group_id, callback) {
+  async groupFromCache(group_id, callback?: any) {
     if (this.redis_enabled && this.tdcache) {
       const group_key = "chat21:messages:groups:" + group_id;
       try {
@@ -62,4 +66,4 @@ class GroupService {
   }
 }
 
-module.exports = GroupService;
+export default GroupService;

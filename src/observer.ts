@@ -1,13 +1,13 @@
-const mongodb = require("mongodb");
-const { ChatDB } = require('./chatdb/index.js');
-const { Webhooks } = require("./webhooks");
-const { TdCache } = require('./TdCache.js');
-const RateManager = require('./services/RateManager.js');
-const logger = require('./tiledesk-logger').logger;
+import * as mongodb from 'mongodb';
+import { ChatDB } from './chatdb/index';
+import { Webhooks } from './webhooks';
+import { TdCache } from './TdCache';
+import RateManager from './services/RateManager';
+import { logger } from './tiledesk-logger';
 
-const MQService = require('./services/MQService');
-const GroupService = require('./services/GroupService');
-const MessageService = require('./services/MessageService');
+import MQService from './services/MQService';
+import GroupService from './services/GroupService';
+import MessageService from './services/MessageService';
 
 let app_id, exchange, chatdb, webhooks, tdcache, rate_manager;
 let mqService, groupService, messageService;
@@ -16,7 +16,7 @@ let autoRestartProperty, prefetch_messages = 10;
 let webhook_endpoints_array, webhook_events_array;
 let active_queues = { 'messages': true, 'persist': true };
 
-async function startServer(config = {}) {
+async function startServer(config: any = {}) {
   app_id = config.app_id || "tilechat";
   exchange = config.exchange || 'amq.topic';
   const rabbitmq_uri = config.rabbitmq_uri || process.env.RABBITMQ_URI;
@@ -57,7 +57,7 @@ async function startServer(config = {}) {
   });
 
   await mqService.connect();
-  
+
   const topics = {
     messages: [
       `apps.${app_id}.outgoing.users.*.messages.*.outgoing`,
@@ -79,16 +79,14 @@ function stopServer(callback) {
   else if (callback) callback();
 }
 
-module.exports = {
-  startServer, stopServer,
-  setAutoRestart: (v) => autoRestartProperty = v,
-  getWebhooks: () => webhooks,
-  setWebHookEnabled: (v) => { webhook_enabled = v; if (webhooks) webhooks.setWebHookEnabled(v); },
-  setWebHookEndpoints: (v) => { webhook_endpoints_array = v; if (webhooks) webhooks.setWebHookEndpoints(v); },
-  setWebHookEvents: (v) => { webhook_events_array = v; if (webhooks) webhooks.setWebHookEvents(v); },
-  setPresenceEnabled: (v) => presence_enabled = v,
-  setDurableEnabled: (v) => durable_enabled = v,
-  setActiveQueues: (v) => active_queues = v,
-  setPrefetchMessages: (v) => prefetch_messages = v,
-  logger
-};
+export const setAutoRestart = (v: boolean) => autoRestartProperty = v;
+export const getWebhooks = () => webhooks;
+export const setWebHookEnabled = (v: boolean) => { webhook_enabled = v; if (webhooks) webhooks.setWebHookEnabled(v); };
+export const setWebHookEndpoints = (v: string[]) => { webhook_endpoints_array = v; if (webhooks) webhooks.setWebHookEndpoints(v); };
+export const setWebHookEvents = (v: string[]) => { webhook_events_array = v; if (webhooks) webhooks.setWebHookEvents(v); };
+export const setPresenceEnabled = (v: boolean) => presence_enabled = v;
+export const setDurableEnabled = (v: boolean) => durable_enabled = v;
+export const setActiveQueues = (v: any) => active_queues = v;
+export const setPrefetchMessages = (v: number) => prefetch_messages = v;
+
+export { startServer, stopServer, logger };

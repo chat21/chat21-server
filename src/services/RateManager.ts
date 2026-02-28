@@ -1,7 +1,9 @@
 
 class RateManager {
+    tdCache: any;
+    defaultRates: any;
 
-    constructor(config) {
+    constructor(config: any) {
 
         if (!config) {
             throw new Error('config is mandatory')
@@ -13,20 +15,20 @@ class RateManager {
 
         this.tdCache = config.tdCache;
 
-    
+
         // Default rates 
         this.defaultRates = {
             webhook: {
-                capacity: parseInt(process.env.BUCKET_WH_CAPACITY) || 10,
-                refill_rate: (parseInt(process.env.BUCKET_WH_REFILL_RATE_PER_MIN) || 10) / 60
+                capacity: parseInt(process.env.BUCKET_WH_CAPACITY as string || "10", 10),
+                refill_rate: (parseInt(process.env.BUCKET_WH_REFILL_RATE_PER_MIN as string || "10", 10)) / 60
             },
             message: {
-                capacity: parseInt(process.env.BUCKET_MSG_CAPACITY) || 30,
-                refill_rate: (parseInt(process.env.BUCKET_MSG_REFILL_RATE_PER_MIN) || 30) / 60
+                capacity: parseInt(process.env.BUCKET_MSG_CAPACITY as string || "30", 10),
+                refill_rate: (parseInt(process.env.BUCKET_MSG_REFILL_RATE_PER_MIN as string || "30", 10)) / 60
             },
             block: {
-                capacity: parseInt(process.env.BUCKET_BLK_CAPACITY) || 100,
-                refill_rate: (parseInt(process.env.BUCKET_BLK_REFILL_RATE_PER_MIN) || 100) / 60
+                capacity: parseInt(process.env.BUCKET_BLK_CAPACITY as string || "100", 10),
+                refill_rate: (parseInt(process.env.BUCKET_BLK_REFILL_RATE_PER_MIN as string || "100", 10)) / 60
             }
         }
 
@@ -34,7 +36,7 @@ class RateManager {
     }
 
     async canExecute(id, type) {
-        
+
         if (!type) {
             console.warn("(RateManager) 'type' is not defined! Skip...")
             return true;
@@ -45,7 +47,7 @@ class RateManager {
         const config = this.defaultRates[type];
         let bucket = await this.getBucket(key, type);
         let current_tokens = bucket.tokens;
-        let elapsed = (new Date() - new Date(bucket.timestamp)) / 1000;
+        let elapsed = (new Date().getTime() - new Date(bucket.timestamp).getTime()) / 1000;
         let tokens = Math.min(config.capacity, current_tokens + (elapsed * config.refill_rate));
 
         if (tokens > 0) {
@@ -89,4 +91,4 @@ class RateManager {
 
 }
 
-module.exports = RateManager;
+export default RateManager;

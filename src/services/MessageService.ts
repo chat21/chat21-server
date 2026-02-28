@@ -1,9 +1,20 @@
-const {v4: uuidv4} = require('uuid');
-const MessageConstants = require("../models/messageConstants");
-const logger = require('../tiledesk-logger').logger;
+import { v4 as uuidv4 } from 'uuid';
+import * as MessageConstants from '../models/messageConstants';
+import { logger } from '../tiledesk-logger';
 
-class MessageService {
-    constructor(options = {}) {
+export default class MessageService {
+    app_id: string;
+    mqService: any;
+    chatdb: any;
+    webhooks: any;
+    groupService: any;
+    rate_manager: any;
+    presence_enabled: boolean;
+    webhook_enabled: boolean;
+    exchange: string;
+    webhook_endpoints_array: string[];
+
+    constructor(options: any = {}) {
         this.app_id = options.app_id;
         this.mqService = options.mqService;
         this.chatdb = options.chatdb;
@@ -97,7 +108,7 @@ class MessageService {
         if (!outgoing_message.timestamp) outgoing_message.timestamp = Date.now();
 
         if (!this.isGroupMessage(outgoing_message)) {
-            const sent_message = {...outgoing_message, status: MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT};
+            const sent_message = { ...outgoing_message, status: MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT };
             const ok = await this.deliverMessage(sent_message, app_id, sender_id, recipient_id);
             if (ok) {
                 const delivered_message = {
@@ -116,7 +127,7 @@ class MessageService {
                 this.sendMessageToGroupMembers(outgoing_message, inline_group, app_id);
                 return true;
             }
-            const group = await this.groupService.getGroup(group_id) || {uid: group_id, transient: true, members: {}};
+            const group = await this.groupService.getGroup(group_id) || { uid: group_id, transient: true, members: {} };
             if (group.transient) {
                 group.members[sender_id] = 1;
             }
@@ -196,7 +207,7 @@ class MessageService {
             try {
                 await this.mqService.publishAsync(this.exchange, recipient_message_update_topic, Buffer.from(JSON.stringify(dest_message_patch)));
                 if (this.webhook_enabled) await this.webhooks.WHnotifyMessageStatusReturnReceipt(dest_message_patch);
-                await this.chatdb.saveOrUpdateMessage({timelineOf: user_id, message_id, status: patch.status});
+                await this.chatdb.saveOrUpdateMessage({ timelineOf: user_id, message_id, status: patch.status });
                 await this.chatdb.saveOrUpdateMessage(dest_message_patch);
             } catch (err) {
                 logger.error("process_update messages error:", err);
@@ -225,7 +236,7 @@ class MessageService {
 
         const user_id = topic_parts[3];
         const convers_with = topic_parts[5];
-        const conversation_archive_patch = {"timelineOf": user_id, "conversWith": convers_with, "archived": true};
+        const conversation_archive_patch = { "timelineOf": user_id, "conversWith": convers_with, "archived": true };
 
         if (this.webhook_enabled) await this.webhooks.WHnotifyConversationArchived(conversation_archive_patch, topic);
 
@@ -281,7 +292,7 @@ class MessageService {
     async sendMessageToGroupMembers(outgoing_message, group, app_id) {
         if (!group.members) return;
         const tasks = Object.keys(group.members).map(member_id => {
-            const message = {...outgoing_message};
+            const message = { ...outgoing_message };
             if (member_id === group.uid) message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT;
             else if (message.attributes && message.attributes.hiddenFor === member_id) return Promise.resolve();
             else message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED;
@@ -318,4 +329,3 @@ class MessageService {
     }
 }
 
-module.exports = MessageService;

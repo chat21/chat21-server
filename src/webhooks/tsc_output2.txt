@@ -1,0 +1,21 @@
+../services/RateManager.ts(22,36): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+../services/RateManager.ts(23,40): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+../services/RateManager.ts(26,36): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+../services/RateManager.ts(27,40): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+../services/RateManager.ts(30,36): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+../services/RateManager.ts(31,40): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+../services/RateManager.ts(50,24): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+../services/RateManager.ts(50,37): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+../../test/chat21client_connect.ts(1,1): error TS6200: Definitions of the following identifiers conflict with those in another file: uuidv4, Chat21Client, observer, express, loggers, logger, bodyParser, messageConstants, user1, user2, local_stack, client_api_log, config, TYPE_TEXT, CHANNEL_TYPE_GROUP, CHANNEL_TYPE_DIRECT, chatClient1
+../../test/test.ts(1,1): error TS6200: Definitions of the following identifiers conflict with those in another file: user3, user4, user5, user6, user7, user8, user9, chatClient2, chatClient3, http_api_server, webhook_app
+../../test/test.ts(1,1): error TS6200: Definitions of the following identifiers conflict with those in another file: uuidv4, Chat21Client, observer, express, loggers, logger, bodyParser, messageConstants, user1, user2, local_stack, client_api_log, config, TYPE_TEXT, CHANNEL_TYPE_GROUP, CHANNEL_TYPE_DIRECT, chatClient1
+../../test/webhooks_message_sent_test.ts(1,1): error TS6200: Definitions of the following identifiers conflict with those in another file: user3, user4, user5, user6, user7, user8, user9, chatClient2, chatClient3, http_api_server, webhook_app
+../../test/webhooks_message_sent_test.ts(1,1): error TS6200: Definitions of the following identifiers conflict with those in another file: uuidv4, Chat21Client, observer, express, loggers, logger, bodyParser, messageConstants, user1, user2, local_stack, client_api_log, config, TYPE_TEXT, CHANNEL_TYPE_GROUP, CHANNEL_TYPE_DIRECT, chatClient1
+../../test/webhooks_test.ts(1,1): error TS6200: Definitions of the following identifiers conflict with those in another file: user3, user4, user5, user6, user7, user8, user9, chatClient2, chatClient3, http_api_server, webhook_app
+../../test/webhooks_test.ts(1,1): error TS6200: Definitions of the following identifiers conflict with those in another file: uuidv4, Chat21Client, observer, express, loggers, logger, bodyParser, messageConstants, user1, user2, local_stack, client_api_log, config, TYPE_TEXT, CHANNEL_TYPE_GROUP, CHANNEL_TYPE_DIRECT, chatClient1

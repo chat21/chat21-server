@@ -1,8 +1,12 @@
-const redis = require('redis');
+import * as redis from 'redis';
 
-class TdCache {
+export class TdCache {
+    redis_host: string;
+    redis_port: number;
+    redis_password?: string;
+    client: any;
 
-    constructor(config) {
+    constructor(config: any) {
         this.redis_host = config.host;
         this.redis_port = config.port;
         this.redis_password = config.password;
@@ -27,8 +31,8 @@ class TdCache {
         await this.client.connect();
     }
 
-    async set(key, value, options) {
-        let redisOptions = {};
+    async set(key: string, value: any, options?: any) {
+        let redisOptions: any = {};
         if (options && options.EX) {
             redisOptions.EX = options.EX;
         }
@@ -44,7 +48,7 @@ class TdCache {
         }
     }
 
-    async incr(key) {
+    async incr(key: string) {
         try {
             return await this.client.incr(key);
         } catch (error) {
@@ -53,7 +57,7 @@ class TdCache {
         }
     }
 
-    async hset(dict_key, key, value, options) {
+    async hset(dict_key: string, key: string, value: any, options?: any) {
         try {
             await this.client.hSet(dict_key, key, value);
             if (options && options.EX) {
@@ -68,7 +72,7 @@ class TdCache {
         }
     }
 
-    async hdel(dict_key, key, options) {
+    async hdel(dict_key: string, key: string, options?: any) {
         try {
             await this.client.hDel(dict_key, key);
             if (options && options.callback) {
@@ -80,12 +84,12 @@ class TdCache {
         }
     }
 
-    async setJSON(key, value, options) {
-      const _string = JSON.stringify(value);
-      return await this.set(key, _string, options);
+    async setJSON(key: string, value: any, options?: any) {
+        const _string = JSON.stringify(value);
+        return await this.set(key, _string, options);
     }
 
-    async get(key, callback) {
+    async get(key: string, callback?: any) {
         try {
             const value = await this.client.get(key);
             if (callback) {
@@ -98,7 +102,7 @@ class TdCache {
         }
     }
 
-    async hgetall(dict_key, callback) {
+    async hgetall(dict_key: string, callback?: any) {
         try {
             const value = await this.client.hGetAll(dict_key);
             if (callback) {
@@ -114,7 +118,7 @@ class TdCache {
         }
     }
 
-    async hget(dict_key, key, callback) {
+    async hget(dict_key: string, key: string, callback?: any) {
         try {
             const value = await this.client.hGet(dict_key, key);
             if (callback) {
@@ -130,17 +134,17 @@ class TdCache {
         }
     }
 
-    async getJSON(key) {
-      const value = await this.get(key);
-      if (!value) return null;
-      try {
-          return JSON.parse(value);
-      } catch (e) {
-          return null;
-      }
+    async getJSON(key: string) {
+        const value = await this.get(key);
+        if (!value) return null;
+        try {
+            return JSON.parse(value);
+        } catch (e) {
+            return null;
+        }
     }
 
-    async del(key, callback) {
+    async del(key: string, callback?: any) {
         try {
             await this.client.del(key);
             if (callback) {
@@ -152,6 +156,4 @@ class TdCache {
         }
     }
 }
-
-module.exports = { TdCache };
 

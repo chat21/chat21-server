@@ -1,30 +1,32 @@
-var assert = require('assert');
-const { v4: uuidv4 } = require('uuid');
-const { Chat21Client } = require('../src/mqttclient/chat21client.js');
-var chat21HttpServer = require('@chat21/chat21-http-server');
-let observer = require('../src/index').observer;
-let express = require('express');
+export { };
+import assert from 'assert';
+import { v4 as uuidv4 } from 'uuid';
+import { Chat21Client } from '../src/mqttclient/chat21client.js';
+import chat21HttpServer from '@chat21/chat21-http-server';
+import { observer } from '../src/index';
+import express from 'express';
 //const { Logger } = require('mongodb');
-const loggers = require('../src/tiledesk-logger');
-let logger = new loggers.TiledeskLogger("debug");
+import { TiledeskLogger } from '../src/tiledesk-logger/index';
+let logger = new TiledeskLogger("debug");
 // logger.setLog('DEBUG');
 // let bodyParser = require('body-parser');
-const bodyParser = require('body-parser');
-const messageConstants = require('../src/models/messageConstants.js');
+import bodyParser from 'body-parser';
+import * as messageConstants from '../src/models/messageConstants';
 
-const user1 =  { userid: 'USER1',
-  fullname: 'User 1',
-  firstname: 'User',
-  lastname: '1',
-  token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxNzkwNDBkNy00NzdiLTQ5NmUtYjA0NS0zMTdhM2JiYzY4NjUiLCJzdWIiOiJVU0VSMSIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjEuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVIxLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSMS4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVIxIiwiY2lkIjoiVVNFUjEiLCJhenAiOiJVU0VSMSIsInVzZXJfaWQiOiJVU0VSMSIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjM5MjE0NDE4LCJleHAiOjE5NTAyNTQ0MTgsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVIxIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.0qLEOVWY0iN7polG9HU33yC7YHRmFNkB1WPruXmHxJ8'
+const user1 = {
+	userid: 'USER1',
+	fullname: 'User 1',
+	firstname: 'User',
+	lastname: '1',
+	token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxNzkwNDBkNy00NzdiLTQ5NmUtYjA0NS0zMTdhM2JiYzY4NjUiLCJzdWIiOiJVU0VSMSIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjEuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVIxLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSMS4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVIxIiwiY2lkIjoiVVNFUjEiLCJhenAiOiJVU0VSMSIsInVzZXJfaWQiOiJVU0VSMSIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjM5MjE0NDE4LCJleHAiOjE5NTAyNTQ0MTgsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVIxIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.0qLEOVWY0iN7polG9HU33yC7YHRmFNkB1WPruXmHxJ8'
 }
 
-const user2 =  {
-  userid: 'USER2',
-  fullname: 'User 2',
-  firstname: 'User',
-  lastname: '2',
-  token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzMWY0NGFmMy0zOGVmLTRkZmMtODM2Yi05YTI5ZjQ3Y2VmMTgiLCJzdWIiOiJVU0VSMiIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjIuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVIyLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSMi4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVIyIiwiY2lkIjoiVVNFUjIiLCJhenAiOiJVU0VSMiIsInVzZXJfaWQiOiJVU0VSMiIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjM5MjE0NDE4LCJleHAiOjE5NTAyNTQ0MTgsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVIyIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.zARfYud7bbRIfK4l9rFrHVrXA6CRlTcol_KJv9yL1q4'
+const user2 = {
+	userid: 'USER2',
+	fullname: 'User 2',
+	firstname: 'User',
+	lastname: '2',
+	token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzMWY0NGFmMy0zOGVmLTRkZmMtODM2Yi05YTI5ZjQ3Y2VmMTgiLCJzdWIiOiJVU0VSMiIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuVVNFUjIuKiIsInJhYmJpdG1xLndyaXRlOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLlVTRVIyLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5VU0VSMi4qIiwicmFiYml0bXEuY29uZmlndXJlOiovKi8qIl0sImNsaWVudF9pZCI6IlVTRVIyIiwiY2lkIjoiVVNFUjIiLCJhenAiOiJVU0VSMiIsInVzZXJfaWQiOiJVU0VSMiIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjM5MjE0NDE4LCJleHAiOjE5NTAyNTQ0MTgsImF1ZCI6WyJyYWJiaXRtcSIsIlVTRVIyIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.zARfYud7bbRIfK4l9rFrHVrXA6CRlTcol_KJv9yL1q4'
 }
 
 
@@ -129,39 +131,39 @@ YOU ONLY NEED TO START                   *******************
 ************************************************************
 ************************************************************`);
 
-describe('Main', function() {
-	before(function(done) {
+describe('Main', function () {
+	before(function (done) {
 		logger.log("before...");
 		done();
 	});
-	
-	after(function(done) {
+
+	after(function (done) {
 		logger.log("after...");
 		done();
 	});
-  
-	beforeEach(function() {
-	  // runs before each test in this block
+
+	beforeEach(function () {
+		// runs before each test in this block
 	});
-  
-	afterEach(function() {
-	  // runs after each test in this block
+
+	afterEach(function () {
+		// runs after each test in this block
 	});
-  
+
 	// *********************************************
 	// **************** TEST CASES *****************
-    // *********************************************
+	// *********************************************
 
-	describe('TiledeskClient - test 0', function() {
-		it('Test 0', function(done) {
+	describe('TiledeskClient - test 0', function () {
+		it('Test 0', function (done) {
 			logger.log("test 0 - start.");
 			done();
 		});
 	});
 
-	describe('TiledeskClient - Connect/Disconnect', function() {
-		
-		it('User1 successfully connects, then diconnects.', function(done) {
+	describe('TiledeskClient - Connect/Disconnect', function () {
+
+		it('User1 successfully connects, then diconnects.', function (done) {
 			logger.log("test 1 - connect()");
 			chatClient1 = new Chat21Client(
 				{
