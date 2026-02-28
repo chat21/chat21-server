@@ -118,25 +118,30 @@ export default class MessageService {
                 await this.deliverMessage(delivered_message, app_id, recipient_id, sender_id);
             }
         } else {
-            const group_id = recipient_id;
+            const group_id_from_topic = recipient_id;
             if (outgoing_message.group) {
                 const inline_group = outgoing_message.group;
-                inline_group.uid = group_id;
+                inline_group.uid = group_id_from_topic;
                 if (!inline_group.members) inline_group.members = {};
-                inline_group.members[group_id] = 1;
+                inline_group.members[group_id_from_topic] = 1;
                 inline_group.members[sender_id] = 1;
                 await this.sendMessageToGroupMembers(outgoing_message, inline_group, app_id);
                 return true;
             }
-            const group = await this.groupService.getGroup(group_id);
+            // Use group_id_from_topic to find group. getGroup already handles prefixing.
+            const group = await this.groupService.getGroup(group_id_from_topic);
             if (group) {
-                if (!group.members) group.members = {};
-                group.members[group_id] = 1;
-                await this.sendMessageToGroupMembers(outgoing_message, group, app_id);
+                // IMPORTANT: Use the group_id from the topic for delivery to match client expectations
+                const delivery_group = { ...group, uid: group_id_from_topic };
+                if (!delivery_group.members) delivery_group.members = {};
+                // Ensure sender and group itself are in members for history/persistence
+                delivery_group.members[group_id_from_topic] = 1;
+                delivery_group.members[sender_id] = 1;
+                await this.sendMessageToGroupMembers(outgoing_message, delivery_group, app_id);
             } else {
-                logger.warn("Group not found for delivery:", group_id, ". Creating transient group for sender.");
-                const transient_group = { uid: group_id, transient: true, members: {} };
-                transient_group.members[group_id] = 1;
+                logger.warn("Group not found for delivery:", group_id_from_topic, ". Creating transient group for sender.");
+                const transient_group = { uid: group_id_from_topic, transient: true, members: {} };
+                transient_group.members[group_id_from_topic] = 1;
                 transient_group.members[sender_id] = 1;
                 await this.sendMessageToGroupMembers(outgoing_message, transient_group, app_id);
             }
