@@ -1,0 +1,1060 @@
+Benchmark Results - Tue Feb 24 11:31:37 CET 2026
+--------------------------------
+--- NUM_MESSAGE: 10 ---
+--- Conversation Benchmark ---
+MQTT Endpoint: wss://stage.eks.tiledesk.com/mqws/ws
+API Endpoint: https://stage.eks.tiledesk.com/api
+Project ID: 6964c3a1fb76080013aa3c54
+Messages to exchange: 10
+------------------------------
+
+Creating users...
+final endpoint: wss://stage.eks.tiledesk.com/mqws/ws
+final endpoint: wss://stage.eks.tiledesk.com/mqws/ws
+Connecting User...
+connecting user_id: ee51d9bc-94bd-48ec-8c55-0f36e24c663b
+using jwt token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxMWUzM2QxOS1kODZkLTQ5ZGMtOTY3MC01MDE0NmZlYTY1MTAiLCJzdWIiOiJlZTUxZDliYy05NGJkLTQ4ZWMtOGM1NS0wZjM2ZTI0YzY2M2IiLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLmVlNTFkOWJjLTk0YmQtNDhlYy04YzU1LTBmMzZlMjRjNjYzYi4qIiwicmFiYml0bXEud3JpdGU6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuZWU1MWQ5YmMtOTRiZC00OGVjLThjNTUtMGYzNmUyNGM2NjNiLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5lZTUxZDliYy05NGJkLTQ4ZWMtOGM1NS0wZjM2ZTI0YzY2M2IuKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiJlZTUxZDliYy05NGJkLTQ4ZWMtOGM1NS0wZjM2ZTI0YzY2M2IiLCJjaWQiOiJlZTUxZDliYy05NGJkLTQ4ZWMtOGM1NS0wZjM2ZTI0YzY2M2IiLCJhenAiOiJlZTUxZDliYy05NGJkLTQ4ZWMtOGM1NS0wZjM2ZTI0YzY2M2IiLCJ1c2VyX2lkIjoiZWU1MWQ5YmMtOTRiZC00OGVjLThjNTUtMGYzNmUyNGM2NjNiIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE3NzE5MjkwOTgsImV4cCI6MTc3NDUyMTA5OCwiYXVkIjpbInJhYmJpdG1xIiwiZWU1MWQ5YmMtOTRiZC00OGVjLThjNTUtMGYzNmUyNGM2NjNiIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.6XXT6GapYDsHiVxDHDw7NF4EEfOtZA9gI3KRlrAlbnM
+starting mqtt connection with LWT on: apps/tilechat/users/ee51d9bc-94bd-48ec-8c55-0f36e24c663b/presence/3bb8bb2c-65a0-4deb-a374-f88931c2d669 wss://stage.eks.tiledesk.com/mqws/ws
+Client connected. User:ee51d9bc-94bd-48ec-8c55-0f36e24c663b
+Chat client first connection for:ee51d9bc-94bd-48ec-8c55-0f36e24c663b
+subscribing to: ee51d9bc-94bd-48ec-8c55-0f36e24c663b topic apps/tilechat/users/ee51d9bc-94bd-48ec-8c55-0f36e24c663b/#
+subscribed to: apps/tilechat/users/ee51d9bc-94bd-48ec-8c55-0f36e24c663b/#  with err null
+Subscribed to MyConversations.
+User connected: ee51d9bc-94bd-48ec-8c55-0f36e24c663b
+Connecting Bot...
+connecting user_id: 0de7b1b8-2c06-40f1-a09c-d0b04a884b17
+using jwt token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjZWJkY2YyMi01MzEwLTRjNzktYWFkMi1lYzU4MTQ5MWU3NWMiLCJzdWIiOiIwZGU3YjFiOC0yYzA2LTQwZjEtYTA5Yy1kMGIwNGE4ODRiMTciLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLjBkZTdiMWI4LTJjMDYtNDBmMS1hMDljLWQwYjA0YTg4NGIxNy4qIiwicmFiYml0bXEud3JpdGU6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuMGRlN2IxYjgtMmMwNi00MGYxLWEwOWMtZDBiMDRhODg0YjE3LioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy4wZGU3YjFiOC0yYzA2LTQwZjEtYTA5Yy1kMGIwNGE4ODRiMTcuKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiIwZGU3YjFiOC0yYzA2LTQwZjEtYTA5Yy1kMGIwNGE4ODRiMTciLCJjaWQiOiIwZGU3YjFiOC0yYzA2LTQwZjEtYTA5Yy1kMGIwNGE4ODRiMTciLCJhenAiOiIwZGU3YjFiOC0yYzA2LTQwZjEtYTA5Yy1kMGIwNGE4ODRiMTciLCJ1c2VyX2lkIjoiMGRlN2IxYjgtMmMwNi00MGYxLWEwOWMtZDBiMDRhODg0YjE3IiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE3NzE5MjkwOTgsImV4cCI6MTc3NDUyMTA5OCwiYXVkIjpbInJhYmJpdG1xIiwiMGRlN2IxYjgtMmMwNi00MGYxLWEwOWMtZDBiMDRhODg0YjE3Il0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.5PD9HJenOGWF9Iw2_OjKRZdywyBU2Jvv_SLBpMIbB4I
+starting mqtt connection with LWT on: apps/tilechat/users/0de7b1b8-2c06-40f1-a09c-d0b04a884b17/presence/2b538e11-c297-472b-ba0e-4069cffece60 wss://stage.eks.tiledesk.com/mqws/ws
+Invalid message topic: apps/tilechat/users/ee51d9bc-94bd-48ec-8c55-0f36e24c663b/presence/3bb8bb2c-65a0-4deb-a374-f88931c2d669
+Client connected. User:0de7b1b8-2c06-40f1-a09c-d0b04a884b17
+Chat client first connection for:0de7b1b8-2c06-40f1-a09c-d0b04a884b17
+subscribing to: 0de7b1b8-2c06-40f1-a09c-d0b04a884b17 topic apps/tilechat/users/0de7b1b8-2c06-40f1-a09c-d0b04a884b17/#
+subscribed to: apps/tilechat/users/0de7b1b8-2c06-40f1-a09c-d0b04a884b17/#  with err null
+Subscribed to MyConversations.
+Bot connected: 0de7b1b8-2c06-40f1-a09c-d0b04a884b17
+Group ID: support-group-6964c3a1fb76080013aa3c54-fc3294d016794a2b8e0f9b9928f63840
+Creating Group and adding members...
+creating group: Benchmark Group support-group-6964c3a1fb76080013aa3c54-fc3294d016794a2b8e0f9b9928f63840 id support-group-6964c3a1fb76080013aa3c54-fc3294d016794a2b8e0f9b9928f63840 members {
+  'ee51d9bc-94bd-48ec-8c55-0f36e24c663b': 1,
+  '0de7b1b8-2c06-40f1-a09c-d0b04a884b17': 1
+}
+Invalid message topic: apps/tilechat/users/0de7b1b8-2c06-40f1-a09c-d0b04a884b17/presence/2b538e11-c297-472b-ba0e-4069cffece60
+response.status: 201
+Group created successfully.
+
+Starting conversation...
+Exchange 1/10 completed. Latency: 271ms
+Exchange 2/10 completed. Latency: 182ms
+Exchange 3/10 completed. Latency: 56ms
+Exchange 4/10 completed. Latency: 87ms
+Exchange 5/10 completed. Latency: 53ms
+Exchange 6/10 completed. Latency: 50ms
+Exchange 7/10 completed. Latency: 54ms
+Exchange 8/10 completed. Latency: 47ms
+Exchange 9/10 completed. Latency: 11ms
+Exchange 10/10 completed. Latency: 41ms
+
+--- Benchmark Results ---
+Total messages exchanged: 10
+Total time: 854 ms
+Average Round-trip Latency: 85.20 ms
+Min Latency: 11 ms
+Max Latency: 271 ms
+--------------------------
+
+
+
+
+--- NUM_MESSAGE: 20 ---
+--- Conversation Benchmark ---
+MQTT Endpoint: wss://stage.eks.tiledesk.com/mqws/ws
+API Endpoint: https://stage.eks.tiledesk.com/api
+Project ID: 6964c3a1fb76080013aa3c54
+Messages to exchange: 20
+------------------------------
+
+Creating users...
+final endpoint: wss://stage.eks.tiledesk.com/mqws/ws
+final endpoint: wss://stage.eks.tiledesk.com/mqws/ws
+Connecting User...
+connecting user_id: b07c467e-8022-4146-9b87-65ace89a0f6c
+using jwt token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjMWQ5YTEzZi03NDllLTRiY2EtOWVmYy0zNjIxMzM0YTc1MmUiLCJzdWIiOiJiMDdjNDY3ZS04MDIyLTQxNDYtOWI4Ny02NWFjZTg5YTBmNmMiLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLmIwN2M0NjdlLTgwMjItNDE0Ni05Yjg3LTY1YWNlODlhMGY2Yy4qIiwicmFiYml0bXEud3JpdGU6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuYjA3YzQ2N2UtODAyMi00MTQ2LTliODctNjVhY2U4OWEwZjZjLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5iMDdjNDY3ZS04MDIyLTQxNDYtOWI4Ny02NWFjZTg5YTBmNmMuKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiJiMDdjNDY3ZS04MDIyLTQxNDYtOWI4Ny02NWFjZTg5YTBmNmMiLCJjaWQiOiJiMDdjNDY3ZS04MDIyLTQxNDYtOWI4Ny02NWFjZTg5YTBmNmMiLCJhenAiOiJiMDdjNDY3ZS04MDIyLTQxNDYtOWI4Ny02NWFjZTg5YTBmNmMiLCJ1c2VyX2lkIjoiYjA3YzQ2N2UtODAyMi00MTQ2LTliODctNjVhY2U4OWEwZjZjIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE3NzE5MjkxMjIsImV4cCI6MTc3NDUyMTEyMiwiYXVkIjpbInJhYmJpdG1xIiwiYjA3YzQ2N2UtODAyMi00MTQ2LTliODctNjVhY2U4OWEwZjZjIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.DK5zDBv4tLWulLeCfVAFL-1Hw5kUK_GFHkhJeuB6ZiY
+starting mqtt connection with LWT on: apps/tilechat/users/b07c467e-8022-4146-9b87-65ace89a0f6c/presence/f0a3518c-0a51-454c-86d3-3c5613ed4f81 wss://stage.eks.tiledesk.com/mqws/ws
+Chat client error event Error: connack timeout
+    at Timeout._onTimeout (/Users/nicocardone/Desktop/DEV/TILEDESK/chat21-server/node_modules/mqtt/build/lib/client.js:363:32)
+    at listOnTimeout (node:internal/timers:588:17)
+    at process.processTimers (node:internal/timers:523:7)
+Chat client close event
+node:internal/process/promises:394
+    triggerUncaughtException(err, true /* fromPromise */);
+    ^
+
+Error: connack timeout
+    at Timeout._onTimeout (/Users/nicocardone/Desktop/DEV/TILEDESK/chat21-server/node_modules/mqtt/build/lib/client.js:363:32)
+    at listOnTimeout (node:internal/timers:588:17)
+    at process.processTimers (node:internal/timers:523:7)
+
+Node.js v22.22.0
+
+
+
+--- NUM_MESSAGE: 30 ---
+--- Conversation Benchmark ---
+MQTT Endpoint: wss://stage.eks.tiledesk.com/mqws/ws
+API Endpoint: https://stage.eks.tiledesk.com/api
+Project ID: 6964c3a1fb76080013aa3c54
+Messages to exchange: 30
+------------------------------
+
+Creating users...
+final endpoint: wss://stage.eks.tiledesk.com/mqws/ws
+final endpoint: wss://stage.eks.tiledesk.com/mqws/ws
+Connecting User...
+connecting user_id: 6f25261a-ba6e-4d85-b1ea-ffe80d0b603b
+using jwt token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI5MGM1OTlkZi0yZTMwLTRkMDQtOTc0MS02ZGViNmVjYWJkZDIiLCJzdWIiOiI2ZjI1MjYxYS1iYTZlLTRkODUtYjFlYS1mZmU4MGQwYjYwM2IiLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLjZmMjUyNjFhLWJhNmUtNGQ4NS1iMWVhLWZmZTgwZDBiNjAzYi4qIiwicmFiYml0bXEud3JpdGU6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuNmYyNTI2MWEtYmE2ZS00ZDg1LWIxZWEtZmZlODBkMGI2MDNiLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy42ZjI1MjYxYS1iYTZlLTRkODUtYjFlYS1mZmU4MGQwYjYwM2IuKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiI2ZjI1MjYxYS1iYTZlLTRkODUtYjFlYS1mZmU4MGQwYjYwM2IiLCJjaWQiOiI2ZjI1MjYxYS1iYTZlLTRkODUtYjFlYS1mZmU4MGQwYjYwM2IiLCJhenAiOiI2ZjI1MjYxYS1iYTZlLTRkODUtYjFlYS1mZmU4MGQwYjYwM2IiLCJ1c2VyX2lkIjoiNmYyNTI2MWEtYmE2ZS00ZDg1LWIxZWEtZmZlODBkMGI2MDNiIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE3NzE5MjkxNzMsImV4cCI6MTc3NDUyMTE3MywiYXVkIjpbInJhYmJpdG1xIiwiNmYyNTI2MWEtYmE2ZS00ZDg1LWIxZWEtZmZlODBkMGI2MDNiIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.Dgj2298As8ZAmE8wtKUxsiTM44o56memGW84GB5Vn44
+starting mqtt connection with LWT on: apps/tilechat/users/6f25261a-ba6e-4d85-b1ea-ffe80d0b603b/presence/1c4f138b-8413-402b-b268-403994f14f8a wss://stage.eks.tiledesk.com/mqws/ws
+Client connected. User:6f25261a-ba6e-4d85-b1ea-ffe80d0b603b
+Chat client first connection for:6f25261a-ba6e-4d85-b1ea-ffe80d0b603b
+subscribing to: 6f25261a-ba6e-4d85-b1ea-ffe80d0b603b topic apps/tilechat/users/6f25261a-ba6e-4d85-b1ea-ffe80d0b603b/#
+subscribed to: apps/tilechat/users/6f25261a-ba6e-4d85-b1ea-ffe80d0b603b/#  with err null
+Subscribed to MyConversations.
+User connected: 6f25261a-ba6e-4d85-b1ea-ffe80d0b603b
+Connecting Bot...
+connecting user_id: 38c7cdd6-562a-456d-bf79-25ad714ca60c
+using jwt token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmNmE4MDJmMS1lMWYyLTQ1M2YtOTFhMS03ODE5ZDU2ZjVkNGUiLCJzdWIiOiIzOGM3Y2RkNi01NjJhLTQ1NmQtYmY3OS0yNWFkNzE0Y2E2MGMiLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLjM4YzdjZGQ2LTU2MmEtNDU2ZC1iZjc5LTI1YWQ3MTRjYTYwYy4qIiwicmFiYml0bXEud3JpdGU6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuMzhjN2NkZDYtNTYyYS00NTZkLWJmNzktMjVhZDcxNGNhNjBjLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy4zOGM3Y2RkNi01NjJhLTQ1NmQtYmY3OS0yNWFkNzE0Y2E2MGMuKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiIzOGM3Y2RkNi01NjJhLTQ1NmQtYmY3OS0yNWFkNzE0Y2E2MGMiLCJjaWQiOiIzOGM3Y2RkNi01NjJhLTQ1NmQtYmY3OS0yNWFkNzE0Y2E2MGMiLCJhenAiOiIzOGM3Y2RkNi01NjJhLTQ1NmQtYmY3OS0yNWFkNzE0Y2E2MGMiLCJ1c2VyX2lkIjoiMzhjN2NkZDYtNTYyYS00NTZkLWJmNzktMjVhZDcxNGNhNjBjIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE3NzE5MjkxNzQsImV4cCI6MTc3NDUyMTE3NCwiYXVkIjpbInJhYmJpdG1xIiwiMzhjN2NkZDYtNTYyYS00NTZkLWJmNzktMjVhZDcxNGNhNjBjIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ._Gc5R_2pV1rxSqUEbBhX1LqaOs3dU268c15BQ87bbKM
+starting mqtt connection with LWT on: apps/tilechat/users/38c7cdd6-562a-456d-bf79-25ad714ca60c/presence/15c7763d-fabb-4750-9fc3-d41964c46952 wss://stage.eks.tiledesk.com/mqws/ws
+Invalid message topic: apps/tilechat/users/6f25261a-ba6e-4d85-b1ea-ffe80d0b603b/presence/1c4f138b-8413-402b-b268-403994f14f8a
+Client connected. User:38c7cdd6-562a-456d-bf79-25ad714ca60c
+Chat client first connection for:38c7cdd6-562a-456d-bf79-25ad714ca60c
+subscribing to: 38c7cdd6-562a-456d-bf79-25ad714ca60c topic apps/tilechat/users/38c7cdd6-562a-456d-bf79-25ad714ca60c/#
+subscribed to: apps/tilechat/users/38c7cdd6-562a-456d-bf79-25ad714ca60c/#  with err null
+Subscribed to MyConversations.
+Bot connected: 38c7cdd6-562a-456d-bf79-25ad714ca60c
+Group ID: support-group-6964c3a1fb76080013aa3c54-23dbef5df37f4431a25e3956be9903ae
+Creating Group and adding members...
+creating group: Benchmark Group support-group-6964c3a1fb76080013aa3c54-23dbef5df37f4431a25e3956be9903ae id support-group-6964c3a1fb76080013aa3c54-23dbef5df37f4431a25e3956be9903ae members {
+  '6f25261a-ba6e-4d85-b1ea-ffe80d0b603b': 1,
+  '38c7cdd6-562a-456d-bf79-25ad714ca60c': 1
+}
+Invalid message topic: apps/tilechat/users/38c7cdd6-562a-456d-bf79-25ad714ca60c/presence/15c7763d-fabb-4750-9fc3-d41964c46952
+response.status: 201
+Group created successfully.
+
+Starting conversation...
+Exchange 1/30 completed. Latency: 403ms
+Exchange 2/30 completed. Latency: 121ms
+Exchange 3/30 completed. Latency: 154ms
+Exchange 4/30 completed. Latency: 7ms
+Exchange 5/30 completed. Latency: 14ms
+Exchange 6/30 completed. Latency: 0ms
+Exchange 7/30 completed. Latency: 93ms
+Exchange 8/30 completed. Latency: 102ms
+Exchange 9/30 completed. Latency: 7ms
+Exchange 10/30 completed. Latency: 6ms
+Exchange 11/30 completed. Latency: 7ms
+Exchange 12/30 completed. Latency: 12ms
+Exchange 13/30 completed. Latency: 11ms
+Exchange 14/30 completed. Latency: 70ms
+Exchange 15/30 completed. Latency: 75ms
+Exchange 16/30 completed. Latency: 22ms
+Exchange 17/30 completed. Latency: 7ms
+Exchange 18/30 completed. Latency: 103ms
+Exchange 19/30 completed. Latency: 0ms
+Exchange 20/30 completed. Latency: 2ms
+Exchange 21/30 completed. Latency: 79ms
+Exchange 22/30 completed. Latency: 5ms
+Exchange 23/30 completed. Latency: 1ms
+Exchange 24/30 completed. Latency: 4ms
+Exchange 25/30 completed. Latency: 2ms
+Exchange 26/30 completed. Latency: 4ms
+Exchange 27/30 completed. Latency: 58ms
+Exchange 28/30 completed. Latency: 0ms
+Exchange 29/30 completed. Latency: 0ms
+Exchange 30/30 completed. Latency: 12ms
+
+--- Benchmark Results ---
+Total messages exchanged: 30
+Total time: 1385 ms
+Average Round-trip Latency: 46.03 ms
+Min Latency: 0 ms
+Max Latency: 403 ms
+--------------------------
+
+
+
+
+--- NUM_MESSAGE: 40 ---
+--- Conversation Benchmark ---
+MQTT Endpoint: wss://stage.eks.tiledesk.com/mqws/ws
+API Endpoint: https://stage.eks.tiledesk.com/api
+Project ID: 6964c3a1fb76080013aa3c54
+Messages to exchange: 40
+------------------------------
+
+Creating users...
+final endpoint: wss://stage.eks.tiledesk.com/mqws/ws
+final endpoint: wss://stage.eks.tiledesk.com/mqws/ws
+Connecting User...
+connecting user_id: c9271266-e4a5-42e3-b852-f5fb512ace41
+using jwt token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhNjIyNTA3My03MmQwLTQ1MmMtYWI4YS0wZWM5MjJjMTk4MWIiLCJzdWIiOiJjOTI3MTI2Ni1lNGE1LTQyZTMtYjg1Mi1mNWZiNTEyYWNlNDEiLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLmM5MjcxMjY2LWU0YTUtNDJlMy1iODUyLWY1ZmI1MTJhY2U0MS4qIiwicmFiYml0bXEud3JpdGU6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuYzkyNzEyNjYtZTRhNS00MmUzLWI4NTItZjVmYjUxMmFjZTQxLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5jOTI3MTI2Ni1lNGE1LTQyZTMtYjg1Mi1mNWZiNTEyYWNlNDEuKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiJjOTI3MTI2Ni1lNGE1LTQyZTMtYjg1Mi1mNWZiNTEyYWNlNDEiLCJjaWQiOiJjOTI3MTI2Ni1lNGE1LTQyZTMtYjg1Mi1mNWZiNTEyYWNlNDEiLCJhenAiOiJjOTI3MTI2Ni1lNGE1LTQyZTMtYjg1Mi1mNWZiNTEyYWNlNDEiLCJ1c2VyX2lkIjoiYzkyNzEyNjYtZTRhNS00MmUzLWI4NTItZjVmYjUxMmFjZTQxIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE3NzE5MjkxOTgsImV4cCI6MTc3NDUyMTE5OCwiYXVkIjpbInJhYmJpdG1xIiwiYzkyNzEyNjYtZTRhNS00MmUzLWI4NTItZjVmYjUxMmFjZTQxIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.LaYSQhfzOElBtetEkRw71ZWGHYscRmnA9k0CWN8rswg
+starting mqtt connection with LWT on: apps/tilechat/users/c9271266-e4a5-42e3-b852-f5fb512ace41/presence/58c0fd0e-79de-49c9-afd2-ceb7b195c27d wss://stage.eks.tiledesk.com/mqws/ws
+Client connected. User:c9271266-e4a5-42e3-b852-f5fb512ace41
+Chat client first connection for:c9271266-e4a5-42e3-b852-f5fb512ace41
+subscribing to: c9271266-e4a5-42e3-b852-f5fb512ace41 topic apps/tilechat/users/c9271266-e4a5-42e3-b852-f5fb512ace41/#
+subscribed to: apps/tilechat/users/c9271266-e4a5-42e3-b852-f5fb512ace41/#  with err null
+Subscribed to MyConversations.
+User connected: c9271266-e4a5-42e3-b852-f5fb512ace41
+Connecting Bot...
+connecting user_id: 584df7f0-b28e-47aa-8859-6fc8046f00d8
+using jwt token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxYjc4YjI0ZS03ZGIwLTQyMzUtYWE1Yi1jZWUyODAwYzdjMjQiLCJzdWIiOiI1ODRkZjdmMC1iMjhlLTQ3YWEtODg1OS02ZmM4MDQ2ZjAwZDgiLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLjU4NGRmN2YwLWIyOGUtNDdhYS04ODU5LTZmYzgwNDZmMDBkOC4qIiwicmFiYml0bXEud3JpdGU6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuNTg0ZGY3ZjAtYjI4ZS00N2FhLTg4NTktNmZjODA0NmYwMGQ4LioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy41ODRkZjdmMC1iMjhlLTQ3YWEtODg1OS02ZmM4MDQ2ZjAwZDguKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiI1ODRkZjdmMC1iMjhlLTQ3YWEtODg1OS02ZmM4MDQ2ZjAwZDgiLCJjaWQiOiI1ODRkZjdmMC1iMjhlLTQ3YWEtODg1OS02ZmM4MDQ2ZjAwZDgiLCJhenAiOiI1ODRkZjdmMC1iMjhlLTQ3YWEtODg1OS02ZmM4MDQ2ZjAwZDgiLCJ1c2VyX2lkIjoiNTg0ZGY3ZjAtYjI4ZS00N2FhLTg4NTktNmZjODA0NmYwMGQ4IiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE3NzE5MjkxOTgsImV4cCI6MTc3NDUyMTE5OCwiYXVkIjpbInJhYmJpdG1xIiwiNTg0ZGY3ZjAtYjI4ZS00N2FhLTg4NTktNmZjODA0NmYwMGQ4Il0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.iGK2CF6Rzc-I1u6ys7Zd4n3_AxpgpsNNSfQPI-LRMxk
+starting mqtt connection with LWT on: apps/tilechat/users/584df7f0-b28e-47aa-8859-6fc8046f00d8/presence/412944f4-6d17-4d78-a3cc-11eb63e015eb wss://stage.eks.tiledesk.com/mqws/ws
+Invalid message topic: apps/tilechat/users/c9271266-e4a5-42e3-b852-f5fb512ace41/presence/58c0fd0e-79de-49c9-afd2-ceb7b195c27d
+Client connected. User:584df7f0-b28e-47aa-8859-6fc8046f00d8
+Chat client first connection for:584df7f0-b28e-47aa-8859-6fc8046f00d8
+subscribing to: 584df7f0-b28e-47aa-8859-6fc8046f00d8 topic apps/tilechat/users/584df7f0-b28e-47aa-8859-6fc8046f00d8/#
+subscribed to: apps/tilechat/users/584df7f0-b28e-47aa-8859-6fc8046f00d8/#  with err null
+Subscribed to MyConversations.
+Bot connected: 584df7f0-b28e-47aa-8859-6fc8046f00d8
+Group ID: support-group-6964c3a1fb76080013aa3c54-c8d57353e84a4940aad9d6b58057571c
+Creating Group and adding members...
+creating group: Benchmark Group support-group-6964c3a1fb76080013aa3c54-c8d57353e84a4940aad9d6b58057571c id support-group-6964c3a1fb76080013aa3c54-c8d57353e84a4940aad9d6b58057571c members {
+  'c9271266-e4a5-42e3-b852-f5fb512ace41': 1,
+  '584df7f0-b28e-47aa-8859-6fc8046f00d8': 1
+}
+Invalid message topic: apps/tilechat/users/584df7f0-b28e-47aa-8859-6fc8046f00d8/presence/412944f4-6d17-4d78-a3cc-11eb63e015eb
+response.status: 201
+Group created successfully.
+
+Starting conversation...
+Exchange 1/40 completed. Latency: 207ms
+Exchange 2/40 completed. Latency: 350ms
+Exchange 3/40 completed. Latency: 1ms
+Exchange 4/40 completed. Latency: 0ms
+Exchange 5/40 completed. Latency: 0ms
+Exchange 6/40 completed. Latency: 185ms
+Exchange 7/40 completed. Latency: 0ms
+Exchange 8/40 completed. Latency: 40ms
+Exchange 9/40 completed. Latency: 4ms
+Exchange 10/40 completed. Latency: 13ms
+Exchange 11/40 completed. Latency: 5ms
+Exchange 12/40 completed. Latency: 31ms
+Exchange 13/40 completed. Latency: 0ms
+Exchange 14/40 completed. Latency: 129ms
+Exchange 15/40 completed. Latency: 162ms
+Exchange 16/40 completed. Latency: 23ms
+Exchange 17/40 completed. Latency: 6ms
+Exchange 18/40 completed. Latency: 0ms
+Exchange 19/40 completed. Latency: 0ms
+Exchange 20/40 completed. Latency: 0ms
+Exchange 21/40 completed. Latency: 0ms
+Exchange 22/40 completed. Latency: 6ms
+Exchange 23/40 completed. Latency: 0ms
+Exchange 24/40 completed. Latency: 1ms
+Exchange 25/40 completed. Latency: 0ms
+Exchange 26/40 completed. Latency: 0ms
+Exchange 27/40 completed. Latency: 1ms
+Exchange 28/40 completed. Latency: 4ms
+Exchange 29/40 completed. Latency: 177ms
+Exchange 30/40 completed. Latency: 95ms
+Exchange 31/40 completed. Latency: 92ms
+Exchange 32/40 completed. Latency: 6ms
+Exchange 33/40 completed. Latency: 1ms
+Exchange 34/40 completed. Latency: 3ms
+Exchange 35/40 completed. Latency: 22ms
+Exchange 36/40 completed. Latency: 0ms
+Exchange 37/40 completed. Latency: 114ms
+Exchange 38/40 completed. Latency: 6ms
+Exchange 39/40 completed. Latency: 2ms
+Exchange 40/40 completed. Latency: 0ms
+
+--- Benchmark Results ---
+Total messages exchanged: 40
+Total time: 1692 ms
+Average Round-trip Latency: 42.15 ms
+Min Latency: 0 ms
+Max Latency: 350 ms
+--------------------------
+
+
+
+
+--- NUM_MESSAGE: 50 ---
+--- Conversation Benchmark ---
+MQTT Endpoint: wss://stage.eks.tiledesk.com/mqws/ws
+API Endpoint: https://stage.eks.tiledesk.com/api
+Project ID: 6964c3a1fb76080013aa3c54
+Messages to exchange: 50
+------------------------------
+
+Creating users...
+final endpoint: wss://stage.eks.tiledesk.com/mqws/ws
+final endpoint: wss://stage.eks.tiledesk.com/mqws/ws
+Connecting User...
+connecting user_id: 46328e0f-26c2-4a03-9439-0b82f3f76018
+using jwt token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxMWViMmY3NS02MjhiLTQ0MWMtYTczMy1mMzEzZjBiZjU4Y2UiLCJzdWIiOiI0NjMyOGUwZi0yNmMyLTRhMDMtOTQzOS0wYjgyZjNmNzYwMTgiLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLjQ2MzI4ZTBmLTI2YzItNGEwMy05NDM5LTBiODJmM2Y3NjAxOC4qIiwicmFiYml0bXEud3JpdGU6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuNDYzMjhlMGYtMjZjMi00YTAzLTk0MzktMGI4MmYzZjc2MDE4LioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy40NjMyOGUwZi0yNmMyLTRhMDMtOTQzOS0wYjgyZjNmNzYwMTguKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiI0NjMyOGUwZi0yNmMyLTRhMDMtOTQzOS0wYjgyZjNmNzYwMTgiLCJjaWQiOiI0NjMyOGUwZi0yNmMyLTRhMDMtOTQzOS0wYjgyZjNmNzYwMTgiLCJhenAiOiI0NjMyOGUwZi0yNmMyLTRhMDMtOTQzOS0wYjgyZjNmNzYwMTgiLCJ1c2VyX2lkIjoiNDYzMjhlMGYtMjZjMi00YTAzLTk0MzktMGI4MmYzZjc2MDE4IiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE3NzE5MjkyMjIsImV4cCI6MTc3NDUyMTIyMiwiYXVkIjpbInJhYmJpdG1xIiwiNDYzMjhlMGYtMjZjMi00YTAzLTk0MzktMGI4MmYzZjc2MDE4Il0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.FoMgibadtsrz--BXG67r6O-q_oFBamHAj95gm3EUyzM
+starting mqtt connection with LWT on: apps/tilechat/users/46328e0f-26c2-4a03-9439-0b82f3f76018/presence/0bb6041d-edb5-4693-9f7a-e5c75c102568 wss://stage.eks.tiledesk.com/mqws/ws
+Client connected. User:46328e0f-26c2-4a03-9439-0b82f3f76018
+Chat client first connection for:46328e0f-26c2-4a03-9439-0b82f3f76018
+subscribing to: 46328e0f-26c2-4a03-9439-0b82f3f76018 topic apps/tilechat/users/46328e0f-26c2-4a03-9439-0b82f3f76018/#
+subscribed to: apps/tilechat/users/46328e0f-26c2-4a03-9439-0b82f3f76018/#  with err null
+Subscribed to MyConversations.
+User connected: 46328e0f-26c2-4a03-9439-0b82f3f76018
+Connecting Bot...
+connecting user_id: 46bccd8a-e5cb-442f-a3c1-cf61213b61bb
+using jwt token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyZWRkMmQwZi1hMGQyLTRiZTAtOGRmYS00MDZiYjBmZDBlYmMiLCJzdWIiOiI0NmJjY2Q4YS1lNWNiLTQ0MmYtYTNjMS1jZjYxMjEzYjYxYmIiLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLjQ2YmNjZDhhLWU1Y2ItNDQyZi1hM2MxLWNmNjEyMTNiNjFiYi4qIiwicmFiYml0bXEud3JpdGU6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuNDZiY2NkOGEtZTVjYi00NDJmLWEzYzEtY2Y2MTIxM2I2MWJiLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy40NmJjY2Q4YS1lNWNiLTQ0MmYtYTNjMS1jZjYxMjEzYjYxYmIuKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiI0NmJjY2Q4YS1lNWNiLTQ0MmYtYTNjMS1jZjYxMjEzYjYxYmIiLCJjaWQiOiI0NmJjY2Q4YS1lNWNiLTQ0MmYtYTNjMS1jZjYxMjEzYjYxYmIiLCJhenAiOiI0NmJjY2Q4YS1lNWNiLTQ0MmYtYTNjMS1jZjYxMjEzYjYxYmIiLCJ1c2VyX2lkIjoiNDZiY2NkOGEtZTVjYi00NDJmLWEzYzEtY2Y2MTIxM2I2MWJiIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE3NzE5MjkyMjIsImV4cCI6MTc3NDUyMTIyMiwiYXVkIjpbInJhYmJpdG1xIiwiNDZiY2NkOGEtZTVjYi00NDJmLWEzYzEtY2Y2MTIxM2I2MWJiIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.OFRQJNo_e-qreGFvWWywI9izP5GRkkdbOfiKMF04Lkw
+starting mqtt connection with LWT on: apps/tilechat/users/46bccd8a-e5cb-442f-a3c1-cf61213b61bb/presence/28233fbc-6a75-41e6-aa63-4cc06513a80f wss://stage.eks.tiledesk.com/mqws/ws
+Invalid message topic: apps/tilechat/users/46328e0f-26c2-4a03-9439-0b82f3f76018/presence/0bb6041d-edb5-4693-9f7a-e5c75c102568
+Client connected. User:46bccd8a-e5cb-442f-a3c1-cf61213b61bb
+Chat client first connection for:46bccd8a-e5cb-442f-a3c1-cf61213b61bb
+subscribing to: 46bccd8a-e5cb-442f-a3c1-cf61213b61bb topic apps/tilechat/users/46bccd8a-e5cb-442f-a3c1-cf61213b61bb/#
+subscribed to: apps/tilechat/users/46bccd8a-e5cb-442f-a3c1-cf61213b61bb/#  with err null
+Subscribed to MyConversations.
+Bot connected: 46bccd8a-e5cb-442f-a3c1-cf61213b61bb
+Group ID: support-group-6964c3a1fb76080013aa3c54-7e54dae7c13d40c39839a9a2ce46db6f
+Creating Group and adding members...
+creating group: Benchmark Group support-group-6964c3a1fb76080013aa3c54-7e54dae7c13d40c39839a9a2ce46db6f id support-group-6964c3a1fb76080013aa3c54-7e54dae7c13d40c39839a9a2ce46db6f members {
+  '46328e0f-26c2-4a03-9439-0b82f3f76018': 1,
+  '46bccd8a-e5cb-442f-a3c1-cf61213b61bb': 1
+}
+Invalid message topic: apps/tilechat/users/46bccd8a-e5cb-442f-a3c1-cf61213b61bb/presence/28233fbc-6a75-41e6-aa63-4cc06513a80f
+response.status: 201
+Group created successfully.
+
+Starting conversation...
+Exchange 1/50 completed. Latency: 290ms
+Exchange 2/50 completed. Latency: 136ms
+Exchange 3/50 completed. Latency: 146ms
+Exchange 4/50 completed. Latency: 1ms
+Exchange 5/50 completed. Latency: 35ms
+Exchange 6/50 completed. Latency: 12ms
+Exchange 7/50 completed. Latency: 72ms
+Exchange 8/50 completed. Latency: 76ms
+Exchange 9/50 completed. Latency: 4ms
+Exchange 10/50 completed. Latency: 1ms
+Exchange 11/50 completed. Latency: 29ms
+Exchange 12/50 completed. Latency: 6ms
+Exchange 13/50 completed. Latency: 32ms
+Exchange 14/50 completed. Latency: 3ms
+Exchange 15/50 completed. Latency: 1ms
+Exchange 16/50 completed. Latency: 79ms
+Exchange 17/50 completed. Latency: 26ms
+Exchange 18/50 completed. Latency: 16ms
+Exchange 19/50 completed. Latency: 77ms
+Exchange 20/50 completed. Latency: 1ms
+Exchange 21/50 completed. Latency: 3ms
+Exchange 22/50 completed. Latency: 28ms
+Exchange 23/50 completed. Latency: 8ms
+Exchange 24/50 completed. Latency: 76ms
+Exchange 25/50 completed. Latency: 4ms
+Exchange 26/50 completed. Latency: 2ms
+Exchange 27/50 completed. Latency: 16ms
+Exchange 28/50 completed. Latency: 5ms
+Exchange 29/50 completed. Latency: 57ms
+Exchange 30/50 completed. Latency: 1ms
+Exchange 31/50 completed. Latency: 1ms
+Exchange 32/50 completed. Latency: 0ms
+Exchange 33/50 completed. Latency: 0ms
+Exchange 34/50 completed. Latency: 1ms
+Exchange 35/50 completed. Latency: 31ms
+Exchange 36/50 completed. Latency: 0ms
+Exchange 37/50 completed. Latency: 62ms
+Exchange 38/50 completed. Latency: 1ms
+Exchange 39/50 completed. Latency: 5ms
+Exchange 40/50 completed. Latency: 1ms
+Exchange 41/50 completed. Latency: 159ms
+Exchange 42/50 completed. Latency: 3ms
+Exchange 43/50 completed. Latency: 1ms
+Exchange 44/50 completed. Latency: 79ms
+Exchange 45/50 completed. Latency: 32ms
+Exchange 46/50 completed. Latency: 0ms
+Exchange 47/50 completed. Latency: 77ms
+Exchange 48/50 completed. Latency: 4ms
+Exchange 49/50 completed. Latency: 7ms
+Exchange 50/50 completed. Latency: 128ms
+
+--- Benchmark Results ---
+Total messages exchanged: 50
+Total time: 1845 ms
+Average Round-trip Latency: 36.70 ms
+Min Latency: 0 ms
+Max Latency: 290 ms
+--------------------------
+
+
+
+
+--- NUM_MESSAGE: 60 ---
+--- Conversation Benchmark ---
+MQTT Endpoint: wss://stage.eks.tiledesk.com/mqws/ws
+API Endpoint: https://stage.eks.tiledesk.com/api
+Project ID: 6964c3a1fb76080013aa3c54
+Messages to exchange: 60
+------------------------------
+
+Creating users...
+final endpoint: wss://stage.eks.tiledesk.com/mqws/ws
+final endpoint: wss://stage.eks.tiledesk.com/mqws/ws
+Connecting User...
+connecting user_id: 9a782b32-04a6-44e2-9075-45897d88d4ca
+using jwt token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmZmM4OGZlZS0zZDNlLTQyODYtYTM5Yy1jMDVhNWFhNjljNTMiLCJzdWIiOiI5YTc4MmIzMi0wNGE2LTQ0ZTItOTA3NS00NTg5N2Q4OGQ0Y2EiLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLjlhNzgyYjMyLTA0YTYtNDRlMi05MDc1LTQ1ODk3ZDg4ZDRjYS4qIiwicmFiYml0bXEud3JpdGU6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuOWE3ODJiMzItMDRhNi00NGUyLTkwNzUtNDU4OTdkODhkNGNhLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy45YTc4MmIzMi0wNGE2LTQ0ZTItOTA3NS00NTg5N2Q4OGQ0Y2EuKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiI5YTc4MmIzMi0wNGE2LTQ0ZTItOTA3NS00NTg5N2Q4OGQ0Y2EiLCJjaWQiOiI5YTc4MmIzMi0wNGE2LTQ0ZTItOTA3NS00NTg5N2Q4OGQ0Y2EiLCJhenAiOiI5YTc4MmIzMi0wNGE2LTQ0ZTItOTA3NS00NTg5N2Q4OGQ0Y2EiLCJ1c2VyX2lkIjoiOWE3ODJiMzItMDRhNi00NGUyLTkwNzUtNDU4OTdkODhkNGNhIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE3NzE5MjkyNDcsImV4cCI6MTc3NDUyMTI0NywiYXVkIjpbInJhYmJpdG1xIiwiOWE3ODJiMzItMDRhNi00NGUyLTkwNzUtNDU4OTdkODhkNGNhIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.BzQXfIplU48WXz0o31ZHZygDbnuZ17BwhKinW_LuJP0
+starting mqtt connection with LWT on: apps/tilechat/users/9a782b32-04a6-44e2-9075-45897d88d4ca/presence/9b41f9b5-4c88-4452-8542-ac1bab05aa15 wss://stage.eks.tiledesk.com/mqws/ws
+Client connected. User:9a782b32-04a6-44e2-9075-45897d88d4ca
+Chat client first connection for:9a782b32-04a6-44e2-9075-45897d88d4ca
+subscribing to: 9a782b32-04a6-44e2-9075-45897d88d4ca topic apps/tilechat/users/9a782b32-04a6-44e2-9075-45897d88d4ca/#
+subscribed to: apps/tilechat/users/9a782b32-04a6-44e2-9075-45897d88d4ca/#  with err null
+Subscribed to MyConversations.
+User connected: 9a782b32-04a6-44e2-9075-45897d88d4ca
+Connecting Bot...
+connecting user_id: 2827d996-8085-45ab-8922-6af36d336033
+using jwt token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3YzY0ODQzYS1jZGQ4LTQxNmMtYWExYy1hNzMxY2Q5NmRkMGYiLCJzdWIiOiIyODI3ZDk5Ni04MDg1LTQ1YWItODkyMi02YWYzNmQzMzYwMzMiLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLjI4MjdkOTk2LTgwODUtNDVhYi04OTIyLTZhZjM2ZDMzNjAzMy4qIiwicmFiYml0bXEud3JpdGU6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuMjgyN2Q5OTYtODA4NS00NWFiLTg5MjItNmFmMzZkMzM2MDMzLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy4yODI3ZDk5Ni04MDg1LTQ1YWItODkyMi02YWYzNmQzMzYwMzMuKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiIyODI3ZDk5Ni04MDg1LTQ1YWItODkyMi02YWYzNmQzMzYwMzMiLCJjaWQiOiIyODI3ZDk5Ni04MDg1LTQ1YWItODkyMi02YWYzNmQzMzYwMzMiLCJhenAiOiIyODI3ZDk5Ni04MDg1LTQ1YWItODkyMi02YWYzNmQzMzYwMzMiLCJ1c2VyX2lkIjoiMjgyN2Q5OTYtODA4NS00NWFiLTg5MjItNmFmMzZkMzM2MDMzIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE3NzE5MjkyNDcsImV4cCI6MTc3NDUyMTI0NywiYXVkIjpbInJhYmJpdG1xIiwiMjgyN2Q5OTYtODA4NS00NWFiLTg5MjItNmFmMzZkMzM2MDMzIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.KZTFTtZYGlNUwXccaiEsHuJVVuagP5kka5Bj85_4K4w
+starting mqtt connection with LWT on: apps/tilechat/users/2827d996-8085-45ab-8922-6af36d336033/presence/2177a672-f77c-478e-9b6e-115944caaa10 wss://stage.eks.tiledesk.com/mqws/ws
+Invalid message topic: apps/tilechat/users/9a782b32-04a6-44e2-9075-45897d88d4ca/presence/9b41f9b5-4c88-4452-8542-ac1bab05aa15
+Client connected. User:2827d996-8085-45ab-8922-6af36d336033
+Chat client first connection for:2827d996-8085-45ab-8922-6af36d336033
+subscribing to: 2827d996-8085-45ab-8922-6af36d336033 topic apps/tilechat/users/2827d996-8085-45ab-8922-6af36d336033/#
+subscribed to: apps/tilechat/users/2827d996-8085-45ab-8922-6af36d336033/#  with err null
+Subscribed to MyConversations.
+Bot connected: 2827d996-8085-45ab-8922-6af36d336033
+Group ID: support-group-6964c3a1fb76080013aa3c54-5f31f8c9c8d647d28cd52cf44a87d5d4
+Creating Group and adding members...
+creating group: Benchmark Group support-group-6964c3a1fb76080013aa3c54-5f31f8c9c8d647d28cd52cf44a87d5d4 id support-group-6964c3a1fb76080013aa3c54-5f31f8c9c8d647d28cd52cf44a87d5d4 members {
+  '9a782b32-04a6-44e2-9075-45897d88d4ca': 1,
+  '2827d996-8085-45ab-8922-6af36d336033': 1
+}
+Invalid message topic: apps/tilechat/users/2827d996-8085-45ab-8922-6af36d336033/presence/2177a672-f77c-478e-9b6e-115944caaa10
+response.status: 201
+Group created successfully.
+
+Starting conversation...
+Exchange 1/60 completed. Latency: 379ms
+Exchange 2/60 completed. Latency: 167ms
+Exchange 3/60 completed. Latency: 27ms
+Exchange 4/60 completed. Latency: 159ms
+Exchange 5/60 completed. Latency: 4ms
+Exchange 6/60 completed. Latency: 1ms
+Exchange 7/60 completed. Latency: 0ms
+Exchange 8/60 completed. Latency: 110ms
+Exchange 9/60 completed. Latency: 2ms
+Exchange 10/60 completed. Latency: 104ms
+Exchange 11/60 completed. Latency: 1ms
+Exchange 12/60 completed. Latency: 1ms
+Exchange 13/60 completed. Latency: 0ms
+Exchange 14/60 completed. Latency: 11ms
+Exchange 15/60 completed. Latency: 12ms
+Exchange 16/60 completed. Latency: 41ms
+Exchange 17/60 completed. Latency: 1ms
+Exchange 18/60 completed. Latency: 9ms
+Exchange 19/60 completed. Latency: 0ms
+Exchange 20/60 completed. Latency: 39ms
+Exchange 21/60 completed. Latency: 69ms
+Exchange 22/60 completed. Latency: 1ms
+Exchange 23/60 completed. Latency: 0ms
+Exchange 24/60 completed. Latency: 3ms
+Exchange 25/60 completed. Latency: 91ms
+Exchange 26/60 completed. Latency: 0ms
+Exchange 27/60 completed. Latency: 1ms
+Exchange 28/60 completed. Latency: 3ms
+Exchange 29/60 completed. Latency: 16ms
+Exchange 30/60 completed. Latency: 4ms
+Exchange 31/60 completed. Latency: 0ms
+Exchange 32/60 completed. Latency: 34ms
+Exchange 33/60 completed. Latency: 0ms
+Exchange 34/60 completed. Latency: 1ms
+Exchange 35/60 completed. Latency: 0ms
+Exchange 36/60 completed. Latency: 59ms
+Exchange 37/60 completed. Latency: 35ms
+Exchange 38/60 completed. Latency: 43ms
+Exchange 39/60 completed. Latency: 6ms
+Exchange 40/60 completed. Latency: 0ms
+Exchange 41/60 completed. Latency: 82ms
+Exchange 42/60 completed. Latency: 11ms
+Exchange 43/60 completed. Latency: 2ms
+Exchange 44/60 completed. Latency: 0ms
+Exchange 45/60 completed. Latency: 0ms
+Exchange 46/60 completed. Latency: 205ms
+Exchange 47/60 completed. Latency: 4ms
+Exchange 48/60 completed. Latency: 44ms
+Exchange 49/60 completed. Latency: 37ms
+Exchange 50/60 completed. Latency: 0ms
+Exchange 51/60 completed. Latency: 3ms
+Exchange 52/60 completed. Latency: 5ms
+Exchange 53/60 completed. Latency: 1ms
+Exchange 54/60 completed. Latency: 0ms
+Exchange 55/60 completed. Latency: 0ms
+Exchange 56/60 completed. Latency: 1ms
+Exchange 57/60 completed. Latency: 0ms
+Exchange 58/60 completed. Latency: 4ms
+Exchange 59/60 completed. Latency: 1ms
+Exchange 60/60 completed. Latency: 112ms
+
+--- Benchmark Results ---
+Total messages exchanged: 60
+Total time: 1951 ms
+Average Round-trip Latency: 32.43 ms
+Min Latency: 0 ms
+Max Latency: 379 ms
+--------------------------
+
+
+
+
+--- NUM_MESSAGE: 70 ---
+--- Conversation Benchmark ---
+MQTT Endpoint: wss://stage.eks.tiledesk.com/mqws/ws
+API Endpoint: https://stage.eks.tiledesk.com/api
+Project ID: 6964c3a1fb76080013aa3c54
+Messages to exchange: 70
+------------------------------
+
+Creating users...
+final endpoint: wss://stage.eks.tiledesk.com/mqws/ws
+final endpoint: wss://stage.eks.tiledesk.com/mqws/ws
+Connecting User...
+connecting user_id: e1b21d1b-2f96-4278-8616-d7edf521d798
+using jwt token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI0YTkyZTc1Yi1jNWJlLTQxOWQtYTc3Zi00YmE0OGYwODA5ODMiLCJzdWIiOiJlMWIyMWQxYi0yZjk2LTQyNzgtODYxNi1kN2VkZjUyMWQ3OTgiLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLmUxYjIxZDFiLTJmOTYtNDI3OC04NjE2LWQ3ZWRmNTIxZDc5OC4qIiwicmFiYml0bXEud3JpdGU6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuZTFiMjFkMWItMmY5Ni00Mjc4LTg2MTYtZDdlZGY1MjFkNzk4LioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5lMWIyMWQxYi0yZjk2LTQyNzgtODYxNi1kN2VkZjUyMWQ3OTguKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiJlMWIyMWQxYi0yZjk2LTQyNzgtODYxNi1kN2VkZjUyMWQ3OTgiLCJjaWQiOiJlMWIyMWQxYi0yZjk2LTQyNzgtODYxNi1kN2VkZjUyMWQ3OTgiLCJhenAiOiJlMWIyMWQxYi0yZjk2LTQyNzgtODYxNi1kN2VkZjUyMWQ3OTgiLCJ1c2VyX2lkIjoiZTFiMjFkMWItMmY5Ni00Mjc4LTg2MTYtZDdlZGY1MjFkNzk4IiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE3NzE5MjkyNzEsImV4cCI6MTc3NDUyMTI3MSwiYXVkIjpbInJhYmJpdG1xIiwiZTFiMjFkMWItMmY5Ni00Mjc4LTg2MTYtZDdlZGY1MjFkNzk4Il0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.HZEfdlF-mMvM7mmGWOtnelWYK6CreXGYYub8HjFSKW8
+starting mqtt connection with LWT on: apps/tilechat/users/e1b21d1b-2f96-4278-8616-d7edf521d798/presence/c338622f-f7e6-4ecb-b875-c820149ec816 wss://stage.eks.tiledesk.com/mqws/ws
+Client connected. User:e1b21d1b-2f96-4278-8616-d7edf521d798
+Chat client first connection for:e1b21d1b-2f96-4278-8616-d7edf521d798
+subscribing to: e1b21d1b-2f96-4278-8616-d7edf521d798 topic apps/tilechat/users/e1b21d1b-2f96-4278-8616-d7edf521d798/#
+subscribed to: apps/tilechat/users/e1b21d1b-2f96-4278-8616-d7edf521d798/#  with err null
+Subscribed to MyConversations.
+User connected: e1b21d1b-2f96-4278-8616-d7edf521d798
+Connecting Bot...
+connecting user_id: 81250e54-ca5f-485a-ac1a-6a0baed5add3
+using jwt token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI5ODdiMTRkMC0yNjMwLTRmMzEtODIxYy01OTNlZGQzMjYwNzAiLCJzdWIiOiI4MTI1MGU1NC1jYTVmLTQ4NWEtYWMxYS02YTBiYWVkNWFkZDMiLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLjgxMjUwZTU0LWNhNWYtNDg1YS1hYzFhLTZhMGJhZWQ1YWRkMy4qIiwicmFiYml0bXEud3JpdGU6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuODEyNTBlNTQtY2E1Zi00ODVhLWFjMWEtNmEwYmFlZDVhZGQzLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy44MTI1MGU1NC1jYTVmLTQ4NWEtYWMxYS02YTBiYWVkNWFkZDMuKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiI4MTI1MGU1NC1jYTVmLTQ4NWEtYWMxYS02YTBiYWVkNWFkZDMiLCJjaWQiOiI4MTI1MGU1NC1jYTVmLTQ4NWEtYWMxYS02YTBiYWVkNWFkZDMiLCJhenAiOiI4MTI1MGU1NC1jYTVmLTQ4NWEtYWMxYS02YTBiYWVkNWFkZDMiLCJ1c2VyX2lkIjoiODEyNTBlNTQtY2E1Zi00ODVhLWFjMWEtNmEwYmFlZDVhZGQzIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE3NzE5MjkyNzIsImV4cCI6MTc3NDUyMTI3MiwiYXVkIjpbInJhYmJpdG1xIiwiODEyNTBlNTQtY2E1Zi00ODVhLWFjMWEtNmEwYmFlZDVhZGQzIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.VnKzIGY8dsNqrlAulxU_W0PVGwKaqRsk_Hv0E97vpqE
+starting mqtt connection with LWT on: apps/tilechat/users/81250e54-ca5f-485a-ac1a-6a0baed5add3/presence/67c17bb8-5178-4a29-9e23-1db6b6b8baca wss://stage.eks.tiledesk.com/mqws/ws
+Invalid message topic: apps/tilechat/users/e1b21d1b-2f96-4278-8616-d7edf521d798/presence/c338622f-f7e6-4ecb-b875-c820149ec816
+Client connected. User:81250e54-ca5f-485a-ac1a-6a0baed5add3
+Chat client first connection for:81250e54-ca5f-485a-ac1a-6a0baed5add3
+subscribing to: 81250e54-ca5f-485a-ac1a-6a0baed5add3 topic apps/tilechat/users/81250e54-ca5f-485a-ac1a-6a0baed5add3/#
+subscribed to: apps/tilechat/users/81250e54-ca5f-485a-ac1a-6a0baed5add3/#  with err null
+Subscribed to MyConversations.
+Bot connected: 81250e54-ca5f-485a-ac1a-6a0baed5add3
+Group ID: support-group-6964c3a1fb76080013aa3c54-eefeb9cc349e4dc68ac1a6e973c32703
+Creating Group and adding members...
+creating group: Benchmark Group support-group-6964c3a1fb76080013aa3c54-eefeb9cc349e4dc68ac1a6e973c32703 id support-group-6964c3a1fb76080013aa3c54-eefeb9cc349e4dc68ac1a6e973c32703 members {
+  'e1b21d1b-2f96-4278-8616-d7edf521d798': 1,
+  '81250e54-ca5f-485a-ac1a-6a0baed5add3': 1
+}
+response.status: 201
+Group created successfully.
+
+Starting conversation...
+Invalid message topic: apps/tilechat/users/81250e54-ca5f-485a-ac1a-6a0baed5add3/presence/67c17bb8-5178-4a29-9e23-1db6b6b8baca
+Exchange 1/70 completed. Latency: 288ms
+Exchange 2/70 completed. Latency: 105ms
+Exchange 3/70 completed. Latency: 113ms
+Exchange 4/70 completed. Latency: 2ms
+Exchange 5/70 completed. Latency: 64ms
+Exchange 6/70 completed. Latency: 1ms
+Exchange 7/70 completed. Latency: 46ms
+Exchange 8/70 completed. Latency: 70ms
+Exchange 9/70 completed. Latency: 7ms
+Exchange 10/70 completed. Latency: 15ms
+Exchange 11/70 completed. Latency: 13ms
+Exchange 12/70 completed. Latency: 1ms
+Exchange 13/70 completed. Latency: 4ms
+Exchange 14/70 completed. Latency: 82ms
+Exchange 15/70 completed. Latency: 0ms
+Exchange 16/70 completed. Latency: 1ms
+Exchange 17/70 completed. Latency: 55ms
+Exchange 18/70 completed. Latency: 7ms
+Exchange 19/70 completed. Latency: 40ms
+Exchange 20/70 completed. Latency: 57ms
+Exchange 21/70 completed. Latency: 1ms
+Exchange 22/70 completed. Latency: 27ms
+Exchange 23/70 completed. Latency: 1ms
+Exchange 24/70 completed. Latency: 5ms
+Exchange 25/70 completed. Latency: 7ms
+Exchange 26/70 completed. Latency: 6ms
+Exchange 27/70 completed. Latency: 1ms
+Exchange 28/70 completed. Latency: 46ms
+Exchange 29/70 completed. Latency: 4ms
+Exchange 30/70 completed. Latency: 33ms
+Exchange 31/70 completed. Latency: 2ms
+Exchange 32/70 completed. Latency: 54ms
+Exchange 33/70 completed. Latency: 40ms
+Exchange 34/70 completed. Latency: 2ms
+Exchange 35/70 completed. Latency: 69ms
+Exchange 36/70 completed. Latency: 37ms
+Exchange 37/70 completed. Latency: 0ms
+Exchange 38/70 completed. Latency: 6ms
+Exchange 39/70 completed. Latency: 61ms
+Exchange 40/70 completed. Latency: 12ms
+Exchange 41/70 completed. Latency: 0ms
+Exchange 42/70 completed. Latency: 0ms
+Exchange 43/70 completed. Latency: 1ms
+Exchange 44/70 completed. Latency: 24ms
+Exchange 45/70 completed. Latency: 0ms
+Exchange 46/70 completed. Latency: 1ms
+Exchange 47/70 completed. Latency: 0ms
+Exchange 48/70 completed. Latency: 0ms
+Exchange 49/70 completed. Latency: 52ms
+Exchange 50/70 completed. Latency: 98ms
+Exchange 51/70 completed. Latency: 10ms
+Exchange 52/70 completed. Latency: 9ms
+Exchange 53/70 completed. Latency: 31ms
+Exchange 54/70 completed. Latency: 0ms
+Exchange 55/70 completed. Latency: 0ms
+Exchange 56/70 completed. Latency: 56ms
+Exchange 57/70 completed. Latency: 4ms
+Exchange 58/70 completed. Latency: 1ms
+Exchange 59/70 completed. Latency: 93ms
+Exchange 60/70 completed. Latency: 2ms
+Exchange 61/70 completed. Latency: 27ms
+Exchange 62/70 completed. Latency: 6ms
+Exchange 63/70 completed. Latency: 60ms
+Exchange 64/70 completed. Latency: 0ms
+Exchange 65/70 completed. Latency: 1ms
+Exchange 66/70 completed. Latency: 0ms
+Exchange 67/70 completed. Latency: 4ms
+Exchange 68/70 completed. Latency: 1ms
+Exchange 69/70 completed. Latency: 1ms
+Exchange 70/70 completed. Latency: 0ms
+
+--- Benchmark Results ---
+Total messages exchanged: 70
+Total time: 1873 ms
+Average Round-trip Latency: 26.67 ms
+Min Latency: 0 ms
+Max Latency: 288 ms
+--------------------------
+
+
+
+
+--- NUM_MESSAGE: 80 ---
+--- Conversation Benchmark ---
+MQTT Endpoint: wss://stage.eks.tiledesk.com/mqws/ws
+API Endpoint: https://stage.eks.tiledesk.com/api
+Project ID: 6964c3a1fb76080013aa3c54
+Messages to exchange: 80
+------------------------------
+
+Creating users...
+final endpoint: wss://stage.eks.tiledesk.com/mqws/ws
+final endpoint: wss://stage.eks.tiledesk.com/mqws/ws
+Connecting User...
+connecting user_id: 376e22a9-aa44-4bfc-a9be-f2cf639e31fe
+using jwt token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI4Y2FiODZjMS02MWYyLTQyMGMtYTliMC01MmFiYTkxMWNhMGMiLCJzdWIiOiIzNzZlMjJhOS1hYTQ0LTRiZmMtYTliZS1mMmNmNjM5ZTMxZmUiLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLjM3NmUyMmE5LWFhNDQtNGJmYy1hOWJlLWYyY2Y2MzllMzFmZS4qIiwicmFiYml0bXEud3JpdGU6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuMzc2ZTIyYTktYWE0NC00YmZjLWE5YmUtZjJjZjYzOWUzMWZlLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy4zNzZlMjJhOS1hYTQ0LTRiZmMtYTliZS1mMmNmNjM5ZTMxZmUuKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiIzNzZlMjJhOS1hYTQ0LTRiZmMtYTliZS1mMmNmNjM5ZTMxZmUiLCJjaWQiOiIzNzZlMjJhOS1hYTQ0LTRiZmMtYTliZS1mMmNmNjM5ZTMxZmUiLCJhenAiOiIzNzZlMjJhOS1hYTQ0LTRiZmMtYTliZS1mMmNmNjM5ZTMxZmUiLCJ1c2VyX2lkIjoiMzc2ZTIyYTktYWE0NC00YmZjLWE5YmUtZjJjZjYzOWUzMWZlIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE3NzE5MjkyOTYsImV4cCI6MTc3NDUyMTI5NiwiYXVkIjpbInJhYmJpdG1xIiwiMzc2ZTIyYTktYWE0NC00YmZjLWE5YmUtZjJjZjYzOWUzMWZlIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.urn0-tYMGlq2cENvPP6wlFsgW2OXwTuX0n63amRgVAg
+starting mqtt connection with LWT on: apps/tilechat/users/376e22a9-aa44-4bfc-a9be-f2cf639e31fe/presence/d554bd5e-705a-4b3c-b313-95afa80b6cda wss://stage.eks.tiledesk.com/mqws/ws
+Client connected. User:376e22a9-aa44-4bfc-a9be-f2cf639e31fe
+Chat client first connection for:376e22a9-aa44-4bfc-a9be-f2cf639e31fe
+subscribing to: 376e22a9-aa44-4bfc-a9be-f2cf639e31fe topic apps/tilechat/users/376e22a9-aa44-4bfc-a9be-f2cf639e31fe/#
+subscribed to: apps/tilechat/users/376e22a9-aa44-4bfc-a9be-f2cf639e31fe/#  with err null
+Subscribed to MyConversations.
+User connected: 376e22a9-aa44-4bfc-a9be-f2cf639e31fe
+Connecting Bot...
+connecting user_id: d8a06acf-55a6-4368-920e-92e95ec34569
+using jwt token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjNmI0MjUzMS03Yjg0LTRhZGUtYWNhNS1kODQ5YTg5ZWVlNDAiLCJzdWIiOiJkOGEwNmFjZi01NWE2LTQzNjgtOTIwZS05MmU5NWVjMzQ1NjkiLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLmQ4YTA2YWNmLTU1YTYtNDM2OC05MjBlLTkyZTk1ZWMzNDU2OS4qIiwicmFiYml0bXEud3JpdGU6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuZDhhMDZhY2YtNTVhNi00MzY4LTkyMGUtOTJlOTVlYzM0NTY5LioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5kOGEwNmFjZi01NWE2LTQzNjgtOTIwZS05MmU5NWVjMzQ1NjkuKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiJkOGEwNmFjZi01NWE2LTQzNjgtOTIwZS05MmU5NWVjMzQ1NjkiLCJjaWQiOiJkOGEwNmFjZi01NWE2LTQzNjgtOTIwZS05MmU5NWVjMzQ1NjkiLCJhenAiOiJkOGEwNmFjZi01NWE2LTQzNjgtOTIwZS05MmU5NWVjMzQ1NjkiLCJ1c2VyX2lkIjoiZDhhMDZhY2YtNTVhNi00MzY4LTkyMGUtOTJlOTVlYzM0NTY5IiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE3NzE5MjkyOTYsImV4cCI6MTc3NDUyMTI5NiwiYXVkIjpbInJhYmJpdG1xIiwiZDhhMDZhY2YtNTVhNi00MzY4LTkyMGUtOTJlOTVlYzM0NTY5Il0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.G68I_fZxSp-Z9rdtZDH3VWLtSKfnyLOhMh2FwD0XoGA
+starting mqtt connection with LWT on: apps/tilechat/users/d8a06acf-55a6-4368-920e-92e95ec34569/presence/e1ab22c7-9fd0-404c-9488-95205c07a6cc wss://stage.eks.tiledesk.com/mqws/ws
+Invalid message topic: apps/tilechat/users/376e22a9-aa44-4bfc-a9be-f2cf639e31fe/presence/d554bd5e-705a-4b3c-b313-95afa80b6cda
+Client connected. User:d8a06acf-55a6-4368-920e-92e95ec34569
+Chat client first connection for:d8a06acf-55a6-4368-920e-92e95ec34569
+subscribing to: d8a06acf-55a6-4368-920e-92e95ec34569 topic apps/tilechat/users/d8a06acf-55a6-4368-920e-92e95ec34569/#
+subscribed to: apps/tilechat/users/d8a06acf-55a6-4368-920e-92e95ec34569/#  with err null
+Subscribed to MyConversations.
+Bot connected: d8a06acf-55a6-4368-920e-92e95ec34569
+Group ID: support-group-6964c3a1fb76080013aa3c54-b3493b5d8cbd4fa2a1d4343eb2ed0f9d
+Creating Group and adding members...
+creating group: Benchmark Group support-group-6964c3a1fb76080013aa3c54-b3493b5d8cbd4fa2a1d4343eb2ed0f9d id support-group-6964c3a1fb76080013aa3c54-b3493b5d8cbd4fa2a1d4343eb2ed0f9d members {
+  '376e22a9-aa44-4bfc-a9be-f2cf639e31fe': 1,
+  'd8a06acf-55a6-4368-920e-92e95ec34569': 1
+}
+Invalid message topic: apps/tilechat/users/d8a06acf-55a6-4368-920e-92e95ec34569/presence/e1ab22c7-9fd0-404c-9488-95205c07a6cc
+response.status: 201
+Group created successfully.
+
+Starting conversation...
+Exchange 1/80 completed. Latency: 236ms
+Exchange 2/80 completed. Latency: 251ms
+Exchange 3/80 completed. Latency: 26ms
+Exchange 4/80 completed. Latency: 212ms
+Exchange 5/80 completed. Latency: 4ms
+Exchange 6/80 completed. Latency: 3ms
+Exchange 7/80 completed. Latency: 0ms
+Exchange 8/80 completed. Latency: 142ms
+Exchange 9/80 completed. Latency: 2ms
+Exchange 10/80 completed. Latency: 53ms
+Exchange 11/80 completed. Latency: 40ms
+Exchange 12/80 completed. Latency: 0ms
+Exchange 13/80 completed. Latency: 25ms
+Exchange 14/80 completed. Latency: 1ms
+Exchange 15/80 completed. Latency: 1ms
+Exchange 16/80 completed. Latency: 31ms
+Exchange 17/80 completed. Latency: 2ms
+Exchange 18/80 completed. Latency: 1ms
+Exchange 19/80 completed. Latency: 3ms
+Exchange 20/80 completed. Latency: 86ms
+Exchange 21/80 completed. Latency: 1ms
+Exchange 22/80 completed. Latency: 42ms
+Exchange 23/80 completed. Latency: 7ms
+Exchange 24/80 completed. Latency: 40ms
+Exchange 25/80 completed. Latency: 1ms
+Exchange 26/80 completed. Latency: 34ms
+Exchange 27/80 completed. Latency: 1ms
+Exchange 28/80 completed. Latency: 3ms
+Exchange 29/80 completed. Latency: 1ms
+Exchange 30/80 completed. Latency: 5ms
+Exchange 31/80 completed. Latency: 0ms
+Exchange 32/80 completed. Latency: 0ms
+Exchange 33/80 completed. Latency: 95ms
+Exchange 34/80 completed. Latency: 1ms
+Exchange 35/80 completed. Latency: 5ms
+Exchange 36/80 completed. Latency: 53ms
+Exchange 37/80 completed. Latency: 8ms
+Exchange 38/80 completed. Latency: 25ms
+Exchange 39/80 completed. Latency: 6ms
+Exchange 40/80 completed. Latency: 108ms
+Exchange 41/80 completed. Latency: 55ms
+Exchange 42/80 completed. Latency: 28ms
+Exchange 43/80 completed. Latency: 4ms
+Exchange 44/80 completed. Latency: 14ms
+Exchange 45/80 completed. Latency: 0ms
+Exchange 46/80 completed. Latency: 0ms
+Exchange 47/80 completed. Latency: 82ms
+Exchange 48/80 completed. Latency: 1ms
+Exchange 49/80 completed. Latency: 2ms
+Exchange 50/80 completed. Latency: 7ms
+Exchange 51/80 completed. Latency: 1ms
+Exchange 52/80 completed. Latency: 0ms
+Exchange 53/80 completed. Latency: 1ms
+Exchange 54/80 completed. Latency: 0ms
+Exchange 55/80 completed. Latency: 0ms
+Exchange 56/80 completed. Latency: 88ms
+Exchange 57/80 completed. Latency: 14ms
+Exchange 58/80 completed. Latency: 55ms
+Exchange 59/80 completed. Latency: 4ms
+Exchange 60/80 completed. Latency: 31ms
+Exchange 61/80 completed. Latency: 0ms
+Exchange 62/80 completed. Latency: 0ms
+Exchange 63/80 completed. Latency: 1ms
+Exchange 64/80 completed. Latency: 5ms
+Exchange 65/80 completed. Latency: 0ms
+Exchange 66/80 completed. Latency: 0ms
+Exchange 67/80 completed. Latency: 0ms
+Exchange 68/80 completed. Latency: 0ms
+Exchange 69/80 completed. Latency: 0ms
+Exchange 70/80 completed. Latency: 100ms
+Exchange 71/80 completed. Latency: 2ms
+Exchange 72/80 completed. Latency: 4ms
+Exchange 73/80 completed. Latency: 2ms
+Exchange 74/80 completed. Latency: 2ms
+Exchange 75/80 completed. Latency: 1ms
+Exchange 76/80 completed. Latency: 79ms
+Exchange 77/80 completed. Latency: 0ms
+Exchange 78/80 completed. Latency: 8ms
+Exchange 79/80 completed. Latency: 62ms
+Exchange 80/80 completed. Latency: 99ms
+
+--- Benchmark Results ---
+Total messages exchanged: 80
+Total time: 2322 ms
+Average Round-trip Latency: 28.84 ms
+Min Latency: 0 ms
+Max Latency: 251 ms
+--------------------------
+
+
+
+
+--- NUM_MESSAGE: 90 ---
+--- Conversation Benchmark ---
+MQTT Endpoint: wss://stage.eks.tiledesk.com/mqws/ws
+API Endpoint: https://stage.eks.tiledesk.com/api
+Project ID: 6964c3a1fb76080013aa3c54
+Messages to exchange: 90
+------------------------------
+
+Creating users...
+final endpoint: wss://stage.eks.tiledesk.com/mqws/ws
+final endpoint: wss://stage.eks.tiledesk.com/mqws/ws
+Connecting User...
+connecting user_id: cd277e61-52ac-4ecd-8c48-fe9d59c14f06
+using jwt token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI0NTkzNmM4NS1kZDMxLTRhOTItYjBiMy02OTg1NGI3MDI2NDEiLCJzdWIiOiJjZDI3N2U2MS01MmFjLTRlY2QtOGM0OC1mZTlkNTljMTRmMDYiLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLmNkMjc3ZTYxLTUyYWMtNGVjZC04YzQ4LWZlOWQ1OWMxNGYwNi4qIiwicmFiYml0bXEud3JpdGU6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuY2QyNzdlNjEtNTJhYy00ZWNkLThjNDgtZmU5ZDU5YzE0ZjA2LioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5jZDI3N2U2MS01MmFjLTRlY2QtOGM0OC1mZTlkNTljMTRmMDYuKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiJjZDI3N2U2MS01MmFjLTRlY2QtOGM0OC1mZTlkNTljMTRmMDYiLCJjaWQiOiJjZDI3N2U2MS01MmFjLTRlY2QtOGM0OC1mZTlkNTljMTRmMDYiLCJhenAiOiJjZDI3N2U2MS01MmFjLTRlY2QtOGM0OC1mZTlkNTljMTRmMDYiLCJ1c2VyX2lkIjoiY2QyNzdlNjEtNTJhYy00ZWNkLThjNDgtZmU5ZDU5YzE0ZjA2IiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE3NzE5MjkzMjEsImV4cCI6MTc3NDUyMTMyMSwiYXVkIjpbInJhYmJpdG1xIiwiY2QyNzdlNjEtNTJhYy00ZWNkLThjNDgtZmU5ZDU5YzE0ZjA2Il0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.OkyPzU26jxDNADyLCTmbOqIKH_resoGuktfxvi8FnGE
+starting mqtt connection with LWT on: apps/tilechat/users/cd277e61-52ac-4ecd-8c48-fe9d59c14f06/presence/de98bad4-1caa-453f-a889-180878be1fca wss://stage.eks.tiledesk.com/mqws/ws
+Client connected. User:cd277e61-52ac-4ecd-8c48-fe9d59c14f06
+Chat client first connection for:cd277e61-52ac-4ecd-8c48-fe9d59c14f06
+subscribing to: cd277e61-52ac-4ecd-8c48-fe9d59c14f06 topic apps/tilechat/users/cd277e61-52ac-4ecd-8c48-fe9d59c14f06/#
+subscribed to: apps/tilechat/users/cd277e61-52ac-4ecd-8c48-fe9d59c14f06/#  with err null
+Subscribed to MyConversations.
+User connected: cd277e61-52ac-4ecd-8c48-fe9d59c14f06
+Connecting Bot...
+connecting user_id: e0e6a8ff-330a-4159-b758-fafea6e77b0e
+using jwt token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3NWFkNWMyOS0zZGI3LTRjY2MtODM4Yy04MWQxYmJlN2FjNTgiLCJzdWIiOiJlMGU2YThmZi0zMzBhLTQxNTktYjc1OC1mYWZlYTZlNzdiMGUiLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLmUwZTZhOGZmLTMzMGEtNDE1OS1iNzU4LWZhZmVhNmU3N2IwZS4qIiwicmFiYml0bXEud3JpdGU6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuZTBlNmE4ZmYtMzMwYS00MTU5LWI3NTgtZmFmZWE2ZTc3YjBlLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5lMGU2YThmZi0zMzBhLTQxNTktYjc1OC1mYWZlYTZlNzdiMGUuKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiJlMGU2YThmZi0zMzBhLTQxNTktYjc1OC1mYWZlYTZlNzdiMGUiLCJjaWQiOiJlMGU2YThmZi0zMzBhLTQxNTktYjc1OC1mYWZlYTZlNzdiMGUiLCJhenAiOiJlMGU2YThmZi0zMzBhLTQxNTktYjc1OC1mYWZlYTZlNzdiMGUiLCJ1c2VyX2lkIjoiZTBlNmE4ZmYtMzMwYS00MTU5LWI3NTgtZmFmZWE2ZTc3YjBlIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE3NzE5MjkzMjEsImV4cCI6MTc3NDUyMTMyMSwiYXVkIjpbInJhYmJpdG1xIiwiZTBlNmE4ZmYtMzMwYS00MTU5LWI3NTgtZmFmZWE2ZTc3YjBlIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.OmnLm-VVLD2nzeLPdAuQifbh5OCnG3HrbatCVSgrHcc
+starting mqtt connection with LWT on: apps/tilechat/users/e0e6a8ff-330a-4159-b758-fafea6e77b0e/presence/6957d6ba-2f44-4600-a2f9-c72e91409362 wss://stage.eks.tiledesk.com/mqws/ws
+Invalid message topic: apps/tilechat/users/cd277e61-52ac-4ecd-8c48-fe9d59c14f06/presence/de98bad4-1caa-453f-a889-180878be1fca
+Client connected. User:e0e6a8ff-330a-4159-b758-fafea6e77b0e
+Chat client first connection for:e0e6a8ff-330a-4159-b758-fafea6e77b0e
+subscribing to: e0e6a8ff-330a-4159-b758-fafea6e77b0e topic apps/tilechat/users/e0e6a8ff-330a-4159-b758-fafea6e77b0e/#
+subscribed to: apps/tilechat/users/e0e6a8ff-330a-4159-b758-fafea6e77b0e/#  with err null
+Subscribed to MyConversations.
+Bot connected: e0e6a8ff-330a-4159-b758-fafea6e77b0e
+Group ID: support-group-6964c3a1fb76080013aa3c54-cce72358e3c44f6ab96464077e16c1fc
+Creating Group and adding members...
+creating group: Benchmark Group support-group-6964c3a1fb76080013aa3c54-cce72358e3c44f6ab96464077e16c1fc id support-group-6964c3a1fb76080013aa3c54-cce72358e3c44f6ab96464077e16c1fc members {
+  'cd277e61-52ac-4ecd-8c48-fe9d59c14f06': 1,
+  'e0e6a8ff-330a-4159-b758-fafea6e77b0e': 1
+}
+Invalid message topic: apps/tilechat/users/e0e6a8ff-330a-4159-b758-fafea6e77b0e/presence/6957d6ba-2f44-4600-a2f9-c72e91409362
+response.status: 201
+Group created successfully.
+
+Starting conversation...
+Exchange 1/90 completed. Latency: 247ms
+Exchange 2/90 completed. Latency: 131ms
+Exchange 3/90 completed. Latency: 37ms
+Exchange 4/90 completed. Latency: 44ms
+Exchange 5/90 completed. Latency: 117ms
+Exchange 6/90 completed. Latency: 3ms
+Exchange 7/90 completed. Latency: 8ms
+Exchange 8/90 completed. Latency: 22ms
+Exchange 9/90 completed. Latency: 61ms
+Exchange 10/90 completed. Latency: 8ms
+Exchange 11/90 completed. Latency: 0ms
+Exchange 12/90 completed. Latency: 44ms
+Exchange 13/90 completed. Latency: 19ms
+Exchange 14/90 completed. Latency: 66ms
+Exchange 15/90 completed. Latency: 6ms
+Exchange 16/90 completed. Latency: 18ms
+Exchange 17/90 completed. Latency: 12ms
+Exchange 18/90 completed. Latency: 1ms
+Exchange 19/90 completed. Latency: 66ms
+Exchange 20/90 completed. Latency: 1ms
+Exchange 21/90 completed. Latency: 1ms
+Exchange 22/90 completed. Latency: 1ms
+Exchange 23/90 completed. Latency: 21ms
+Exchange 24/90 completed. Latency: 7ms
+Exchange 25/90 completed. Latency: 72ms
+Exchange 26/90 completed. Latency: 1ms
+Exchange 27/90 completed. Latency: 1ms
+Exchange 28/90 completed. Latency: 38ms
+Exchange 29/90 completed. Latency: 47ms
+Exchange 30/90 completed. Latency: 1ms
+Exchange 31/90 completed. Latency: 1ms
+Exchange 32/90 completed. Latency: 3ms
+Exchange 33/90 completed. Latency: 32ms
+Exchange 34/90 completed. Latency: 0ms
+Exchange 35/90 completed. Latency: 70ms
+Exchange 36/90 completed. Latency: 1ms
+Exchange 37/90 completed. Latency: 21ms
+Exchange 38/90 completed. Latency: 1ms
+Exchange 39/90 completed. Latency: 1ms
+Exchange 40/90 completed. Latency: 12ms
+Exchange 41/90 completed. Latency: 54ms
+Exchange 42/90 completed. Latency: 43ms
+Exchange 43/90 completed. Latency: 161ms
+Exchange 44/90 completed. Latency: 4ms
+Exchange 45/90 completed. Latency: 31ms
+Exchange 46/90 completed. Latency: 62ms
+Exchange 47/90 completed. Latency: 107ms
+Exchange 48/90 completed. Latency: 27ms
+Exchange 49/90 completed. Latency: 0ms
+Exchange 50/90 completed. Latency: 57ms
+Exchange 51/90 completed. Latency: 6ms
+Exchange 52/90 completed. Latency: 1ms
+Exchange 53/90 completed. Latency: 0ms
+Exchange 54/90 completed. Latency: 4ms
+Exchange 55/90 completed. Latency: 0ms
+Exchange 56/90 completed. Latency: 0ms
+Exchange 57/90 completed. Latency: 32ms
+Exchange 58/90 completed. Latency: 7ms
+Exchange 59/90 completed. Latency: 50ms
+Exchange 60/90 completed. Latency: 6ms
+Exchange 61/90 completed. Latency: 1ms
+Exchange 62/90 completed. Latency: 93ms
+Exchange 63/90 completed. Latency: 35ms
+Exchange 64/90 completed. Latency: 5ms
+Exchange 65/90 completed. Latency: 1ms
+Exchange 66/90 completed. Latency: 67ms
+Exchange 67/90 completed. Latency: 7ms
+Exchange 68/90 completed. Latency: 22ms
+Exchange 69/90 completed. Latency: 13ms
+Exchange 70/90 completed. Latency: 55ms
+Exchange 71/90 completed. Latency: 3ms
+Exchange 72/90 completed. Latency: 1ms
+Exchange 73/90 completed. Latency: 1ms
+Exchange 74/90 completed. Latency: 1ms
+Exchange 75/90 completed. Latency: 0ms
+Exchange 76/90 completed. Latency: 0ms
+Exchange 77/90 completed. Latency: 1ms
+Exchange 78/90 completed. Latency: 22ms
+Exchange 79/90 completed. Latency: 12ms
+Exchange 80/90 completed. Latency: 1ms
+Exchange 81/90 completed. Latency: 0ms
+Exchange 82/90 completed. Latency: 1ms
+Exchange 83/90 completed. Latency: 59ms
+Exchange 84/90 completed. Latency: 0ms
+Exchange 85/90 completed. Latency: 31ms
+Exchange 86/90 completed. Latency: 1ms
+Exchange 87/90 completed. Latency: 0ms
+Exchange 88/90 completed. Latency: 1ms
+Exchange 89/90 completed. Latency: 3ms
+Exchange 90/90 completed. Latency: 1ms
+
+--- Benchmark Results ---
+Total messages exchanged: 90
+Total time: 2351 ms
+Average Round-trip Latency: 25.92 ms
+Min Latency: 0 ms
+Max Latency: 247 ms
+--------------------------
+
+
+
+
+--- NUM_MESSAGE: 100 ---
+--- Conversation Benchmark ---
+MQTT Endpoint: wss://stage.eks.tiledesk.com/mqws/ws
+API Endpoint: https://stage.eks.tiledesk.com/api
+Project ID: 6964c3a1fb76080013aa3c54
+Messages to exchange: 100
+------------------------------
+
+Creating users...
+final endpoint: wss://stage.eks.tiledesk.com/mqws/ws
+final endpoint: wss://stage.eks.tiledesk.com/mqws/ws
+Connecting User...
+connecting user_id: f862b5c0-b7b5-4ebd-9913-5d53886b105f
+using jwt token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI2NGI5NTdjZS02YTYwLTQzZTktYjUwZC05Y2NkZWJiODE1MTkiLCJzdWIiOiJmODYyYjVjMC1iN2I1LTRlYmQtOTkxMy01ZDUzODg2YjEwNWYiLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLmY4NjJiNWMwLWI3YjUtNGViZC05OTEzLTVkNTM4ODZiMTA1Zi4qIiwicmFiYml0bXEud3JpdGU6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuZjg2MmI1YzAtYjdiNS00ZWJkLTk5MTMtNWQ1Mzg4NmIxMDVmLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy5mODYyYjVjMC1iN2I1LTRlYmQtOTkxMy01ZDUzODg2YjEwNWYuKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiJmODYyYjVjMC1iN2I1LTRlYmQtOTkxMy01ZDUzODg2YjEwNWYiLCJjaWQiOiJmODYyYjVjMC1iN2I1LTRlYmQtOTkxMy01ZDUzODg2YjEwNWYiLCJhenAiOiJmODYyYjVjMC1iN2I1LTRlYmQtOTkxMy01ZDUzODg2YjEwNWYiLCJ1c2VyX2lkIjoiZjg2MmI1YzAtYjdiNS00ZWJkLTk5MTMtNWQ1Mzg4NmIxMDVmIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE3NzE5MjkzNDYsImV4cCI6MTc3NDUyMTM0NiwiYXVkIjpbInJhYmJpdG1xIiwiZjg2MmI1YzAtYjdiNS00ZWJkLTk5MTMtNWQ1Mzg4NmIxMDVmIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ.xTuKBp7fWIsEbHLWm_Vq27xfp25v34KyTORMQPliXuA
+starting mqtt connection with LWT on: apps/tilechat/users/f862b5c0-b7b5-4ebd-9913-5d53886b105f/presence/84509fce-332e-4e3d-afa8-f73f888e9e11 wss://stage.eks.tiledesk.com/mqws/ws
+Client connected. User:f862b5c0-b7b5-4ebd-9913-5d53886b105f
+Chat client first connection for:f862b5c0-b7b5-4ebd-9913-5d53886b105f
+subscribing to: f862b5c0-b7b5-4ebd-9913-5d53886b105f topic apps/tilechat/users/f862b5c0-b7b5-4ebd-9913-5d53886b105f/#
+subscribed to: apps/tilechat/users/f862b5c0-b7b5-4ebd-9913-5d53886b105f/#  with err null
+Subscribed to MyConversations.
+User connected: f862b5c0-b7b5-4ebd-9913-5d53886b105f
+Connecting Bot...
+connecting user_id: 8472536d-bfff-4960-a954-c447c8076681
+using jwt token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI0N2U4ZWIxNC0yZjQxLTRkZWUtYmU3OS0xODhhNDQyOTIwYTEiLCJzdWIiOiI4NDcyNTM2ZC1iZmZmLTQ5NjAtYTk1NC1jNDQ3YzgwNzY2ODEiLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi9hcHBzLnRpbGVjaGF0LnVzZXJzLjg0NzI1MzZkLWJmZmYtNDk2MC1hOTU0LWM0NDdjODA3NjY4MS4qIiwicmFiYml0bXEud3JpdGU6Ki8qL2FwcHMudGlsZWNoYXQudXNlcnMuODQ3MjUzNmQtYmZmZi00OTYwLWE5NTQtYzQ0N2M4MDc2NjgxLioiLCJyYWJiaXRtcS53cml0ZToqLyovYXBwcy50aWxlY2hhdC5vdXRnb2luZy51c2Vycy44NDcyNTM2ZC1iZmZmLTQ5NjAtYTk1NC1jNDQ3YzgwNzY2ODEuKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiI4NDcyNTM2ZC1iZmZmLTQ5NjAtYTk1NC1jNDQ3YzgwNzY2ODEiLCJjaWQiOiI4NDcyNTM2ZC1iZmZmLTQ5NjAtYTk1NC1jNDQ3YzgwNzY2ODEiLCJhenAiOiI4NDcyNTM2ZC1iZmZmLTQ5NjAtYTk1NC1jNDQ3YzgwNzY2ODEiLCJ1c2VyX2lkIjoiODQ3MjUzNmQtYmZmZi00OTYwLWE5NTQtYzQ0N2M4MDc2NjgxIiwiYXBwX2lkIjoidGlsZWNoYXQiLCJpYXQiOjE3NzE5MjkzNDYsImV4cCI6MTc3NDUyMTM0NiwiYXVkIjpbInJhYmJpdG1xIiwiODQ3MjUzNmQtYmZmZi00OTYwLWE5NTQtYzQ0N2M4MDc2NjgxIl0sImtpZCI6InRpbGVkZXNrLWtleSIsInRpbGVkZXNrX2FwaV9yb2xlcyI6InVzZXIifQ._fDjELai-YSGg4ZQAnOCAqMa368CUorSC2jio_oGuY8
+starting mqtt connection with LWT on: apps/tilechat/users/8472536d-bfff-4960-a954-c447c8076681/presence/f26f1aa8-fb07-4a97-b9eb-b75d1b19917c wss://stage.eks.tiledesk.com/mqws/ws
+Invalid message topic: apps/tilechat/users/f862b5c0-b7b5-4ebd-9913-5d53886b105f/presence/84509fce-332e-4e3d-afa8-f73f888e9e11
+Client connected. User:8472536d-bfff-4960-a954-c447c8076681
+Chat client first connection for:8472536d-bfff-4960-a954-c447c8076681
+subscribing to: 8472536d-bfff-4960-a954-c447c8076681 topic apps/tilechat/users/8472536d-bfff-4960-a954-c447c8076681/#
+subscribed to: apps/tilechat/users/8472536d-bfff-4960-a954-c447c8076681/#  with err null
+Subscribed to MyConversations.
+Bot connected: 8472536d-bfff-4960-a954-c447c8076681
+Group ID: support-group-6964c3a1fb76080013aa3c54-522649a70737432b96d938987f36b277
+Creating Group and adding members...
+creating group: Benchmark Group support-group-6964c3a1fb76080013aa3c54-522649a70737432b96d938987f36b277 id support-group-6964c3a1fb76080013aa3c54-522649a70737432b96d938987f36b277 members {
+  'f862b5c0-b7b5-4ebd-9913-5d53886b105f': 1,
+  '8472536d-bfff-4960-a954-c447c8076681': 1
+}
+Invalid message topic: apps/tilechat/users/8472536d-bfff-4960-a954-c447c8076681/presence/f26f1aa8-fb07-4a97-b9eb-b75d1b19917c
+response.status: 201
+Group created successfully.
+
+Starting conversation...
+Exchange 1/100 completed. Latency: 290ms
+Exchange 2/100 completed. Latency: 216ms
+Exchange 3/100 completed. Latency: 1ms
+Exchange 4/100 completed. Latency: 74ms
+Exchange 5/100 completed. Latency: 101ms
+Exchange 6/100 completed. Latency: 17ms
+Exchange 7/100 completed. Latency: 1ms
+Exchange 8/100 completed. Latency: 11ms
+Exchange 9/100 completed. Latency: 0ms
+Exchange 10/100 completed. Latency: 81ms
+Exchange 11/100 completed. Latency: 36ms
+Exchange 12/100 completed. Latency: 1ms
+Exchange 13/100 completed. Latency: 74ms
+Exchange 14/100 completed. Latency: 4ms
+Exchange 15/100 completed. Latency: 1ms
+Exchange 16/100 completed. Latency: 3ms
+Exchange 17/100 completed. Latency: 7ms
+Exchange 18/100 completed. Latency: 12ms
+Exchange 19/100 completed. Latency: 80ms
+Exchange 20/100 completed. Latency: 6ms
+Exchange 21/100 completed. Latency: 40ms
+Exchange 22/100 completed. Latency: 1ms
+Exchange 23/100 completed. Latency: 62ms
+Exchange 24/100 completed. Latency: 2ms
+Exchange 25/100 completed. Latency: 1ms
+Exchange 26/100 completed. Latency: 6ms
+Exchange 27/100 completed. Latency: 0ms
+Exchange 28/100 completed. Latency: 6ms
+Exchange 29/100 completed. Latency: 19ms
+Exchange 30/100 completed. Latency: 3ms
+Exchange 31/100 completed. Latency: 14ms
+Exchange 32/100 completed. Latency: 40ms
+Exchange 33/100 completed. Latency: 6ms
+Exchange 34/100 completed. Latency: 6ms
+Exchange 35/100 completed. Latency: 6ms
+Exchange 36/100 completed. Latency: 24ms
+Exchange 37/100 completed. Latency: 66ms
+Exchange 38/100 completed. Latency: 24ms
+Exchange 39/100 completed. Latency: 12ms
+Exchange 40/100 completed. Latency: 66ms
+Exchange 41/100 completed. Latency: 33ms
+Exchange 42/100 completed. Latency: 65ms
+Exchange 43/100 completed. Latency: 25ms
+Exchange 44/100 completed. Latency: 12ms
+Exchange 45/100 completed. Latency: 1ms
+Exchange 46/100 completed. Latency: 1ms
+Exchange 47/100 completed. Latency: 0ms
+Exchange 48/100 completed. Latency: 111ms
+Exchange 49/100 completed. Latency: 4ms
+Exchange 50/100 completed. Latency: 49ms
+Exchange 51/100 completed. Latency: 23ms
+Exchange 52/100 completed. Latency: 166ms
+Exchange 53/100 completed. Latency: 1ms
+Exchange 54/100 completed. Latency: 3ms
+Exchange 55/100 completed. Latency: 1ms
+Exchange 56/100 completed. Latency: 1ms
+Exchange 57/100 completed. Latency: 2ms
+Exchange 58/100 completed. Latency: 37ms
+Exchange 59/100 completed. Latency: 52ms
+Exchange 60/100 completed. Latency: 35ms
+Exchange 61/100 completed. Latency: 1ms
+Exchange 62/100 completed. Latency: 12ms
+Exchange 63/100 completed. Latency: 7ms
+Exchange 64/100 completed. Latency: 1ms
+Exchange 65/100 completed. Latency: 0ms
+Exchange 66/100 completed. Latency: 1ms
+Exchange 67/100 completed. Latency: 57ms
+Exchange 68/100 completed. Latency: 40ms
+Exchange 69/100 completed. Latency: 1ms
+Exchange 70/100 completed. Latency: 167ms
+Exchange 71/100 completed. Latency: 1ms
+Exchange 72/100 completed. Latency: 6ms
+Exchange 73/100 completed. Latency: 0ms
+Exchange 74/100 completed. Latency: 0ms
+Exchange 75/100 completed. Latency: 1ms
+Exchange 76/100 completed. Latency: 0ms
+Exchange 77/100 completed. Latency: 23ms
+Exchange 78/100 completed. Latency: 52ms
+Exchange 79/100 completed. Latency: 4ms
+Exchange 80/100 completed. Latency: 29ms
+Exchange 81/100 completed. Latency: 0ms
+Exchange 82/100 completed. Latency: 0ms
+Exchange 83/100 completed. Latency: 3ms
+Exchange 84/100 completed. Latency: 0ms
+Exchange 85/100 completed. Latency: 14ms
+Exchange 86/100 completed. Latency: 1ms
+Exchange 87/100 completed. Latency: 0ms
+Exchange 88/100 completed. Latency: 55ms
+Exchange 89/100 completed. Latency: 34ms
+Exchange 90/100 completed. Latency: 6ms
+Exchange 91/100 completed. Latency: 0ms
+Exchange 92/100 completed. Latency: 0ms
+Exchange 93/100 completed. Latency: 57ms
+Exchange 94/100 completed. Latency: 29ms
+Exchange 95/100 completed. Latency: 0ms
+Exchange 96/100 completed. Latency: 3ms
+Exchange 97/100 completed. Latency: 8ms
+Exchange 98/100 completed. Latency: 1ms
+Exchange 99/100 completed. Latency: 192ms
+Exchange 100/100 completed. Latency: 0ms
+
+--- Benchmark Results ---
+Total messages exchanged: 100
+Total time: 2855 ms
+Average Round-trip Latency: 28.48 ms
+Min Latency: 0 ms
+Max Latency: 290 ms
+--------------------------
+
+
+
+
