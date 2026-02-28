@@ -119,6 +119,7 @@ export default class MessageService {
             }
         } else {
             const group_id_from_topic = recipient_id;
+            console.log("[MSG_FLOW] Processing GROUP message. Group ID:", group_id_from_topic, "Sender:", sender_id, "Has inline group:", !!outgoing_message.group);
             if (outgoing_message.group) {
                 const inline_group = outgoing_message.group;
                 inline_group.uid = group_id_from_topic;
@@ -127,12 +128,16 @@ export default class MessageService {
                 inline_group.members[sender_id] = 1;
                 // CRITICAL: Save inline group to database/cache so members are persisted
                 // This ensures subsequent iterations get the correct group members even without cache
+                console.log("[INLINE_GROUP_SAVE] Saving inline group:", group_id_from_topic, "with members:", Object.keys(inline_group.members));
                 await this.groupService.saveGroup(inline_group);
+                console.log("[INLINE_GROUP_SAVED] Group saved with members:", Object.keys(inline_group.members));
                 await this.sendMessageToGroupMembers(outgoing_message, inline_group, app_id);
                 return true;
             }
             // Use group_id_from_topic to find group. getGroup already handles prefixing.
+            console.log("[GROUP_RETRIEVE] Looking up group from DB/cache:", group_id_from_topic);
             const group = await this.groupService.getGroup(group_id_from_topic);
+            console.log("[GROUP_RETRIEVED] Group retrieved:", group_id_from_topic, "members:", group?.members ? Object.keys(group.members) : "NO MEMBERS");
             if (group) {
                 // IMPORTANT: Use the group_id from the topic for delivery to match client expectations
                 const delivery_group = { ...group, uid: group_id_from_topic };
@@ -142,13 +147,16 @@ export default class MessageService {
                 delivery_group.members[sender_id] = 1;
                 
                 // Log the members being used for message delivery
+                console.log("[MESSAGE_ROUTE] Routing to members:", Object.keys(delivery_group.members), "for group:", group_id_from_topic);
                 logger.debug("Routing message to group members:", Object.keys(delivery_group.members), "for group:", group_id_from_topic);
                 await this.sendMessageToGroupMembers(outgoing_message, delivery_group, app_id);
             } else {
+                console.log("[GROUP_NOT_FOUND] Group not found for delivery:", group_id_from_topic, ". Creating transient group.");
                 logger.warn("Group not found for delivery:", group_id_from_topic, ". Creating transient group for sender.");
                 const transient_group = { uid: group_id_from_topic, transient: true, members: {} };
                 transient_group.members[group_id_from_topic] = 1;
                 transient_group.members[sender_id] = 1;
+                console.log("[TRANSIENT_GROUP] Created with members:", Object.keys(transient_group.members));
                 await this.sendMessageToGroupMembers(outgoing_message, transient_group, app_id);
             }
         }
@@ -278,6 +286,7 @@ export default class MessageService {
         const notify_to = data.notify_to;
         if (!group || !group.uid) return true;
 
+        console.log("[UPDATE_GROUP_START] Processing group update for:", group.uid, "incoming members:", group.members ? Object.keys(group.members) : "NONE");
         const app_id = group.appId || this.app_id;
         try {
             // Merge members: load existing group from DB/cache and union members
@@ -286,17 +295,24 @@ export default class MessageService {
             // IMPORTANT: Preserve existing members even when cache is disabled
             const existingGroup = await this.groupService.getGroup(group.uid);
             if (existingGroup) {
+                console.log("[UPDATE_GROUP_EXISTING] Found existing group:", group.uid, "existing members:", existingGroup.members ? Object.keys(existingGroup.members) : "NONE");
                 // Always preserve existing members if the incoming update doesn't have them
                 if (existingGroup.members && (!group.members || Object.keys(group.members).length === 0)) {
                     group.members = existingGroup.members;
+                    console.log("[UPDATE_GROUP_PRESERVED] Preserved existing members for:", group.uid, "members:", Object.keys(group.members));
                     logger.log("Preserved existing group members for:", group.uid, "members:", Object.keys(group.members));
                 } else if (existingGroup.members && group.members) {
                     // Union members from both existing and new update
                     group.members = { ...existingGroup.members, ...group.members };
+                    console.log("[UPDATE_GROUP_MERGED] Merged group members for:", group.uid, "final members:", Object.keys(group.members));
                     logger.log("Merged group members for:", group.uid, "final members:", Object.keys(group.members));
                 }
+            } else {
+                console.log("[UPDATE_GROUP_NEW] No existing group, this is a new one:", group.uid);
             }
+            console.log("[UPDATE_GROUP_SAVING] Saving group:", group.uid, "with members:", group.members ? Object.keys(group.members) : "NONE");
             await this.groupService.saveGroup(group);
+            console.log("[UPDATE_GROUP_SAVED] Group saved:", group.uid);
         } catch (err) {
             logger.error("Error saving group in process_update_group:", err);
         }
@@ -331,11 +347,13 @@ export default class MessageService {
 
     async sendMessageToGroupMembers(outgoing_message, group, app_id) {
         if (!group.members) {
+            console.log("[SEND_ERROR] Group has no members to deliver to!", "group.uid:", group.uid, "group:", JSON.stringify(group));
             logger.error("ERROR: Group has no members to deliver to!", "group.uid:", group.uid, "group:", JSON.stringify(group));
             return;
         }
         
         const member_count = Object.keys(group.members).length;
+        console.log("[SEND_TO_MEMBERS] Delivering message to", member_count, "members in group:", group.uid, "members:", Object.keys(group.members));
         logger.debug("sendMessageToGroupMembers - delivering message to", member_count, "members in group:", group.uid);
         
         const tasks = Object.keys(group.members).map(member_id => {
