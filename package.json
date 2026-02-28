@@ -39,7 +39,7 @@
     "test": "ts-mocha ./test/*.ts --timeout 10000 --exit",
     "benchmarks": "node ./benchmarks/index.js",
     "build": "tsc",
-    "start": "node dist/chatservermq.js",
+    "start": "node dist/src/chatservermq.js",
     "dev": "ts-node src/chatservermq.ts"
   },
   "author": "",

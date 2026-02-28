@@ -6,3 +6,5 @@ publish.sh
 start.sh
 nohup.out
 /.idea/
+
+dist
