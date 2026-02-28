@@ -125,6 +125,9 @@ export default class MessageService {
                 if (!inline_group.members) inline_group.members = {};
                 inline_group.members[group_id_from_topic] = 1;
                 inline_group.members[sender_id] = 1;
+                // CRITICAL: Save inline group to database/cache so members are persisted
+                // This ensures subsequent iterations get the correct group members even without cache
+                await this.groupService.saveGroup(inline_group);
                 await this.sendMessageToGroupMembers(outgoing_message, inline_group, app_id);
                 return true;
             }
