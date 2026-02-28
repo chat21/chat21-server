@@ -69,6 +69,19 @@ class GroupService {
       }
     }
   }
+
+  async saveGroup(group, callback?: any) {
+    logger.log("**** saveGroup:", group.uid);
+    try {
+      const savedGroup = await this.chatdb.saveOrUpdateGroup(group);
+      this.saveGroupInCache(group, group.uid);
+      if (callback) callback(null, savedGroup);
+      return savedGroup;
+    } catch (err) {
+      if (callback) callback(err);
+      throw err;
+    }
+  }
 }
 
 export default GroupService;

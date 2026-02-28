@@ -268,6 +268,12 @@ export default class MessageService {
         if (!group || !group.uid) return true;
 
         const app_id = group.appId || this.app_id;
+        try {
+            await this.groupService.saveGroup(group);
+        } catch (err) {
+            logger.error("Error saving group in process_update_group:", err);
+        }
+
         const tasks = Object.keys(notify_to).map(member_id => {
             const updated_group_topic = `apps.${app_id}.users.${member_id}.groups.${group.uid}.clientupdated`;
             return this.mqService.publishAsync(this.exchange, updated_group_topic, Buffer.from(JSON.stringify(group))).catch(err => {
