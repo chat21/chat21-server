@@ -25,20 +25,20 @@ class Chat21Client {
         this.reconnections = 0 // just to check how many reconnections
         this.client_id = this.uuidv4();
         this.log = options.log ? true : false;
-    
+
         if (options && options.MQTTendpoint) {
             if (options.MQTTendpoint.startsWith('/')) {
                 if (this.log) {
                     console.log("MQTTendpoint relative url");
                 }
                 var loc = window.location, new_uri;
-                if(window.frameElement && window.frameElement.getAttribute('tiledesk_context') === 'parent'){
+                if (window.frameElement && window.frameElement.getAttribute('tiledesk_context') === 'parent') {
                     loc = window.parent.location
                 }
                 if (loc.protocol === "https:") {
                     // new_uri = "wss:";
                     new_uri = "mqtt:";
-                    
+
                 } else {
                     // new_uri = "ws:";
                     new_uri = "mqtt:";
@@ -50,7 +50,7 @@ class Chat21Client {
             } else {
                 this.endpoint = options.MQTTendpoint
             }
-            
+
         }
         else {
             this.endpoint = "ws://34.253.207.0:15675/ws"
@@ -63,10 +63,10 @@ class Chat21Client {
         this.user_id = null;
         this.jwt = null;
         this.last_handler = 0;
-        
+
         // this.onMessageCallbacks = new Map();
         // this.onConnectCallbacks = new Map();
-        
+
         this.onConversationAddedCallbacks = new Map();
         this.onConversationUpdatedCallbacks = new Map();
         this.onConversationDeletedCallbacks = new Map();
@@ -87,17 +87,17 @@ class Chat21Client {
         // RABBITMQ: https://www.cloudamqp.com/blog/2015-09-03-part4-rabbitmq-for-beginners-exchanges-routing-keys-bindings.html#topic-exchange
         this.topic_inbox = 'apps/tilechat/users/' + this.user_id + "/#"
         // if (this.log) {
-            console.log("subscribing to:", this.user_id, "topic", this.topic_inbox);
+        console.log("subscribing to:", this.user_id, "topic", this.topic_inbox);
         // }
         return new Promise((resolve, reject) => {
-            this.client.subscribe(this.topic_inbox, (err)  => {
+            this.client.subscribe(this.topic_inbox, (err) => {
                 if (err) {
                     console.error("An error occurred while subscribing user", this.user_id, "on topic:", this.topic_inbox, "Error:", err);
                     if (subscribedCallback) subscribedCallback(err);
                     return reject(err);
                 }
                 // if (this.log) {
-                    console.log("subscribed to:", this.topic_inbox, " with err", err)
+                console.log("subscribed to:", this.topic_inbox, " with err", err)
                 // }
                 if (subscribedCallback) subscribedCallback();
                 resolve();
@@ -120,6 +120,7 @@ class Chat21Client {
         }
         // console.log("outgoing_message:", outgoing_message)
         const payload = JSON.stringify(outgoing_message)
+        console.log("payload:", payload);
         return new Promise((resolve, reject) => {
             this.client.publish(dest_topic, payload, { qos: 0, retain: false }, (err) => {
                 if (err) {
@@ -543,7 +544,7 @@ class Chat21Client {
             console.log("Subscribed to MyConversations.");
             this.on_message_handler = this.client.on('message', (topic, message) => {
                 if (this.log) {
-                    // console.log("topic:" + topic + "\nmessage payload:" + message)
+                    console.log("topic:" + topic + "\nmessage payload:" + message)
                 }
                 const _topic = this.parseTopic(topic)
                 if (!_topic) {
@@ -555,7 +556,7 @@ class Chat21Client {
                 const conversWith = _topic.conversWith
                 try {
                     const message_json = JSON.parse(message.toString())
-                    
+
 
                     // TEMPORARILY DISABLED, ADDED-CONVERSATIONS ARE OBSERVED BY NEW MESSAGES.
                     // MOVED TO: this.onMessageAddedCallbacks
@@ -585,7 +586,7 @@ class Chat21Client {
                         if (topic.includes("/conversations/") && topic.endsWith(_CLIENTDELETED)) {
                             // map.forEach((value, key, map) =>)
                             if (this.log) {
-                                console.log("conversation deleted! /conversations/, topic:", topic, message.toString() );
+                                console.log("conversation deleted! /conversations/, topic:", topic, message.toString());
                             }
                             this.onConversationDeletedCallbacks.forEach((callback, handler, map) => {
                                 callback(JSON.parse(message.toString()), _topic)
@@ -628,7 +629,7 @@ class Chat21Client {
                         // console.log("Observing conversations added from messages", message_json);
                         // if (this.onConversationAddedCallbacks) {
                         let update_conversation = true;
-                        
+
                         if (message_json.attributes && message_json.attributes.updateconversation == false) {
                             update_conversation = false
                         }
@@ -672,22 +673,22 @@ class Chat21Client {
                             if (this.log) { console.log("/messages/_CLIENTADDED") }
                             if (type === CALLBACK_TYPE_ON_MESSAGE_ADDED_FOR_CONVERSATION) {
                                 if (conversWith === callback_obj.conversWith) {
-                                    if (this.log) { console.log("/messages/_CLIENTADDED on: ", conversWith)}
+                                    if (this.log) { console.log("/messages/_CLIENTADDED on: ", conversWith) }
                                     callback_obj.callback(JSON.parse(message.toString()), _topic)
                                 }
                             }
                         }
                         if (topic.includes("/messages/") && topic.endsWith(_CLIENTUPDATED)) {
-                            if (this.log) {console.log("/messages/_CLIENTUPDATED")}
+                            if (this.log) { console.log("/messages/_CLIENTUPDATED") }
                             if (type === CALLBACK_TYPE_ON_MESSAGE_UPDATED_FOR_CONVERSATION) {
                                 if (conversWith === callback_obj.conversWith) {
-                                    if (this.log) {console.log("/messages/_CLIENTUPDATED on: ", conversWith);}
+                                    if (this.log) { console.log("/messages/_CLIENTUPDATED on: ", conversWith); }
                                     callback_obj.callback(JSON.parse(message.toString()), _topic)
                                 }
                             }
                         }
                     })
-                    
+
                     // if (topic.includes("/messages/") && topic.endsWith(_CLIENTUPDATED)) {
                     //     this.onMessageUpdatedInConversationCallbacks.forEach((obj, handler, map) => {
                     //         if (conversWith === obj.conversWith) {
@@ -695,7 +696,7 @@ class Chat21Client {
                     //         }
                     //     });
                     // }
-                    
+
 
                 }
                 catch (err) {
@@ -704,7 +705,7 @@ class Chat21Client {
             })
             if (subscribedCallback) subscribedCallback();
         })
-        
+
         // console.log("HANDLER_:", this.on_message_handler)
     }
 
@@ -728,7 +729,7 @@ class Chat21Client {
     async lastArchivedConversations(callback) {
         // ex.: http://localhost:8004/tilechat/04-ANDREASPONZIELLO/archived_conversations
         const URL = `${this.APIendpoint}/${this.appid}/${this.user_id}/archived_conversations`
-        if (this.log) {console.log("getting last archived conversations...", URL)}
+        if (this.log) { console.log("getting last archived conversations...", URL) }
         let options = {
             url: URL,
             headers: {
@@ -751,7 +752,7 @@ class Chat21Client {
         // ex.: http://localhost:8004/tilechat/04-ANDREASPONZIELLO/conversations
         const archived_url_part = archived ? '/archived' : '';
         const URL = `${this.APIendpoint}/${this.appid}/${this.user_id}/conversations` + archived_url_part;
-        if (this.log) {console.log("getting last convs...", URL);}
+        if (this.log) { console.log("getting last convs...", URL); }
         let options = {
             url: URL,
             headers: {
@@ -799,7 +800,7 @@ class Chat21Client {
             console.log("getting conversation detail:", URL);
             console.log("conversWith:", conversWith);
         }
-        
+
         let options = {
             url: URL,
             headers: {
@@ -858,9 +859,9 @@ class Chat21Client {
         // data: options.data,
         // method: options.method
         if (log) {
-          //console.log("HTTP Request:", options);
+            //console.log("HTTP Request:", options);
         }
-        
+
         try {
             const response = await axios({
                 url: options.url,
@@ -890,7 +891,7 @@ class Chat21Client {
             console.log("connecting user_id:", user_id)
             console.log("using jwt token:", jwt)
         }
-        
+
         if (this.client) {
             this.client.end()
         }
@@ -913,22 +914,22 @@ class Chat21Client {
             password: jwt,
             rejectUnauthorized: false
         }
-        if (this.log) {console.log("starting mqtt connection with LWT on:", this.presence_topic, this.endpoint)}
+        if (this.log) { console.log("starting mqtt connection with LWT on:", this.presence_topic, this.endpoint) }
         // client = mqtt.connect('mqtt://127.0.0.1:15675/ws',options)
         //console.log("starting mqtt connection with LWT on:", this.presence_topic, this.endpoint)
-        this.client = mqtt.connect(this.endpoint,options)
-        
+        this.client = mqtt.connect(this.endpoint, options)
+
         return new Promise((resolve, reject) => {
             const onConnect = async () => {
                 this.client.removeListener('error', onError);
                 // if (this.log) {
-                    console.log("Client connected. User:" + user_id)
+                console.log("Client connected. User:" + user_id)
                 // }
                 if (!this.connected) {
-                    if (this.log) {console.log("Chat client first connection for:" + user_id)}
+                    if (this.log) { console.log("Chat client first connection for:" + user_id) }
                     this.connected = true
                     // callback();
-                    await this.start( () => {
+                    await this.start(() => {
                         if (callback) callback();
                         resolve();
                     });
@@ -937,7 +938,7 @@ class Chat21Client {
                 }
                 this.client.publish(
                     this.presence_topic,
-                    JSON.stringify({connected: true}),
+                    JSON.stringify({ connected: true }),
                     { qos: 0, retain: false }, (err) => {
                         if (err) {
                             console.error("Error con presence publish:", err);
@@ -960,17 +961,17 @@ class Chat21Client {
 
             this.client.on('reconnect',
                 () => {
-                    if (this.log) {console.log("Chat client reconnect event");}
+                    if (this.log) { console.log("Chat client reconnect event"); }
                 }
             );
             this.client.on('close',
                 () => {
-                    if (this.log) {console.log("Chat client close event");}
+                    if (this.log) { console.log("Chat client close event"); }
                 }
             );
             this.client.on('offline',
                 () => {
-                    if (this.log) {console.log("Chat client offline event");}
+                    if (this.log) { console.log("Chat client offline event"); }
                 }
             );
             this.client.on('error',
@@ -989,7 +990,7 @@ class Chat21Client {
             return new Promise((resolve, reject) => {
                 this.client.publish(
                     this.presence_topic,
-                    JSON.stringify({connected: true}),
+                    JSON.stringify({ connected: true }),
                     { qos: 0, retain: false }, (err) => {
                         if (err) {
                             console.error("Error on presence publish:", err);
@@ -1005,8 +1006,8 @@ class Chat21Client {
     async close(callback) {
         if (this.topic_inbox) {
             return new Promise((resolve) => {
-                this.client.unsubscribe(this.topic_inbox, (err)  => {
-                    if (this.log) {console.log("unsubscribed from", this.topic_inbox);}
+                this.client.unsubscribe(this.topic_inbox, (err) => {
+                    if (this.log) { console.log("unsubscribed from", this.topic_inbox); }
                     this.client.end(() => {
                         this.connected = false
                         // reset all subscriptions
@@ -1032,9 +1033,9 @@ class Chat21Client {
     }
 
     uuidv4() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-          var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-          return v.toString(16);
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
         });
     }
 }

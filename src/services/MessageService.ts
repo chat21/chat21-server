@@ -122,17 +122,24 @@ export default class MessageService {
             if (outgoing_message.group) {
                 const inline_group = outgoing_message.group;
                 inline_group.uid = group_id;
+                if (!inline_group.members) inline_group.members = {};
                 inline_group.members[group_id] = 1;
                 inline_group.members[sender_id] = 1;
-                this.sendMessageToGroupMembers(outgoing_message, inline_group, app_id);
+                await this.sendMessageToGroupMembers(outgoing_message, inline_group, app_id);
                 return true;
             }
-            const group = await this.groupService.getGroup(group_id) || { uid: group_id, transient: true, members: {} };
-            if (group.transient) {
-                group.members[sender_id] = 1;
+            const group = await this.groupService.getGroup(group_id);
+            if (group) {
+                if (!group.members) group.members = {};
+                group.members[group_id] = 1;
+                await this.sendMessageToGroupMembers(outgoing_message, group, app_id);
+            } else {
+                logger.warn("Group not found for delivery:", group_id, ". Creating transient group for sender.");
+                const transient_group = { uid: group_id, transient: true, members: {} };
+                transient_group.members[group_id] = 1;
+                transient_group.members[sender_id] = 1;
+                await this.sendMessageToGroupMembers(outgoing_message, transient_group, app_id);
             }
-            group.members[group.uid] = 1;
-            await this.sendMessageToGroupMembers(outgoing_message, group, app_id);
         }
         return true;
     }

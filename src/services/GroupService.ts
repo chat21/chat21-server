@@ -21,7 +21,12 @@ class GroupService {
         return group;
       } else {
         logger.log("--GROUP", group_id, "NO CACHE! GET FROM DB...");
-        const dbGroup = await this.chatdb.getGroup(group_id);
+        let dbGroup = await this.chatdb.getGroup(group_id);
+        if (!dbGroup && !group_id.startsWith('group-')) {
+          const prefixed_group_id = 'group-' + group_id;
+          logger.log("--GROUP", group_id, "NOT FOUND IN DB. TRYING WITH PREFIX:", prefixed_group_id);
+          dbGroup = await this.chatdb.getGroup(prefixed_group_id);
+        }
         if (dbGroup) {
           this.saveGroupInCache(dbGroup, group_id);
         }
