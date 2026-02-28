@@ -147,7 +147,8 @@ export default class MessageService {
                 delivery_group.members[sender_id] = 1;
                 
                 // Log the members being used for message delivery
-                console.log("[MESSAGE_ROUTE] Routing to members:", Object.keys(delivery_group.members), "for group:", group_id_from_topic);
+                console.log("[MESSAGE_ROUTE] BEFORE adding group/sender - members from DB:", group.members ? Object.keys(group.members) : "NONE");
+                console.log("[MESSAGE_ROUTE] AFTER adding group/sender - members:", Object.keys(delivery_group.members), "for group:", group_id_from_topic);
                 logger.debug("Routing message to group members:", Object.keys(delivery_group.members), "for group:", group_id_from_topic);
                 await this.sendMessageToGroupMembers(outgoing_message, delivery_group, app_id);
             } else {
@@ -286,7 +287,7 @@ export default class MessageService {
         const notify_to = data.notify_to;
         if (!group || !group.uid) return true;
 
-        console.log("[UPDATE_GROUP_START] Processing group update for:", group.uid, "incoming members:", group.members ? Object.keys(group.members) : "NONE");
+        console.log("[UPDATE_GROUP_START] *** CRITICAL: Processing group update for:", group.uid, "incoming members:", group.members ? Object.keys(group.members) : "NONE", "full payload members:", JSON.stringify(group.members));
         const app_id = group.appId || this.app_id;
         try {
             // Merge members: load existing group from DB/cache and union members
@@ -304,7 +305,7 @@ export default class MessageService {
                 } else if (existingGroup.members && group.members) {
                     // Union members from both existing and new update
                     group.members = { ...existingGroup.members, ...group.members };
-                    console.log("[UPDATE_GROUP_MERGED] Merged group members for:", group.uid, "final members:", Object.keys(group.members));
+                    console.log("[UPDATE_GROUP_MERGED] Merged group members for:", group.uid, "existing:", Object.keys(existingGroup.members), "incoming:", Object.keys(data.group.members), "final members:", Object.keys(group.members));
                     logger.log("Merged group members for:", group.uid, "final members:", Object.keys(group.members));
                 }
             } else {

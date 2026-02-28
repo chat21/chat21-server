@@ -16,7 +16,7 @@ class GroupService {
     try {
       const group = await this.groupFromCache(group_id);
       if (group) {
-        console.log("[GS_CACHE_HIT] Group found in CACHE:", group_id, "members:", group.members ? Object.keys(group.members) : "NONE");
+        console.log("[GS_CACHE_HIT] Group found in CACHE:", group_id, "members:", group.members ? Object.keys(group.members) : "NONE", "full members object:", JSON.stringify(group.members));
         logger.log("--GROUP", group_id, "FOUND IN CACHE:", group);
         if (callback) callback(null, group);
         return group;
@@ -31,7 +31,7 @@ class GroupService {
           dbGroup = await this.chatdb.getGroup(prefixed_group_id);
         }
         if (dbGroup) {
-          console.log("[GS_DB_HIT] Group found in DB:", group_id, "members:", dbGroup.members ? Object.keys(dbGroup.members) : "NONE");
+          console.log("[GS_DB_HIT] Group found in DB:", group_id, "members:", dbGroup.members ? Object.keys(dbGroup.members) : "NONE", "full members object:", JSON.stringify(dbGroup.members), "appId:", dbGroup.appId);
           this.saveGroupInCache(dbGroup, group_id);
         } else {
           console.log("[GS_DB_MISS] Group NOT found in DB:", group_id);
