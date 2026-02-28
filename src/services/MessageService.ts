@@ -274,6 +274,15 @@ export default class MessageService {
 
         const app_id = group.appId || this.app_id;
         try {
+            // Merge members: load existing group from DB/cache and union members
+            // This prevents chatbot-triggered group updates from removing members
+            // that were added via the HTTP API (e.g., botClient in benchmarks)
+            const existingGroup = await this.groupService.getGroup(group.uid);
+            if (existingGroup && existingGroup.members) {
+                if (!group.members) group.members = {};
+                group.members = { ...existingGroup.members, ...group.members };
+                logger.log("Merged group members for:", group.uid, "final members:", Object.keys(group.members));
+            }
             await this.groupService.saveGroup(group);
         } catch (err) {
             logger.error("Error saving group in process_update_group:", err);
