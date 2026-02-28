@@ -126,6 +126,19 @@ export default class MessageService {
                 if (!inline_group.members) inline_group.members = {};
                 inline_group.members[group_id_from_topic] = 1;
                 inline_group.members[sender_id] = 1;
+                
+                // CRITICAL FIX: Merge inline group with existing members to prevent data loss
+                // When webhooks send partial group data, we must preserve existing members
+                // This is especially important when cache is disabled
+                console.log("[INLINE_GROUP_MERGE] Retrieving existing group to merge members:", group_id_from_topic);
+                const existingGroup = await this.groupService.getGroup(group_id_from_topic);
+                if (existingGroup && existingGroup.members) {
+                    console.log("[INLINE_GROUP_EXISTING] Found existing members:", Object.keys(existingGroup.members));
+                    // Union all members: keep existing ones and add new ones from inline_group
+                    inline_group.members = { ...existingGroup.members, ...inline_group.members };
+                    console.log("[INLINE_GROUP_MERGED] Merged members from existing group. Final members:", Object.keys(inline_group.members));
+                }
+                
                 // CRITICAL: Save inline group to database/cache so members are persisted
                 // This ensures subsequent iterations get the correct group members even without cache
                 console.log("[INLINE_GROUP_SAVE] Saving inline group:", group_id_from_topic, "with members:", Object.keys(inline_group.members));

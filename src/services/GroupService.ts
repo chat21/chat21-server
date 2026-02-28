@@ -77,13 +77,31 @@ class GroupService {
     }
   }
 
-  async saveGroup(group, callback?: any) {
-    logger.log("**** saveGroup:", group.uid);
-    console.log("[GS_SAVE] Saving group:", group.uid, "with members:", group.members ? Object.keys(group.members) : "NONE", "full group:", JSON.stringify(group));
+  async saveGroup(group, callback?: any, mergeMembers: boolean = true) {
+    logger.log("**** saveGroup:", group.uid, "mergeMembers:", mergeMembers);
+    console.log("[GS_SAVE] Saving group:", group.uid, "with members:", group.members ? Object.keys(group.members) : "NONE", "mergeMembers:", mergeMembers);
+    
     try {
-      const savedGroup = await this.chatdb.saveOrUpdateGroup(group);
-      console.log("[GS_SAVED] Group saved to DB:", group.uid, "members:", group.members ? Object.keys(group.members) : "NONE");
-      this.saveGroupInCache(group, group.uid);
+      // If mergeMembers is true, load existing group and merge members to prevent data loss
+      let groupToSave = group;
+      if (mergeMembers) {
+        try {
+          const existingGroup = await this.chatdb.getGroup(group.uid);
+          if (existingGroup && existingGroup.members && Object.keys(existingGroup.members).length > 0) {
+            console.log("[GS_MERGE] Merging with existing members:", Object.keys(existingGroup.members));
+            // Merge: keep existing members and add new ones
+            groupToSave = { ...group, members: { ...existingGroup.members, ...group.members } };
+            console.log("[GS_MERGED] Final merged members:", Object.keys(groupToSave.members));
+          }
+        } catch (err) {
+          // If existing group fetch fails, just save the new group as-is
+          console.log("[GS_MERGE_ERROR] Error fetching existing group for merge, continuing with provided group");
+        }
+      }
+      
+      const savedGroup = await this.chatdb.saveOrUpdateGroup(groupToSave);
+      console.log("[GS_SAVED] Group saved to DB:", group.uid, "final members:", groupToSave.members ? Object.keys(groupToSave.members) : "NONE");
+      this.saveGroupInCache(groupToSave, groupToSave.uid);
       if (callback) callback(null, savedGroup);
       return savedGroup;
     } catch (err) {
