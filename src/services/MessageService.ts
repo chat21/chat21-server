@@ -137,6 +137,9 @@ export default class MessageService {
                 // Ensure sender and group itself are in members for history/persistence
                 delivery_group.members[group_id_from_topic] = 1;
                 delivery_group.members[sender_id] = 1;
+                
+                // Log the members being used for message delivery
+                logger.debug("Routing message to group members:", Object.keys(delivery_group.members), "for group:", group_id_from_topic);
                 await this.sendMessageToGroupMembers(outgoing_message, delivery_group, app_id);
             } else {
                 logger.warn("Group not found for delivery:", group_id_from_topic, ". Creating transient group for sender.");
@@ -277,11 +280,18 @@ export default class MessageService {
             // Merge members: load existing group from DB/cache and union members
             // This prevents chatbot-triggered group updates from removing members
             // that were added via the HTTP API (e.g., botClient in benchmarks)
+            // IMPORTANT: Preserve existing members even when cache is disabled
             const existingGroup = await this.groupService.getGroup(group.uid);
-            if (existingGroup && existingGroup.members) {
-                if (!group.members) group.members = {};
-                group.members = { ...existingGroup.members, ...group.members };
-                logger.log("Merged group members for:", group.uid, "final members:", Object.keys(group.members));
+            if (existingGroup) {
+                // Always preserve existing members if the incoming update doesn't have them
+                if (existingGroup.members && (!group.members || Object.keys(group.members).length === 0)) {
+                    group.members = existingGroup.members;
+                    logger.log("Preserved existing group members for:", group.uid, "members:", Object.keys(group.members));
+                } else if (existingGroup.members && group.members) {
+                    // Union members from both existing and new update
+                    group.members = { ...existingGroup.members, ...group.members };
+                    logger.log("Merged group members for:", group.uid, "final members:", Object.keys(group.members));
+                }
             }
             await this.groupService.saveGroup(group);
         } catch (err) {
@@ -317,7 +327,14 @@ export default class MessageService {
     }
 
     async sendMessageToGroupMembers(outgoing_message, group, app_id) {
-        if (!group.members) return;
+        if (!group.members) {
+            logger.error("ERROR: Group has no members to deliver to!", "group.uid:", group.uid, "group:", JSON.stringify(group));
+            return;
+        }
+        
+        const member_count = Object.keys(group.members).length;
+        logger.debug("sendMessageToGroupMembers - delivering message to", member_count, "members in group:", group.uid);
+        
         const tasks = Object.keys(group.members).map(member_id => {
             const message = { ...outgoing_message };
             if (member_id === group.uid) message.status = MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT;
