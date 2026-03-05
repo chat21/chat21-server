@@ -14,6 +14,32 @@ const RateManager = require('./services/RateManager.js');
 const app = express();
 app.use(bodyParser.json());
 const logger = require('./tiledesk-logger').logger;
+const prometheus = require('prom-client');
+const register = prometheus.register;
+
+const messagesProjectCounter = new prometheus.Counter({
+  name: 'chat21_messages_per_project_total',
+  help: 'Total number of messages per project',
+  labelNames: ['project_id']
+});
+
+const messagesIPCounter = new prometheus.Counter({
+  name: 'chat21_messages_per_ip_total',
+  help: 'Total number of messages per IP address',
+  labelNames: ['ip_address']
+});
+
+const messagesProjectIPCounter = new prometheus.Counter({
+  name: 'chat21_messages_per_project_ip_total',
+  help: 'Total number of messages per project and IP address',
+  labelNames: ['project_id', 'ip_address']
+});
+
+const messagesTopicCounter = new prometheus.Counter({
+  name: 'chat21_messages_per_topic_total',
+  help: 'Total number of messages per topic',
+  labelNames: ['topic']
+});
 console.log("(Observer) Log level:", process.env.LOG_LEVEL);
 logger.setLog(process.env.LOG_LEVEL);
 var amqpConn = null;
@@ -436,6 +462,26 @@ async function process_outgoing(topic, message_string, callback) {
   }
 
   let outgoing_message = JSON.parse(message_string)
+
+  if (topic) {
+    messagesTopicCounter.inc({ topic: topic });
+  }
+
+  if (outgoing_message.attributes) {
+    const project_id = outgoing_message.attributes.projectId;
+    const ip_address = outgoing_message.attributes.ipAddress;
+
+    if (project_id) {
+      messagesProjectCounter.inc({ project_id: project_id });
+    }
+    if (ip_address) {
+      messagesIPCounter.inc({ ip_address: ip_address });
+    }
+    if (project_id && ip_address) {
+      messagesProjectIPCounter.inc({ project_id: project_id, ip_address: ip_address });
+    }
+  }
+
   let messageId = uuidv4()
   //let outgoing_message = message
   outgoing_message.message_id = messageId
@@ -1244,6 +1290,20 @@ async function startServer(config) {
   else {
     logger.info("(Observer) Presence disabled.");
   }
+
+  app.get('/metrics', async (req, res) => {
+    try {
+      res.set('Content-Type', register.contentType);
+      res.end(await register.metrics());
+    } catch (ex) {
+      res.status(500).end(ex);
+    }
+  });
+
+  let metrics_port = process.env.METRICS_PORT || 9090;
+  app.listen(metrics_port, () => {
+    logger.info(`(Observer) Prometheus metrics listening on port ${metrics_port}`);
+  });
 
   logger.debug('(Observer) Starting AMQP connection....');
   var amqpConnection = await start();
