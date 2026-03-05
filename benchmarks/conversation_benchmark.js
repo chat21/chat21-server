@@ -16,14 +16,17 @@ if (!TILEDESK_PROJECT_ID) {
     process.exit(1);
 }
 
+const RUN_ID = uuidv4().substring(0, 8);
 const config = {
     MQTT_ENDPOINT,
     CHAT_API_ENDPOINT,
     API_ENDPOINT,
     APPID,
     TILEDESK_PROJECT_ID,
-    MESSAGE_PREFIX: "Conv-bench",
-    NUM_MESSAGES: NUM_MESSAGE
+    MESSAGE_PREFIX: "Conv-bench-" + RUN_ID,
+    GROUP_PREFIX: process.env.GROUP_PREFIX || 'bench-group',
+    NUM_MESSAGES: NUM_MESSAGE,
+    MESSAGE_DELAY: process.env.MESSAGE_DELAY || 1000
 };
 
 async function createAnonymousUser(tiledeskProjectId) {
@@ -69,25 +72,59 @@ async function runBenchmark() {
             appId: config.APPID,
             MQTTendpoint: config.MQTT_ENDPOINT,
             APIendpoint: config.CHAT_API_ENDPOINT,
-            log: true
+            log: false
         });
 
-        const botClient = new Chat21Client({
+        const user2Client = new Chat21Client({
             appId: config.APPID,
             MQTTendpoint: config.MQTT_ENDPOINT,
             APIendpoint: config.CHAT_API_ENDPOINT,
-            log: true
+            log: false
+        });
+
+        // User2 behavior: reply to benchmark messages from user1
+        user2Client.onMessageAdded((message) => {
+            console.log(">>> USER2 SAW MESSAGE:", JSON.stringify({ text: message.text, sender: message.sender, recipient: message.recipient }));
+            const isBenchMessage = message && typeof message.text === 'string' && message.text.startsWith(config.MESSAGE_PREFIX);
+            if (message && message.recipient === group_id && message.sender === userData1.userid && isBenchMessage) {
+
+                // Extract the exchange index from the message text to ensure we only reply once per exchange
+                const match = message.text.match(new RegExp(`${config.MESSAGE_PREFIX}-(\\d+)`));
+                if (match) {
+                    const exchangeIdx = parseInt(match[1]);
+                    const replyText = `${config.MESSAGE_PREFIX}-${exchangeIdx}-reply`;
+
+                    console.log(`User2 replying to exchange ${exchangeIdx}...`);
+                    user2Client.sendMessage(
+                        replyText,
+                        'text',
+                        group_id,
+                        group_name,
+                        "User 2",
+                        { projectId: config.TILEDESK_PROJECT_ID },
+                        null,
+                        'group',
+                        (err) => {
+                            if (err) {
+                                console.error(`User2 failed to send reply for exchange ${exchangeIdx}:`, err);
+                            } else {
+                                console.log(`User2 sent reply for exchange ${exchangeIdx}`);
+                            }
+                        }
+                    );
+                }
+            }
         });
 
         console.log("Connecting User...");
         await connectClient(userClient, userData1.userid, userData1.token);
         console.log("User connected:", userData1.userid);
 
-        console.log("Connecting Bot...");
-        await connectClient(botClient, userData2.userid, userData2.token);
-        console.log("Bot connected:", userData2.userid);
+        console.log("Connecting User2...");
+        await connectClient(user2Client, userData2.userid, userData2.token);
+        console.log("User2 connected:", userData2.userid);
 
-        const group_id = "support-group-" + config.TILEDESK_PROJECT_ID + "-" + uuidv4().replace(/-+/g, "");
+        const group_id = `${config.GROUP_PREFIX}-${config.TILEDESK_PROJECT_ID}-${uuidv4().replace(/-+/g, "")}`;
         const group_name = "Benchmark Group " + group_id;
 
         console.log("Group ID:", group_id);
@@ -104,42 +141,49 @@ async function runBenchmark() {
         let last_message_sent_time = 0;
         let latencies = [];
 
-        // Bot behavior: reply to any message starting with prefix from the user
-        botClient.onMessageAdded((message) => {
-            if (message && message.recipient === group_id && message.sender !== userData2.userid && message.text.startsWith(config.MESSAGE_PREFIX)) {
-                // console.log("Bot received:", message.text);
-                const replyText = message.text + "-reply";
-                botClient.sendMessage(
-                    replyText,
-                    'text',
-                    group_id,
-                    group_name,
-                    "Bot User",
-                    { projectId: config.TILEDESK_PROJECT_ID },
-                    null,
-                    'group',
-                    null
-                );
-            }
-        });
+        let retryInterval = null;
 
         // User behavior: wait for reply, then send next or finish
         const conversationFinished = new Promise((resolve, reject) => {
+            const TIMEOUT_MS = 120000;
             const timeout = setTimeout(() => {
-                reject(new Error("Conversation timed out after 60 seconds"));
-            }, 60000);
+                if (retryInterval) clearInterval(retryInterval);
+                reject(new Error(`Conversation timed out after ${TIMEOUT_MS / 1000} seconds`));
+            }, TIMEOUT_MS);
 
             userClient.onMessageAdded((message) => {
-                if (message && message.recipient === group_id && message.sender === userData2.userid && message.text.includes("-reply")) {
+                const expectedReply = `${config.MESSAGE_PREFIX}-${messages_exchanged}-reply`;
+
+                if (message && message.recipient === group_id) {
+                    console.log("<<< USER SAW MESSAGE:", JSON.stringify({ text: message.text, sender: message.sender, recipient: message.recipient }), "Expected:", expectedReply);
+                }
+
+                if (message && message.recipient === group_id && message.sender !== userData1.userid && message.sender !== userData2.userid) {
+                    console.log("<<< USER IGNORED NON-BENCH PARTICIPANT:", JSON.stringify({ text: message.text, sender: message.sender, recipient: message.recipient }));
+                }
+
+                if (message &&
+                    message.recipient === group_id &&
+                    message.sender === userData2.userid &&
+                    message.text === expectedReply) {
+
                     const now = Date.now();
                     const latency = now - last_message_sent_time;
                     latencies.push(latency);
-                    messages_exchanged++;
 
-                    console.log(`Exchange ${messages_exchanged}/${config.NUM_MESSAGES} completed. Latency: ${latency}ms`);
+                    console.log(`Exchange ${messages_exchanged + 1}/${config.NUM_MESSAGES} completed. Latency: ${latency}ms`);
+
+                    messages_exchanged++;
+                    if (retryInterval) {
+                        clearInterval(retryInterval);
+                        retryInterval = null;
+                    }
 
                     if (messages_exchanged < config.NUM_MESSAGES) {
-                        sendNextMessage();
+                        console.log(`Waiting ${config.MESSAGE_DELAY}ms before next exchange...`);
+                        setTimeout(() => {
+                            sendNextMessage();
+                        }, config.MESSAGE_DELAY);
                     } else {
                         clearTimeout(timeout);
                         resolve();
@@ -149,7 +193,12 @@ async function runBenchmark() {
         });
 
         function sendNextMessage() {
+            if (retryInterval) {
+                clearInterval(retryInterval);
+            }
+
             const messageText = `${config.MESSAGE_PREFIX}-${messages_exchanged}`;
+            // console.log(`User sending message for exchange ${messages_exchanged}...`);
             last_message_sent_time = Date.now();
             userClient.sendMessage(
                 messageText,
@@ -160,8 +209,32 @@ async function runBenchmark() {
                 { projectId: config.TILEDESK_PROJECT_ID },
                 null,
                 'group',
-                null
+                (err) => {
+                    if (err) {
+                        console.error(`User failed to send message for exchange ${messages_exchanged}:`, err);
+                    }
+                }
             );
+
+            // Set retry interval
+            retryInterval = setInterval(() => {
+                console.log(`Retrying exchange ${messages_exchanged} (no reply after 10s)...`);
+                userClient.sendMessage(
+                    messageText,
+                    'text',
+                    group_id,
+                    group_name,
+                    "User 1",
+                    { projectId: config.TILEDESK_PROJECT_ID },
+                    null,
+                    'group',
+                    (err) => {
+                        if (err) {
+                            console.error(`User failed to resend message for exchange ${messages_exchanged}:`, err);
+                        }
+                    }
+                );
+            }, 10000);
         }
 
         console.log("\nStarting conversation...");
@@ -182,7 +255,7 @@ async function runBenchmark() {
         console.log("--------------------------\n");
 
         userClient.close();
-        botClient.close();
+        user2Client.close();
         process.exit(0);
 
     } catch (error) {

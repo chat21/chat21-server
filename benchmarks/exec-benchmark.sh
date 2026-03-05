@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Output file
-RESULT_FILE="benchmark_results-nocache.txt"
+RESULT_FILE="benchmark_results-cache.txt"
 
 # Clear or create the result file
 echo "Benchmark Results - $(date)" > "$RESULT_FILE"
