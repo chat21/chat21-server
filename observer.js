@@ -455,10 +455,12 @@ async function process_outgoing(topic, message_string, callback) {
   const recipient_id = topic_parts[6];
   //const me = sender_id
 
-  const allowed = await rate_manager.canExecute(sender_id, 'message');
-  if (!allowed) {
-    console.warn("Webhook rate limit exceeded for user " + sender_id)
-    return
+  if(rate_manager){
+    const allowed = await rate_manager.canExecute(sender_id, 'message');
+    if (!allowed) {
+      console.warn("Webhook rate limit exceeded for user " + sender_id)
+      return
+    }
   }
 
   let outgoing_message = JSON.parse(message_string)
