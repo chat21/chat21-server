@@ -258,6 +258,11 @@ function startWorker() {
   amqpConn.createChannel(function (err, ch) {
     channel = ch;
     if (closeOnErr(err)) return;
+    const sharedQueueOptions = {
+      durable: true,
+      exclusive: false,
+      autoDelete: false
+    };
     ch.on("error", function (err) {
       logger.error("[AMQP] channel error", err);
       process.exit(0);
@@ -272,7 +277,7 @@ function startWorker() {
     });
     logger.info("(Observer) Enabling queues:", active_queues);
     if (active_queues['messages']) {
-      ch.assertQueue("messages", { durable: durable_enabled }, function (err, _ok) {
+      ch.assertQueue("messages", sharedQueueOptions, function (err, _ok) {
         if (closeOnErr(err)) return;
         let queue = _ok.queue;
         logger.log("asserted queue:", queue);
@@ -301,7 +306,7 @@ function startWorker() {
       });
     }
     if (active_queues['persist']) {
-      ch.assertQueue("persist", { durable: durable_enabled }, function (err, _ok) {
+      ch.assertQueue("persist", sharedQueueOptions, function (err, _ok) {
         if (closeOnErr(err)) return;
         let queue = _ok.queue;
         logger.log("asserted queue:", queue);

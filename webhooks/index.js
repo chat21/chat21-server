@@ -630,6 +630,11 @@ class Webhooks {
     this.amqpConn.createChannel((err, ch) => {
       this.channel = ch;
       if (this.closeOnErr(err)) return;
+      const sharedQueueOptions = {
+        durable: true,
+        exclusive: false,
+        autoDelete: false
+      };
       ch.on("error", function (err) {
         logger.error("[Webooks.AMQP] channel error", err);
       });
@@ -640,7 +645,7 @@ class Webhooks {
       ch.assertExchange(this.exchange, 'topic', {
         durable: this.durable_enabled
       });
-      ch.assertQueue(this.queue, { durable: this.durable_enabled }, (err, _ok) => {
+      ch.assertQueue(this.queue, sharedQueueOptions, (err, _ok) => {
         if (this.closeOnErr(err)) return;
         logger.debug("subscribed to _ok.queue: " + _ok.queue);
         this.subscribeTo(this.topic_webhook_message_deliver, ch, _ok.queue)
