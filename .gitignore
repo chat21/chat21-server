@@ -8,3 +8,17 @@ nohup.out
 
 .idea
 dist
+.DS_Store
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+*.zip
+*.tar.gz
+*.env
+*.pem
+*.key
+*.crt
+*.pfx
+*.cer
