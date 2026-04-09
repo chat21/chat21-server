@@ -546,7 +546,7 @@ class Chat21Client {
             if (this.log) {
                 console.log("this.on_message_handler already subscribed. Reconnected num", this.reconnections)
             }
-            callbsubscribedCallbackack();
+            subscribedCallback();
             return
         }
         this.subscribeToMyConversations(() => {
