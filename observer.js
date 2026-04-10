@@ -629,7 +629,7 @@ function sendMessageToGroupMembers(outgoing_message, group, app_id, callback) {
 // let groups = {};
 function getGroup(group_id, callback) {
   logger.log("**** getGroup:", group_id)
-  groupFromCache(group_id, (group) => {
+  groupFromCache(group_id).then((group) => {
     logger.log("group from cache?", group);
     if (group) {
       logger.log("--GROUP", group_id, "FOUND IN CACHE:", group);
@@ -645,30 +645,30 @@ function getGroup(group_id, callback) {
         callback(err, group);
       });
     }
+  }).catch((err) => {
+    logger.error("groupFromCache error:", err);
+    chatdb.getGroup(group_id, callback);
   });
 }
 
-function groupFromCache(group_id, callback) {
+async function groupFromCache(group_id) {
   logger.log("groupFromCache() group_id:", group_id)
   if (redis_enabled) {
     const group_key = "chat21:messages:groups:" + group_id;
     logger.log("group key", group_key)
-    tdcache.client.get(group_key, (err, group) => {
-      if (err) {
-        logger.error("Error during getGroup():", err);
-        callback(null);
-      }
-      else {
-        if (callback) {
-          logger.log("got group by key:", group);
-          callback(JSON.parse(group));
-        }
-      }
-    });
+    try {
+      const value = await tdcache.get(group_key);
+      logger.log("got group by key:", value);
+      return JSON.parse(value);
+    }
+    catch (err) {
+      logger.error("Error during groupFromCache():", err);
+      return null;
+    }
   }
   else {
     logger.log("No redis.");
-    callback(null);
+    return null;
   }
 }
 
@@ -1118,6 +1118,8 @@ function process_update_group(topic, payload, callback) {
     callback(true);
     return;
   }
+  // Keep the cache in sync so that subsequent messages use the updated member list
+  saveGroupInCache(group, group.uid, () => {});
   deliverGroupUpdated(group, notify_to, function(ok) {
     callback(ok)
   })

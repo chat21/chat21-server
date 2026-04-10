@@ -52,7 +52,7 @@ class RateManager {
             tokens -= 1;
             bucket.tokens = tokens;
             bucket.timestamp = new Date();
-            this.setBucket(key, bucket)
+            await this.setBucket(key, bucket)
             return true;
         } else {
             bucket.timestamp = new Date();
