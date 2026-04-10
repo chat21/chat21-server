@@ -4,6 +4,35 @@
 available on:
  ▶️ https://www.npmjs.com/package/@chat21/chat21-server
 
+## v0.2.59
+- **perf:** reduced Redis RTTs per message with cache ON from 3 sequential to ~1 effective:
+  - `setBucket()` in `RateManager` is now fire-and-forget (removed blocking `await`), saving 1 Redis RTT per message
+  - `groupFromCache()` is now pre-fetched in parallel with `canExecute()`, saving another sequential RTT
+- **fix:** `process_update_group()` now calls `saveGroupInCache()` to keep the Redis group cache fresh on group updates (stale-cache bug)
+- **fix:** `groupFromCache()` refactored to use `await tdcache.get()` instead of raw `tdcache.client.get()`
+- **docs:** added `CACHE_PERFORMANCE.md` with full analysis, benchmark results, and MongoDB profiler evidence
+- **feat:** added `perfomance/mongo_proof.sh` and `perfomance/mongo_proof_compare.js` to measure MongoDB query reduction with cache ON vs OFF
+
+Benchmark results (50 sessions × 30 messages, stage K8s cluster):
+  - Cache ON p99: 661 ms → 447 ms (−32%)
+  - Cache ON max: 1,548 ms → 1,171 ms (−24%)
+  - MongoDB `groups.findOne` queries: −100% with cache ON (verified via profiler)
+
+## v0.2.58
+- added performance testing scripts for cache ON/OFF comparison (`perfomance/messages_delay_cachetest.js`, `perfomance/compare_stats.js`, `perfomance/run_cache_comparison.sh`)
+
+## v0.2.57
+- debug version
+
+## v0.2.56
+- debug version
+
+## v0.2.55
+- debug version
+
+## v0.2.54
+- debug version
+
 ## v0.2.53
 - debug version
 
