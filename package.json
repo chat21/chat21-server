@@ -21,14 +21,31 @@
   },
   "devDependencies": {
     "@chat21/chat21-http-server": "^0.2.37",
+    "@types/amqplib": "^0.10.8",
+    "@types/chai": "^4.3.20",
+    "@types/express": "^5.0.6",
+    "@types/mocha": "^10.0.10",
+    "@types/mongodb": "^3.6.20",
+    "@types/node": "^25.6.0",
+    "@types/redis": "^2.8.32",
+    "@types/sinon": "^21.0.1",
+    "@types/uuid": "^10.0.0",
     "axios": "^0.21.1",
+    "chai": "^4.5.0",
     "loadtest": "^1.4.3",
-    "should": "^9.0.2"
+    "should": "^9.0.2",
+    "sinon": "^21.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.2"
   },
   "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/chatservermq.ts",
+    "start": "node dist/chatservermq.js",
+    "start:legacy": "node chatservermq.js",
     "test": "mocha ./test/*.js --timeout 10000 --exit",
-    "benchmarks": "node ./benchmarks/index.js",
-    "start": "node chatservermq.js"
+    "test:unit": "mocha --require ts-node/register 'src/test/unit/**/*.test.ts' --timeout 10000",
+    "benchmarks": "node ./benchmarks/index.js"
   },
   "author": "",
   "license": "MIT"
