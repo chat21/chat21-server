@@ -460,6 +460,11 @@ async function process_outgoing(topic, message_string, callback) {
   const recipient_id = topic_parts[6];
   //const me = sender_id
 
+  // Pre-fetch group from cache in parallel with the rate limit check to save a Redis RTT.
+  const groupCachePromise = recipient_id.includes("group-")
+    ? groupFromCache(recipient_id).catch(() => null)
+    : null;
+
   if(rate_manager){
     const allowed = await rate_manager.canExecute(sender_id, 'message');
     if (!allowed) {
@@ -550,11 +555,9 @@ async function process_outgoing(topic, message_string, callback) {
       });
       return;
     }
-    // chatdb.getGroup(group_id, function(err, group) { // REDIS?
     logger.debug("getting group:", group_id)
     getGroup(group_id, function(err, group) {
       if (!group) { // created only to temporary store group-messages in group-timeline
-        // TODO: 1. create group (on-the-fly), 2. remove this code, 3. continue as if the group exists.
         logger.debug("group doesn't exist! Sending anyway to group timeline...");
         group = {
           uid: group_id,
@@ -570,9 +573,8 @@ async function process_outgoing(topic, message_string, callback) {
       group.members[group.uid] = 1
       sendMessageToGroupMembers(outgoing_message, group, app_id, (ack) => {
         logger.debug("Message sent to group:" + JSON.stringify(group));
-        //callback(ack);
       });
-    })
+    }, groupCachePromise)
   }
 }
 
@@ -627,9 +629,12 @@ function sendMessageToGroupMembers(outgoing_message, group, app_id, callback) {
 }
 
 // let groups = {};
-function getGroup(group_id, callback) {
+// Optional `prefetchPromise` is the result of groupFromCache() already started in parallel
+// with the rate-limit check. When provided, the extra Redis GET is skipped entirely.
+function getGroup(group_id, callback, prefetchPromise) {
   logger.log("**** getGroup:", group_id)
-  groupFromCache(group_id).then((group) => {
+  const cachePromise = prefetchPromise || groupFromCache(group_id);
+  cachePromise.then((group) => {
     logger.log("group from cache?", group);
     if (group) {
       logger.log("--GROUP", group_id, "FOUND IN CACHE:", group);

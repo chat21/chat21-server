@@ -52,7 +52,9 @@ class RateManager {
             tokens -= 1;
             bucket.tokens = tokens;
             bucket.timestamp = new Date();
-            await this.setBucket(key, bucket)
+            // Fire-and-forget: the write-back persists state for the NEXT request only.
+            // Awaiting it would block the current message pipeline unnecessarily.
+            this.setBucket(key, bucket).catch(err => console.error('(RateManager) setBucket error:', err));
             return true;
         } else {
             bucket.timestamp = new Date();
