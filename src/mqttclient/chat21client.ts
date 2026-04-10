@@ -10,6 +10,16 @@
 
 import * as mqtt from 'mqtt';
 import axios from 'axios';
+import type {
+  ParsedTopic,
+  CallbackHandler,
+  RequestOptions,
+  MessageCallback,
+  SimpleCallback,
+  DataCallback,
+  RequestCallback,
+} from './types';
+import { isBrowser } from './types';
 
 const _CLIENTADDED = '/clientadded';
 const _CLIENTUPDATED = '/clientupdated';
@@ -22,32 +32,6 @@ export interface Chat21ClientOptions {
   APIendpoint: string;
   appId: string;
   log?: boolean;
-}
-
-interface ParsedTopic {
-  conversWith: string;
-}
-
-interface CallbackHandler {
-  type: string;
-  conversWith: string;
-  callback: (message: Record<string, unknown>, topic: ParsedTopic) => void;
-}
-
-interface RequestOptions {
-  url: string;
-  headers: Record<string, string>;
-  data?: Record<string, unknown>;
-  method: string;
-}
-
-type MessageCallback = (message: Record<string, unknown>, topic: ParsedTopic) => void;
-type SimpleCallback = (err?: Error | null) => void;
-type DataCallback = (err: Error | null, data: unknown) => void;
-type RequestCallback = (err: Error | null, response: unknown, json: unknown) => void;
-
-function isBrowser(): boolean {
-  return false;
 }
 
 export class Chat21Client {
@@ -92,6 +76,8 @@ export class Chat21Client {
     }
   }
 
+  // ─── Subscriptions ─────────────────────────────────────────────────────────
+
   subscribeToMyConversations(subscribedCallback: () => void): void {
     this.topic_inbox = 'apps/tilechat/users/' + this.user_id + '/#';
     console.log('subscribing to:', this.user_id, 'topic', this.topic_inbox);
@@ -110,6 +96,8 @@ export class Chat21Client {
       subscribedCallback();
     });
   }
+
+  // ─── Message sending ───────────────────────────────────────────────────────
 
   sendMessage(
     text: string,
@@ -213,6 +201,8 @@ export class Chat21Client {
       }
     });
   }
+
+  // ─── Group management ──────────────────────────────────────────────────────
 
   groupCreate(
     name: string,
@@ -327,6 +317,8 @@ export class Chat21Client {
     }, this.log);
   }
 
+  // ─── Conversation management ───────────────────────────────────────────────
+
   saveInstance(
     instance_id: string,
     data: Record<string, unknown>,
@@ -370,6 +362,8 @@ export class Chat21Client {
       }
     });
   }
+
+  // ─── Callback registration ─────────────────────────────────────────────────
 
   onConversationAdded(callback: MessageCallback): number {
     this.last_handler++;
@@ -448,6 +442,8 @@ export class Chat21Client {
   removeOnGroupUpdatedHandler(handler: number): void {
     this.onGroupUpdatedCallbacks.delete(handler);
   }
+
+  // ─── Message routing (MQTT message handler) ────────────────────────────────
 
   start(subscribedCallback: () => void): void {
     if (this.on_message_handler) {
@@ -600,6 +596,8 @@ export class Chat21Client {
     });
   }
 
+  // ─── Topic parsing + conversation details ──────────────────────────────────
+
   parseTopic(topic: string): ParsedTopic | null {
     const topic_parts = topic.split('/');
     if (topic_parts.length >= 7) {
@@ -677,6 +675,8 @@ export class Chat21Client {
     );
   }
 
+  // ─── HTTP helpers ──────────────────────────────────────────────────────────
+
   static myrequest(options: RequestOptions, callback: RequestCallback, log: boolean): void {
     if (log) {
       // console.log("HTTP Request:", options);
@@ -706,6 +706,8 @@ export class Chat21Client {
         }
       });
   }
+
+  // ─── Connection management ─────────────────────────────────────────────────
 
   connect(user_id: string, jwt: string, callback: () => void): void {
     this.user_id = user_id;

@@ -10,6 +10,7 @@ import * as https from 'https';
 import { TiledeskLogger } from '../tiledesk-logger';
 import MessageConstants from '../models/messageConstants';
 import { ChatMessage, Conversation } from '../types';
+import type { WorkCallback, SendDataCallback, SimpleCallback } from './types';
 
 export interface WebhooksOptions {
   RABBITMQ_URI: string;
@@ -22,10 +23,6 @@ export interface WebhooksOptions {
   prefetch_messages?: number;
   logger?: TiledeskLogger;
 }
-
-type WorkCallback = (ok: boolean) => void;
-type SendDataCallback = (err: Error | { statusCode: number } | null, data: string | null) => void;
-type SimpleCallback = (err: Error | null) => void;
 
 /**
  * Manages webhooks for chat21-server.
@@ -99,6 +96,8 @@ export class Webhooks {
     );
   }
 
+  // ─── Config getters / setters ──────────────────────────────────────────────
+
   getWebHookEnabled(): boolean {
     return this.enabled;
   }
@@ -126,6 +125,8 @@ export class Webhooks {
       this.webhook_events_array = events;
     }
   }
+
+  // ─── Notification helpers (WHnotify*) ──────────────────────────────────────
 
   WHnotifyMessageStatusSentOrDelivered(
     message_payload: string,
@@ -264,6 +265,8 @@ export class Webhooks {
       }
     });
   }
+
+  // ─── Webhook process handlers (WHprocess_*) ────────────────────────────────
 
   WHprocess_webhook_message_deliver(
     topic: string,
@@ -516,6 +519,8 @@ export class Webhooks {
     return false;
   }
 
+  // ─── HTTP delivery ─────────────────────────────────────────────────────────
+
   WHsendData(
     endpoint: string,
     json: Record<string, unknown>,
@@ -567,6 +572,8 @@ export class Webhooks {
       return callback(err as Error, null);
     }
   }
+
+  // ─── AMQP infrastructure ───────────────────────────────────────────────────
 
   async whenConnected(): Promise<amqp.ConfirmChannel> {
     const ch = await this.startPublisher();
@@ -666,6 +673,8 @@ export class Webhooks {
       callback(true);
     }
   }
+
+  // ─── Lifecycle ─────────────────────────────────────────────────────────────
 
   start(): Promise<{ conn: amqp.Connection; ch: amqp.ConfirmChannel }> {
     logger.info('Webhook config: ', this);
