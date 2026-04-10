@@ -185,7 +185,12 @@ export class TdCache {
   async getJSON<T = unknown>(key: string): Promise<T | null> {
     const value = await this.get(key);
     if (value === null) return null;
-    return JSON.parse(value) as T;
+    try {
+      return JSON.parse(value) as T;
+    } catch (err) {
+      console.error(`TdCache.getJSON: failed to parse JSON for key "${key}":`, (err as Error).message);
+      return null;
+    }
   }
 
   del(key: string, callback?: () => void): Promise<void> {

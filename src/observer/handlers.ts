@@ -24,6 +24,7 @@ import {
 import { groupFromCache, saveGroupInCache, getGroup, isGroupMessage } from './groups';
 import { deliverMessage, deliverGroupUpdated, sendMessageToGroupMembers } from './message';
 import { logger } from '../tiledesk-logger/index';
+import { safeParseJSON } from './utils';
 import MessageConstants from '../models/messageConstants';
 
 // ─── Message router ──────────────────────────────────────────────────────────
@@ -72,9 +73,14 @@ function process_presence(topic: string, message_string: string, callback: (ok: 
     return;
   }
   const topic_parts = topic.split(".");
+  if (topic_parts.length < 4) {
+    logger.error("[process_presence] Malformed topic (expected ≥4 parts):", topic);
+    return;
+  }
   const pres_app_id = topic_parts[1];
   const user_id = topic_parts[3];
-  const presence_payload = JSON.parse(message_string);
+  const presence_payload = safeParseJSON(message_string, 'process_presence');
+  if (!presence_payload) return;
   logger.debug("presence_payload:", presence_payload);
   const presence_status = presence_payload.connected ? "online" : "offline";
   logger.debug("presence_status:", presence_status);
@@ -106,6 +112,10 @@ async function process_outgoing(topic: string, message_string: string, callback:
   callback(true);
   logger.debug("***** TOPIC outgoing: " + topic + " MESSAGE PAYLOAD: " + message_string);
   const topic_parts = topic.split(".");
+  if (topic_parts.length < 7) {
+    logger.error("[process_outgoing] Malformed topic (expected ≥7 parts):", topic);
+    return;
+  }
   const out_app_id = topic_parts[1];
   const sender_id = topic_parts[4];
   const recipient_id = topic_parts[6];
@@ -123,7 +133,8 @@ async function process_outgoing(topic: string, message_string: string, callback:
     }
   }
 
-  const outgoing_message: Record<string, unknown> = JSON.parse(message_string);
+  const outgoing_message: Record<string, unknown> | null = safeParseJSON(message_string, 'process_outgoing');
+  if (!outgoing_message) return;
 
   if (topic) {
     messagesTopicCounter.inc({ topic: topic });
@@ -213,10 +224,16 @@ async function process_outgoing(topic: string, message_string: string, callback:
 function process_delivered(topic: string, message_string: string, callback: (ok: boolean) => void): void {
   logger.debug(">>>>> DELIVERING:", topic, "MESSAGE PAYLOAD:", message_string);
   const topic_parts = topic.split(".");
+  if (topic_parts.length < 7) {
+    logger.error("[process_delivered] Malformed topic (expected ≥7 parts):", topic);
+    callback(true);
+    return;
+  }
   const del_app_id = topic_parts[2];
   const inbox_of = topic_parts[4];
   const convers_with = topic_parts[6];
-  const message: Record<string, unknown> = JSON.parse(message_string);
+  const message: Record<string, unknown> | null = safeParseJSON(message_string, 'process_delivered');
+  if (!message) { callback(true); return; }
   if (message.status !== MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED) {
     logger.error("process_delivered() error: status != DELIVERED (150). Only delivering messages with status DELIVERED", message);
     callback(true);
@@ -241,11 +258,17 @@ function process_delivered(topic: string, message_string: string, callback: (ok:
 function process_persist(topic: string, message_string: string, callback: (ok: boolean) => void): void {
   logger.debug(">>>>> TOPIC persist: " + topic + " MESSAGE PAYLOAD: " + message_string);
   const topic_parts = topic.split(".");
+  if (topic_parts.length < 7) {
+    logger.error("[process_persist] Malformed topic (expected ≥7 parts):", topic);
+    callback(true);
+    return;
+  }
   const per_app_id = topic_parts[2];
   const me = topic_parts[4];
   const convers_with = topic_parts[6];
 
-  const persist_message: Record<string, unknown> = JSON.parse(message_string);
+  const persist_message: Record<string, unknown> | null = safeParseJSON(message_string, 'process_persist');
+  if (!persist_message) { callback(true); return; }
   const savedMessage = persist_message;
   savedMessage.app_id = per_app_id;
   savedMessage.timelineOf = me;
@@ -296,7 +319,8 @@ function process_update(topic: string, message_string: string, callback: (ok: bo
     const convers_with = topic_parts[5];
     const message_id = topic_parts[6];
     logger.debug("updating message:", message_id, "on convers_with", convers_with, "for user", user_id, "patch", message_string);
-    const patch: Record<string, unknown> = JSON.parse(message_string);
+    const patch: Record<string, unknown> | null = safeParseJSON(message_string, 'process_update:messages');
+    if (!patch) { callback(true); return; }
     if (!patch.status || patch.status !== 200) {
       logger.debug("Error GRAVE- process_update: (!patch.status || patch.status != 200) - SKIP UPDATE.", topic);
       callback(true);
@@ -357,7 +381,8 @@ function process_update(topic: string, message_string: string, callback: (ok: bo
     const user_id = topic_parts[3];
     const convers_with = topic_parts[5];
     logger.debug("updating conversation:" + convers_with + " for user " + user_id + " patch " + message_string);
-    const patch: Record<string, unknown> = JSON.parse(message_string);
+    const patch: Record<string, unknown> | null = safeParseJSON(message_string, 'process_update:conversations');
+    if (!patch) { callback(true); return; }
     const me = user_id;
     patch.timelineOf = me;
     patch.conversWith = convers_with;
@@ -474,7 +499,8 @@ function process_update_group(topic: string, payload: string, callback: (ok: boo
   const grp_app_id = topic_parts[2];
   logger.debug("app_id:" + grp_app_id);
   logger.debug("payload:" + payload);
-  const data: Record<string, unknown> = JSON.parse(payload);
+  const data: Record<string, unknown> | null = safeParseJSON(payload, 'process_update_group');
+  if (!data) { callback(true); return; }
   logger.debug("process_update_group DATA ", JSON.stringify(data));
   const group = data.group as Record<string, unknown>;
   const notify_to = data.notify_to as Record<string, unknown>;

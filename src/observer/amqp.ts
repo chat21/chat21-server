@@ -15,7 +15,8 @@ export function start(): Promise<{ conn: amqp.Connection; ch: amqp.ConfirmChanne
 
 export function startMQ(
   resolve: (value: { conn: amqp.Connection; ch: amqp.ConfirmChannel }) => void,
-  reject: (reason?: unknown) => void
+  reject: (reason?: unknown) => void,
+  attempt = 0
 ): void {
   const autoRestart_val = process.env.AUTO_RESTART || observerState.autoRestartProperty;
   const autoRestart =
@@ -23,20 +24,23 @@ export function startMQ(
     autoRestart_val === "true" ||
     autoRestart_val === true;
 
+  const MAX_DELAY_MS = 30_000;
+  const backoffDelay = Math.min(1000 * Math.pow(2, attempt), MAX_DELAY_MS);
+
   logger.debug("(Observer) Connecting to RabbitMQ...");
   amqp.connect(observerState.rabbitmq_uri, (err, conn) => {
     if (err) {
-      logger.error("[Observer AMQP]", err);
+      logger.error("[Observer AMQP] connection error:", err.message);
       if (autoRestart) {
-        logger.error("[Observer AMQP] reconnecting");
-        return setTimeout(() => { startMQ(resolve, reject); }, 1000);
+        logger.error(`[Observer AMQP] reconnecting in ${backoffDelay}ms (attempt ${attempt + 1})`);
+        return setTimeout(() => { startMQ(resolve, reject, attempt + 1); }, backoffDelay);
       } else {
         process.exit(1);
       }
     }
     conn.on("error", (err: Error) => {
       if (err.message !== "Connection closing") {
-        logger.error("[Observer AMQP] conn error", err);
+        logger.error("[Observer AMQP] conn error:", err.message);
         return reject(err);
       }
     });
@@ -44,7 +48,7 @@ export function startMQ(
       logger.info("[Observer AMQP] close");
       if (autoRestart) {
         logger.info("[Observer AMQP] reconnecting because of a disconnection (Autorestart = true)");
-        return setTimeout(() => { startMQ(resolve, reject); }, 1000);
+        return setTimeout(() => { startMQ(resolve, reject, 0); }, 1000);
       } else {
         logger.info("[Observer AMQP] close event. No action.");
       }
@@ -68,11 +72,11 @@ export function startPublisher(): Promise<amqp.ConfirmChannel> {
     observerState.amqpConn!.createConfirmChannel((err, ch) => {
       if (closeOnErr(err)) return;
       ch.on("error", function (err: Error) {
-        logger.error("[AMQP] channel error", err);
+        logger.error("[AMQP] publisher channel error:", err.message);
         process.exit(0);
       });
       ch.on("close", function () {
-        logger.debug("[AMQP] channel closed");
+        logger.debug("[AMQP] publisher channel closed");
       });
       observerState.pubChannel = ch;
       return resolve(ch);
@@ -90,7 +94,7 @@ export function startWorker(): void {
       autoDelete: false
     };
     ch.on("error", function (err: Error) {
-      logger.error("[AMQP] channel error", err);
+      logger.error("[AMQP] worker channel error:", err.message);
       process.exit(0);
     });
     ch.on("close", function () {
@@ -154,7 +158,7 @@ function processMsg(msg: amqp.Message | null): void {
 
 export function closeOnErr(err: Error | null): boolean {
   if (!err) return false;
-  logger.error("[AMQP] error", err);
+  logger.error("[AMQP] error:", err.message);
   observerState.amqpConn!.close();
   return true;
 }

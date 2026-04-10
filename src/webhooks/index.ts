@@ -528,6 +528,7 @@ export class Webhooks {
   ): void {
     const q = url.parse(endpoint, true);
     const protocol = q.protocol === 'http:' ? http : https;
+    const WEBHOOK_TIMEOUT_MS = 30_000;
     const options: http.RequestOptions = {
       path: q.pathname ?? '/',
       host: q.hostname,
@@ -536,6 +537,7 @@ export class Webhooks {
       headers: {
         'Content-Type': 'application/json',
       },
+      timeout: WEBHOOK_TIMEOUT_MS,
     };
     logger.debug('Using request options:' + JSON.stringify(options));
     try {
@@ -557,12 +559,17 @@ export class Webhooks {
           respdata += chunk.toString();
         });
         response.on('end', () => {
-          logger.debug('WEBHOOK RESPONSE: ' + respdata + ' for webhook_endpoint: ' + endpoint);
+          const truncated = respdata.length > 500 ? respdata.slice(0, 500) + '…' : respdata;
+          logger.debug('WEBHOOK RESPONSE: ' + truncated + ' for webhook_endpoint: ' + endpoint);
           return callback(null, respdata);
         });
       });
+      req.on('timeout', () => {
+        logger.error('WEBHOOK request timed out for endpoint: ' + endpoint);
+        req.destroy(new Error('Webhook request timed out after ' + WEBHOOK_TIMEOUT_MS + 'ms'));
+      });
       req.on('error', (err: Error) => {
-        logger.error('WEBHOOK RESPONSE Error: ', err);
+        logger.error('WEBHOOK RESPONSE Error: ' + err.message);
         return callback(err, null);
       });
       req.write(JSON.stringify(json));
