@@ -39,16 +39,16 @@ export function deliverMessage(
         }
       });
     }
-    // Analytics: track message.delivered for direct (non-group) DELIVERED messages only.
-    if (
-      message.status === MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED &&
-      !isGroupMessage(message)
-    ) {
+    // Populate in-memory caches for ALL delivered messages (group or direct) so
+    // subsequent events (return_receipt, presence) can resolve the project ID
+    // without any database round-trip.
+    // NOTE: the analytics event for group messages is fired once per message in
+    // process_outgoing() to avoid N-per-member inflation. Direct messages fire
+    // the event here, after the cache block.
+    if (message.status === MessageConstants.CHAT_MESSAGE_STATUS_CODE.DELIVERED) {
       const attrs = message.attributes as Record<string, unknown> | undefined;
       const id_project = attrs?.projectId as string | undefined;
 
-      // Populate in-memory caches so subsequent events (return_receipt, presence)
-      // can resolve the project ID without any database round-trip.
       if (id_project) {
         const msg_id = message.message_id as string | undefined;
         if (msg_id) {
@@ -62,15 +62,19 @@ export function deliverMessage(
         observerState.userProjectCache.set(inbox_of, id_project);
       }
 
-      trackAnalyticsEvent('message.delivered', id_project, {
-        id_message: message.message_id as string ?? '',
-        sender_id: message.sender as string ?? '',
-        recipient_id: inbox_of,
-        app_id,
-        channel_type: (attrs?.channel as string) ?? null,
-        delivery_latency_ms: null,
-        ip_address: (attrs?.ipAddress as string) ?? null,
-      });
+      // Analytics event only for direct (non-group) messages.
+      // Group messages are tracked once in process_outgoing() instead.
+      if (!isGroupMessage(message)) {
+        trackAnalyticsEvent('message.delivered', id_project, {
+          id_message: message.message_id as string ?? '',
+          sender_id: message.sender as string ?? '',
+          recipient_id: inbox_of,
+          app_id,
+          channel_type: (attrs?.channel as string) ?? null,
+          delivery_latency_ms: null,
+          ip_address: (attrs?.ipAddress as string) ?? null,
+        });
+      }
     }
     logger.debug("ADDED. NOW PUBLISH TO 'persist' TOPIC: " + persist_topic);
     publish(observerState.exchange, persist_topic, Buffer.from(message_payload), function (err) {

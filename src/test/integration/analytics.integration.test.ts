@@ -332,4 +332,82 @@ describe('Analytics integration', function () {
     assert.strictEqual(evt.payload.status,  'online',      'status should be online when connected=true');
     assert.strictEqual(evt.payload.user_id, PRES_USER_ID,  'user_id should match the presence user');
   });
+
+  // ── Test 4: group message — message.delivered + downstream cache ──────────────
+  //
+  // Validates the fix for the core bug: all Tiledesk chats are groups, so analytics
+  // must fire for group-recipient messages too.
+  //
+  // Strategy:
+  //  4a. Send an outgoing message to a "group-XXX" recipient (inline group, so no
+  //      DB lookup is needed). Verify message.delivered fires with channel_type=group.
+  //  4b. Verify messageProjectCache was populated: send a return-receipt update
+  //      using the captured message_id; assert message.return_receipt has correct
+  //      id_project (proves the cache was filled by deliverMessage, not bypassed).
+  //  4c. Verify userProjectCache was populated: send a presence event for the
+  //      group sender; assert user.presence_changed has correct id_project.
+
+  it('emits message.delivered (channel_type=group) and populates caches for downstream events', async function () {
+    const GROUP_ID    = 'group-inttest001';
+    const GROUP_USER1 = 'grpuser1';
+    const GROUP_USER2 = 'grpuser2';
+    const GROUP_PROJECT = 'test-project-group-001';
+
+    // 4a. Send an outgoing message to the group (inline group spec embeds members).
+    //     Routing: apps.<app>.outgoing.users.<sender>.messages.<group_id>.outgoing
+    const groupOutPayload = JSON.stringify({
+      text: 'hello group integration test',
+      attributes: { projectId: GROUP_PROJECT },
+      group: {
+        members: {
+          [GROUP_USER1]: 1,
+          [GROUP_USER2]: 1,
+        },
+      },
+    });
+    publishChannel.publish(
+      'amq.topic',
+      `apps.tilechat.outgoing.users.${GROUP_USER1}.messages.${GROUP_ID}.outgoing`,
+      Buffer.from(groupOutPayload)
+    );
+
+    const deliveredEvt = await waitForEvent('message.delivered');
+    const msg_id = deliveredEvt.payload.id_message as string;
+
+    assert.ok(msg_id && msg_id.length > 0,
+      'payload.id_message must be a non-empty UUID');
+    assert.strictEqual(deliveredEvt.id_project,       GROUP_PROJECT, 'id_project should match projectId attribute');
+    assert.strictEqual(deliveredEvt.payload.channel_type, 'group',   'channel_type should be "group"');
+    assert.strictEqual(deliveredEvt.payload.recipient_id, GROUP_ID,  'recipient_id should be the group ID');
+    assert.strictEqual(deliveredEvt.payload.sender_id,  GROUP_USER1, 'sender_id should be the group message sender');
+
+    // Clear before asserting downstream events.
+    receivedEvents = [];
+
+    // 4b. Return receipt — proves messageProjectCache was populated by the fixed
+    //     deliverMessage() path (which now runs for group-delivered copies too).
+    publishChannel.publish(
+      'amq.topic',
+      `apps.tilechat.users.${GROUP_USER1}.messages.${GROUP_ID}.${msg_id}.update`,
+      Buffer.from(JSON.stringify({ status: 200 }))
+    );
+
+    const rrEvt = await waitForEvent('message.return_receipt');
+    assert.strictEqual(rrEvt.id_project,         GROUP_PROJECT, 'return_receipt id_project must come from cache (non-null)');
+    assert.strictEqual(rrEvt.payload.id_message,  msg_id,       'return_receipt id_message must match group message UUID');
+
+    receivedEvents = [];
+
+    // 4c. Presence event — proves userProjectCache was populated for the group sender.
+    publishChannel.publish(
+      'amq.topic',
+      `apps.tilechat.users.${GROUP_USER1}.presence.client2`,
+      Buffer.from(JSON.stringify({ connected: false }))
+    );
+
+    const presEvt = await waitForEvent('user.presence_changed');
+    assert.strictEqual(presEvt.id_project,      GROUP_PROJECT, 'presence id_project must come from user cache (non-null)');
+    assert.strictEqual(presEvt.payload.status,  'offline',     'status should be offline when connected=false');
+    assert.strictEqual(presEvt.payload.user_id, GROUP_USER1,   'user_id should match group sender');
+  });
 });

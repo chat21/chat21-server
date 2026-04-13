@@ -208,6 +208,22 @@ async function process_outgoing(topic: string, message_string: string, callback:
     });
   } else {
     const group_id = recipient_id;
+    // Analytics: fire message.delivered once per group message here, before the
+    // fan-out to individual members, to avoid N-per-member event inflation.
+    // id_project is available directly from outgoing message attributes.
+    {
+      const grpAttrs = outgoing_message.attributes as Record<string, unknown> | undefined;
+      const grp_id_project = (grpAttrs?.projectId as string | undefined) ?? null;
+      trackAnalyticsEvent('message.delivered', grp_id_project, {
+        id_message: outgoing_message.message_id as string ?? '',
+        sender_id: sender_id,
+        recipient_id: group_id,
+        app_id: out_app_id,
+        channel_type: 'group',
+        delivery_latency_ms: null,
+        ip_address: (grpAttrs?.ipAddress as string) ?? null,
+      });
+    }
     if (outgoing_message.group) {
       logger.debug("Inline Group message.", outgoing_message);
       const inline_group = outgoing_message.group as Record<string, unknown>;
