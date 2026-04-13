@@ -38,6 +38,22 @@ export interface ObserverState {
   pubChannel: amqp.ConfirmChannel | null;
   offlinePubQueue: Array<[string, string, Buffer]>;
   channel: amqp.Channel | null;
+  analytics_enabled: boolean;
+  analytics_exchange: string;
+  /**
+   * In-memory maps used to resolve id_project for analytics events without
+   * any database round-trip:
+   *
+   *  messageProjectCache  message_id  → projectId
+   *    Populated by deliverMessage() when status=DELIVERED; consumed by
+   *    process_update() for message.return_receipt events.
+   *
+   *  userProjectCache     user_id     → projectId
+   *    Populated by deliverMessage() for both sender and recipient; consumed
+   *    by process_presence() for user.presence_changed events.
+   */
+  messageProjectCache: Map<string, string>;
+  userProjectCache: Map<string, string>;
 }
 
 export const observerState: ObserverState = {
@@ -68,4 +84,8 @@ export const observerState: ObserverState = {
   pubChannel: null,
   offlinePubQueue: [],
   channel: null,
+  analytics_enabled: false,
+  analytics_exchange: 'tiledesk.analytics',
+  messageProjectCache: new Map<string, string>(),
+  userProjectCache: new Map<string, string>(),
 };

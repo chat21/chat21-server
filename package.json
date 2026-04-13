@@ -45,6 +45,7 @@
     "start:legacy": "node chatservermq.js",
     "test": "mocha ./test/*.js --timeout 10000 --exit",
     "test:unit": "mocha --require ts-node/register 'src/test/unit/**/*.test.ts' --timeout 10000",
+    "test:integration": "mocha --require ts-node/register 'src/test/integration/**/*.integration.test.ts' --timeout 30000 --exit",
     "benchmarks": "node ./benchmarks/index.js"
   },
   "author": "",

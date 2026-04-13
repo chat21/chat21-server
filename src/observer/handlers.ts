@@ -26,6 +26,7 @@ import { deliverMessage, deliverGroupUpdated, sendMessageToGroupMembers } from '
 import { logger } from '../tiledesk-logger/index';
 import { safeParseJSON } from './utils';
 import MessageConstants from '../models/messageConstants';
+import { trackAnalyticsEvent } from './analytics';
 
 // ─── Message router ──────────────────────────────────────────────────────────
 
@@ -68,10 +69,9 @@ function process_presence(topic: string, message_string: string, callback: (ok: 
     return;
   }
   logger.debug("> got PRESENCE testament", message_string, " on topic", topic);
-  if (!observerState.webhook_enabled) {
-    logger.debug("WEBHOOKS DISABLED. Skipping presence notification");
-    return;
-  }
+
+  // Parse topic parts early — needed for both analytics and webhook.
+  // Topic format: apps.<app_id>.users.<user_id>.presence.<client_id>
   const topic_parts = topic.split(".");
   if (topic_parts.length < 4) {
     logger.error("[process_presence] Malformed topic (expected ≥4 parts):", topic);
@@ -79,11 +79,30 @@ function process_presence(topic: string, message_string: string, callback: (ok: 
   }
   const pres_app_id = topic_parts[1];
   const user_id = topic_parts[3];
+  const client_id = topic_parts[5] ?? null;
+
   const presence_payload = safeParseJSON(message_string, 'process_presence');
   if (!presence_payload) return;
   logger.debug("presence_payload:", presence_payload);
   const presence_status = presence_payload.connected ? "online" : "offline";
   logger.debug("presence_status:", presence_status);
+
+  // Analytics: fires regardless of webhook_enabled.
+  // Resolve the project ID from the in-memory user cache (populated by
+  // deliverMessage() with zero DB cost) instead of querying MongoDB.
+  const id_project = observerState.userProjectCache.get(user_id) ?? null;
+  trackAnalyticsEvent('user.presence_changed', id_project, {
+    user_id,
+    client_id,
+    status: presence_status,
+    app_id: pres_app_id,
+  });
+
+  if (!observerState.webhook_enabled) {
+    logger.debug("WEBHOOKS DISABLED. Skipping presence notification");
+    return;
+  }
+
   const presence_event = {
     "event_type": "presence-change",
     "presence": presence_status,
@@ -314,7 +333,6 @@ function process_update(topic: string, message_string: string, callback: (ok: bo
   }
   if (topic_parts[4] === "messages") {
     logger.debug(" MESSAGE UPDATE.");
-    const upd_app_id = topic_parts[1];
     const user_id = topic_parts[3];
     const convers_with = topic_parts[5];
     const message_id = topic_parts[6];
@@ -356,6 +374,15 @@ function process_update(topic: string, message_string: string, callback: (ok: bo
             }
           });
         }
+        // Analytics: track message.return_receipt.
+        // Resolve the project ID from the in-memory message cache (populated
+        // by deliverMessage() with zero DB cost) instead of querying MongoDB.
+        const id_project = observerState.messageProjectCache.get(message_id) ?? null;
+        trackAnalyticsEvent('message.return_receipt', id_project, {
+          id_message: message_id,
+          recipient_id: convers_with,
+          id_request: null,
+        });
         logger.debug(">>> ON DISK... WITH A STATUS ON MY MESSAGE-UPDATE TOPIC", topic, "WITH PATCH: " + JSON.stringify(my_message_patch));
         observerState.chatdb!.saveOrUpdateMessage(my_message_patch, function (err) {
           if (err) {
@@ -374,7 +401,6 @@ function process_update(topic: string, message_string: string, callback: (ok: bo
         });
       }
     });
-    void upd_app_id;
   } else if (topic_parts[4] === "conversations") {
     logger.debug(" CONVERSATION UPDATE.");
     const upd_app_id = topic_parts[1];

@@ -113,6 +113,13 @@ export async function startServer(config?: ObserverStartConfig): Promise<void> {
   logger.debug("(Observer) webhook_enabled: " + observerState.webhook_enabled);
   logger.debug("(Observer) presence_enabled: " + observerState.presence_enabled);
 
+  // Analytics config
+  observerState.analytics_enabled = process.env.ANALYTICS_ENABLED === 'true';
+  if (process.env.ANALYTICS_EXCHANGE) {
+    observerState.analytics_exchange = process.env.ANALYTICS_EXCHANGE;
+  }
+  logger.info(`(Observer) analytics_enabled: ${observerState.analytics_enabled}, exchange: ${observerState.analytics_exchange}`);
+
   observerState.app_id = config.app_id || "tilechat";
   observerState.exchange = config.exchange || 'amq.topic';
 

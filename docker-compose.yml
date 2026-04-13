@@ -1,0 +1,32 @@
+# No 'version' key — it is obsolete in current Docker Compose and causes warnings.
+services:
+  rabbitmq:
+    image: rabbitmq:3.11-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_ERLANG_COOKIE: chat21_test_cookie
+      # Inject -setcookie directly into the erl command line so that Erlang's
+      # auth module never tries to read or create $HOME/.erlang.cookie.
+      # Without this, auth:init_no_setcookie/0 fails with eacces on macOS
+      # Docker Desktop because the VirtioFS layer does not honour chmod 0400
+      # on newly created files inside the container home directory.
+      RABBITMQ_SERVER_START_ARGS: "-setcookie chat21_test_cookie"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  mongodb:
+    image: mongo:6
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
