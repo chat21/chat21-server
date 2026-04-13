@@ -40,6 +40,12 @@ export interface ObserverState {
   channel: amqp.Channel | null;
   analytics_enabled: boolean;
   analytics_exchange: string;
+  /** URI for the dedicated analytics RabbitMQ broker (may differ from rabbitmq_uri). */
+  analytics_rabbitmq_uri: string;
+  /** AMQP connection to the analytics broker (separate from amqpConn). */
+  analyticsConn: amqp.Connection | null;
+  /** Confirm channel on the analytics broker used exclusively for analytics publishes. */
+  analyticsPubChannel: amqp.ConfirmChannel | null;
   /**
    * In-memory maps used to resolve id_project for analytics events without
    * any database round-trip:
@@ -86,6 +92,9 @@ export const observerState: ObserverState = {
   channel: null,
   analytics_enabled: false,
   analytics_exchange: 'tiledesk.analytics',
+  analytics_rabbitmq_uri: '',
+  analyticsConn: null,
+  analyticsPubChannel: null,
   messageProjectCache: new Map<string, string>(),
   userProjectCache: new Map<string, string>(),
 };

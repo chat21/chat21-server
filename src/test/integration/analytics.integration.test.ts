@@ -32,9 +32,10 @@ import {
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 
-const RABBITMQ_URI       = process.env.RABBITMQ_URI  ?? 'amqp://guest:guest@localhost:5672';
-const MONGODB_URI        = process.env.MONGODB_URI   ?? 'mongodb://localhost:27017/chat21_integration_test';
-const ANALYTICS_EXCHANGE = 'tiledesk.analytics';
+const RABBITMQ_URI          = process.env.RABBITMQ_URI           ?? 'amqp://guest:guest@localhost:5672';
+const ANALYTICS_RABBITMQ_URI = process.env.ANALYTICS_RABBITMQ_URI ?? 'amqp://guest:guest@localhost:5673';
+const MONGODB_URI            = process.env.MONGODB_URI            ?? 'mongodb://localhost:27017/chat21_integration_test';
+const ANALYTICS_EXCHANGE     = 'tiledesk.analytics';
 
 const TEST_PROJECT  = 'test-project-001';
 const TEST_PROJECT2 = 'test-project-002';
@@ -54,9 +55,17 @@ interface AnalyticsEnvelope {
 // ─── Shared state ─────────────────────────────────────────────────────────────
 
 let receivedEvents: AnalyticsEnvelope[] = [];
+/** AMQP connection to the analytics broker — used only to consume analytics events. */
 let consumerConn: amqp.Connection;
-/** Channel used for both consuming analytics events and publishing trigger messages. */
-let testChannel: amqp.Channel;
+/** Channel on the analytics broker for consuming analytics events. */
+let consumerChannel: amqp.Channel;
+/**
+ * Channel on the MAIN broker for publishing trigger messages.
+ * The observer's worker queue is bound to the main broker, so trigger messages
+ * (outgoing messages, updates, presence events) must be sent there.
+ */
+let publishConn: amqp.Connection;
+let publishChannel: amqp.Channel;
 let mongoClient: mongodb.MongoClient;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -85,8 +94,9 @@ function waitForEvent(eventType: string, timeoutMs = 8000): Promise<AnalyticsEnv
 
 /**
  * Promisified nested callback chain for AMQP consumer setup.
- * Opens a channel on the shared consumerConn, declares the analytics exchange,
- * creates an exclusive queue bound with '#', and starts consuming into receivedEvents.
+ * Opens a channel on consumerConn (analytics broker), declares the analytics
+ * exchange, creates an exclusive queue bound with '#', and starts consuming
+ * into receivedEvents.
  */
 function setupConsumer(): Promise<amqp.Channel> {
   return new Promise((resolve, reject) => {
@@ -124,6 +134,25 @@ function setupConsumer(): Promise<amqp.Channel> {
   });
 }
 
+/**
+ * Opens a plain channel on the main broker for publishing trigger messages.
+ * The observer's worker queues are bound to the main broker (RABBITMQ_URI),
+ * so outgoing messages / updates / presence events must be sent there.
+ */
+function setupPublisher(): Promise<amqp.Channel> {
+  return new Promise((resolve, reject) => {
+    amqp.connect(RABBITMQ_URI, (err, conn) => {
+      if (err) return reject(new Error(`publisher AMQP connect failed: ${err.message}`));
+      publishConn = conn;
+      conn.createChannel((chErr, ch) => {
+        if (chErr) return reject(new Error(`publisher createChannel: ${chErr.message}`));
+        publishChannel = ch;
+        resolve(ch);
+      });
+    });
+  });
+}
+
 // ─── Suite ────────────────────────────────────────────────────────────────────
 
 describe('Analytics integration', function () {
@@ -138,15 +167,19 @@ describe('Analytics integration', function () {
     process.env.AUTO_RESTART       = 'false'; // prevent reconnect loops in tests
     process.env.METRICS_PORT       = '9191';  // avoid port 9090 collision
 
-    // 1. Connect consumer AMQP, declare analytics exchange, set up receiver.
+    // 1. Connect consumer AMQP to the analytics broker, declare analytics exchange, set up receiver.
     await new Promise<void>((resolve, reject) => {
-      amqp.connect(RABBITMQ_URI, (err, conn) => {
+      amqp.connect(ANALYTICS_RABBITMQ_URI, (err, conn) => {
         if (err) return reject(new Error(`AMQP connect failed: ${err.message}`));
         consumerConn = conn;
         resolve();
       });
     });
-    testChannel = await setupConsumer();
+    consumerChannel = await setupConsumer();
+
+    // 2. Connect publisher AMQP to the MAIN broker for sending trigger messages.
+    //    (The observer's worker queues are bound to the main broker, not the analytics broker.)
+    publishChannel = await setupPublisher();
 
     // 2. MongoDB client (used only for teardown / DB drop — no pre-seeding needed).
     mongoClient = await mongodb.MongoClient.connect(MONGODB_URI, {
@@ -159,8 +192,9 @@ describe('Analytics integration', function () {
     setPresenceEnabled(true);   // required for presence analytics to fire
 
     await startServer({
-      rabbitmq_uri: RABBITMQ_URI,
-      mongodb_uri:  MONGODB_URI,
+      rabbitmq_uri:          RABBITMQ_URI,
+      analytics_rabbitmq_uri: ANALYTICS_RABBITMQ_URI,
+      mongodb_uri:           MONGODB_URI,
     });
 
     // Allow the observer's worker channel to finish asserting the queue and bindings.
@@ -177,7 +211,12 @@ describe('Analytics integration', function () {
     // Close the observer's AMQP connection.
     await new Promise<void>(r => stopServer(r));
 
-    // Close the consumer connection.
+    // Close the publisher connection (main broker).
+    await new Promise<void>((resolve, reject) =>
+      publishConn.close((err) => (err ? reject(err) : resolve()))
+    );
+
+    // Close the consumer connection (analytics broker).
     await new Promise<void>((resolve, reject) =>
       consumerConn.close((err) => (err ? reject(err) : resolve()))
     );
@@ -197,7 +236,7 @@ describe('Analytics integration', function () {
     });
 
     // Routing key triggers process_outgoing() → deliverMessage() with status=DELIVERED.
-    testChannel.publish(
+    publishChannel.publish(
       'amq.topic',
       'apps.tilechat.outgoing.users.intuser1.messages.intuser2.outgoing',
       Buffer.from(payload)
@@ -225,7 +264,7 @@ describe('Analytics integration', function () {
       text: 'test message for return receipt',
       attributes: { projectId: TEST_PROJECT },
     });
-    testChannel.publish(
+    publishChannel.publish(
       'amq.topic',
       'apps.tilechat.outgoing.users.intuser3.messages.intuser4.outgoing',
       Buffer.from(outPayload)
@@ -242,7 +281,7 @@ describe('Analytics integration', function () {
 
     // 2c. Now send the return-receipt update using the captured message ID.
     //     Topic: apps.tilechat.users.<user_id>.messages.<convers_with>.<msg_id>.update
-    testChannel.publish(
+    publishChannel.publish(
       'amq.topic',
       `apps.tilechat.users.intuser3.messages.intuser4.${msg_id}.update`,
       Buffer.from(JSON.stringify({ status: 200 }))
@@ -268,7 +307,7 @@ describe('Analytics integration', function () {
       text: 'seed message for presence test',
       attributes: { projectId: TEST_PROJECT2 },
     });
-    testChannel.publish(
+    publishChannel.publish(
       'amq.topic',
       `apps.tilechat.outgoing.users.${PRES_USER_ID}.messages.intuser6.outgoing`,
       Buffer.from(outPayload)
@@ -281,7 +320,7 @@ describe('Analytics integration', function () {
     receivedEvents = [];
 
     // 3c. Now send the presence event.
-    testChannel.publish(
+    publishChannel.publish(
       'amq.topic',
       `apps.tilechat.users.${PRES_USER_ID}.presence.client1`,
       Buffer.from(JSON.stringify({ connected: true }))

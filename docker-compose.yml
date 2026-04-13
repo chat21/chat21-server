@@ -21,6 +21,25 @@ services:
       timeout: 5s
       retries: 10
 
+  # Dedicated analytics broker — mirrors the main RabbitMQ but on port 5673.
+  # In production this would be the separate tiledesk-server-rabbitmq instance
+  # pointed to by ANALYTICS_RABBITMQ_URI.
+  rabbitmq-analytics:
+    image: rabbitmq:3.11-management
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_ERLANG_COOKIE: chat21_analytics_cookie
+      RABBITMQ_SERVER_START_ARGS: "-setcookie chat21_analytics_cookie"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   mongodb:
     image: mongo:6
     ports:

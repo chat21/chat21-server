@@ -17,7 +17,7 @@ import { trackAnalyticsEvent } from '../../observer/analytics';
 function resetState() {
   observerState.analytics_enabled = false;
   observerState.analytics_exchange = 'tiledesk.analytics';
-  observerState.pubChannel = null as unknown as typeof observerState.pubChannel;
+  observerState.analyticsPubChannel = null as unknown as typeof observerState.analyticsPubChannel;
 }
 
 describe('trackAnalyticsEvent', () => {
@@ -26,9 +26,9 @@ describe('trackAnalyticsEvent', () => {
   beforeEach(() => {
     resetState();
     publishStub = sinon.stub().returns(true);
-    observerState.pubChannel = {
+    observerState.analyticsPubChannel = {
       publish: publishStub,
-    } as unknown as typeof observerState.pubChannel;
+    } as unknown as typeof observerState.analyticsPubChannel;
   });
 
   afterEach(() => {
@@ -55,7 +55,7 @@ describe('trackAnalyticsEvent', () => {
 
   it('does nothing when pubChannel is null', () => {
     observerState.analytics_enabled = true;
-    observerState.pubChannel = null as unknown as typeof observerState.pubChannel;
+    observerState.analyticsPubChannel = null as unknown as typeof observerState.analyticsPubChannel;
     trackAnalyticsEvent('message.delivered', 'proj-1', { foo: 'bar' });
     assert.equal(publishStub.callCount, 0);
   });

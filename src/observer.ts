@@ -24,7 +24,7 @@ import { logger } from './tiledesk-logger/index';
 import type { ActiveQueues } from './types/index';
 import { observerState } from './observer/state';
 import { register } from './observer/prometheus';
-import { start } from './observer/amqp';
+import { start, startAnalyticsPublisher } from './observer/amqp';
 
 console.log("(Observer) Log level:", process.env.LOG_LEVEL);
 logger.setLog(process.env.LOG_LEVEL);
@@ -98,6 +98,7 @@ export interface ObserverStartConfig {
   app_id?: string;
   exchange?: string;
   rabbitmq_uri?: string;
+  analytics_rabbitmq_uri?: string;
   mongodb_uri?: string;
   redis_enabled?: boolean | string;
   redis_host?: string;
@@ -118,7 +119,29 @@ export async function startServer(config?: ObserverStartConfig): Promise<void> {
   if (process.env.ANALYTICS_EXCHANGE) {
     observerState.analytics_exchange = process.env.ANALYTICS_EXCHANGE;
   }
-  logger.info(`(Observer) analytics_enabled: ${observerState.analytics_enabled}, exchange: ${observerState.analytics_exchange}`);
+
+  // Resolve analytics RabbitMQ URI (separate broker from the main AMQP connection).
+  const analyticsUri =
+    config.analytics_rabbitmq_uri ||
+    process.env.ANALYTICS_RABBITMQ_URI ||
+    '';
+  observerState.analytics_rabbitmq_uri = analyticsUri;
+
+  if (observerState.analytics_enabled) {
+    if (!analyticsUri) {
+      throw new Error(
+        'ANALYTICS_ENABLED=true but no analytics RabbitMQ URI is configured. ' +
+        'Set ANALYTICS_RABBITMQ_URI or pass config.analytics_rabbitmq_uri.'
+      );
+    }
+    logger.info(`(Observer) analytics_enabled: true, exchange: ${observerState.analytics_exchange}, uri: ${analyticsUri}`);
+  } else {
+    if (!analyticsUri) {
+      logger.warn('(Observer) analytics_enabled: false and ANALYTICS_RABBITMQ_URI is not configured.');
+    } else {
+      logger.info(`(Observer) analytics_enabled: false, exchange: ${observerState.analytics_exchange}, uri: ${analyticsUri} (no connection will be opened)`);
+    }
+  }
 
   observerState.app_id = config.app_id || "tilechat";
   observerState.exchange = config.exchange || 'amq.topic';
@@ -219,6 +242,13 @@ export async function startServer(config?: ObserverStartConfig): Promise<void> {
   logger.debug('(Observer) Starting AMQP connection....');
   await start();
   logger.debug("[Observer.AMQP] connected.");
+
+  if (observerState.analytics_enabled) {
+    logger.debug('(Observer) Starting analytics AMQP connection...');
+    await startAnalyticsPublisher();
+    logger.debug('[Observer.AMQP] analytics publisher ready.');
+  }
+
   logger.debug("Observer started.");
 }
 
@@ -238,7 +268,13 @@ async function startRateManager(tdCache: TdCache): Promise<void> {
 }
 
 export function stopServer(callback: () => void): void {
-  observerState.amqpConn!.close(callback);
+  if (observerState.analyticsConn) {
+    observerState.analyticsConn.close(() => {
+      observerState.amqpConn!.close(callback);
+    });
+  } else {
+    observerState.amqpConn!.close(callback);
+  }
 }
 
 export { logger };

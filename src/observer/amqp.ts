@@ -162,3 +162,51 @@ export function closeOnErr(err: Error | null): boolean {
   observerState.amqpConn!.close();
   return true;
 }
+
+/**
+ * Opens a dedicated AMQP connection + ConfirmChannel to the analytics broker.
+ *
+ * Design decisions (confirmed with operator):
+ *  - Uses observerState.analytics_rabbitmq_uri (separate from rabbitmq_uri).
+ *  - Hard-crashes the process (process.exit(1)) if the connection fails — analytics
+ *    is treated as a hard dependency when ANALYTICS_ENABLED=true.
+ *  - Does NOT use the auto-restart loop; a startup failure is unrecoverable.
+ *  - Stores connection in observerState.analyticsConn, channel in analyticsPubChannel.
+ */
+export function startAnalyticsPublisher(): Promise<amqp.ConfirmChannel> {
+  return new Promise(function (resolve, reject) {
+    logger.debug("[Analytics AMQP] Connecting to analytics RabbitMQ...");
+    amqp.connect(observerState.analytics_rabbitmq_uri, (err, conn) => {
+      if (err) {
+        logger.error("[Analytics AMQP] connection error:", err.message);
+        process.exit(1);
+      }
+      conn.on("error", (connErr: Error) => {
+        if (connErr.message !== "Connection closing") {
+          logger.error("[Analytics AMQP] conn error:", connErr.message);
+        }
+      });
+      conn.on("close", () => {
+        logger.info("[Analytics AMQP] connection closed");
+      });
+      observerState.analyticsConn = conn;
+
+      conn.createConfirmChannel((chErr, ch) => {
+        if (chErr) {
+          logger.error("[Analytics AMQP] failed to create confirm channel:", chErr.message);
+          process.exit(1);
+        }
+        ch.on("error", (chConnErr: Error) => {
+          logger.error("[Analytics AMQP] publisher channel error:", chConnErr.message);
+          process.exit(0);
+        });
+        ch.on("close", () => {
+          logger.debug("[Analytics AMQP] publisher channel closed");
+        });
+        observerState.analyticsPubChannel = ch;
+        logger.debug("[Analytics AMQP] publisher channel ready");
+        return resolve(ch);
+      });
+    });
+  });
+}

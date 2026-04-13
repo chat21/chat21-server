@@ -21,8 +21,8 @@ export function trackAnalyticsEvent(
     logger.debug(`[Analytics] skipping event '${eventType}': no id_project`);
     return;
   }
-  if (!observerState.pubChannel) {
-    logger.warn(`[Analytics] skipping event '${eventType}': pubChannel not ready`);
+  if (!observerState.analyticsPubChannel) {
+    logger.warn(`[Analytics] skipping event '${eventType}': analyticsPubChannel not ready`);
     return;
   }
 
@@ -39,7 +39,7 @@ export function trackAnalyticsEvent(
   const routingKey = `analytics.${eventType}`;
 
   try {
-    observerState.pubChannel.publish(
+    observerState.analyticsPubChannel.publish(
       observerState.analytics_exchange,
       routingKey,
       Buffer.from(JSON.stringify(envelope)),

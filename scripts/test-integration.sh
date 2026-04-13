@@ -45,6 +45,23 @@ until docker compose -f "$REPO_ROOT/docker-compose.yml" exec -T rabbitmq \
 done
 echo "  RabbitMQ is ready." >&2
 
+# ── Wait for RabbitMQ (analytics) ───────────────────────────────────────────
+echo "==> Waiting for RabbitMQ (analytics) to become healthy..." >&2
+RETRIES=30
+until docker compose -f "$REPO_ROOT/docker-compose.yml" exec -T rabbitmq-analytics \
+      rabbitmq-diagnostics ping --quiet 2>/dev/null; do
+  RETRIES=$((RETRIES - 1))
+  if [ "$RETRIES" -eq 0 ]; then
+    echo "ERROR: RabbitMQ (analytics) did not become ready in time." >&2
+    docker compose -f "$REPO_ROOT/docker-compose.yml" logs rabbitmq-analytics >&2
+    docker compose -f "$REPO_ROOT/docker-compose.yml" down -v
+    exit 1
+  fi
+  echo "  RabbitMQ (analytics) not ready yet, retrying in 3s... ($RETRIES retries left)" >&2
+  sleep 3
+done
+echo "  RabbitMQ (analytics) is ready." >&2
+
 # ── Wait for MongoDB ─────────────────────────────────────────────────────────
 echo "==> Waiting for MongoDB to become healthy..." >&2
 RETRIES=30
@@ -66,6 +83,7 @@ echo "  MongoDB is ready." >&2
 echo "==> Running integration tests..." >&2
 EXIT_CODE=0
 RABBITMQ_URI=amqp://guest:guest@localhost:5672 \
+ANALYTICS_RABBITMQ_URI=amqp://guest:guest@localhost:5673 \
 MONGODB_URI=mongodb://localhost:27017/chat21_integration_test \
   npm --prefix "$REPO_ROOT" run test:integration || EXIT_CODE=$?
 
