@@ -91,7 +91,7 @@ function process_presence(topic: string, message_string: string, callback: (ok: 
   // Resolve the project ID from the in-memory user cache (populated by
   // deliverMessage() with zero DB cost) instead of querying MongoDB.
   const id_project = observerState.userProjectCache.get(user_id) ?? null;
-  trackAnalyticsEvent('user.presence_changed', id_project, {
+  trackAnalyticsEvent(MessageConstants.ANALYTICS_EVENTS.USER_PRESENCE_CHANGED, id_project, {
     user_id,
     client_id,
     status: presence_status,
@@ -214,7 +214,7 @@ async function process_outgoing(topic: string, message_string: string, callback:
     {
       const grpAttrs = outgoing_message.attributes as Record<string, unknown> | undefined;
       const grp_id_project = (grpAttrs?.projectId as string | undefined) ?? null;
-      trackAnalyticsEvent('message.delivered', grp_id_project, {
+      trackAnalyticsEvent(MessageConstants.ANALYTICS_EVENTS.MESSAGE_DELIVERED, grp_id_project, {
         id_message: outgoing_message.message_id as string ?? '',
         sender_id: sender_id,
         recipient_id: group_id,
@@ -394,7 +394,7 @@ function process_update(topic: string, message_string: string, callback: (ok: bo
         // Resolve the project ID from the in-memory message cache (populated
         // by deliverMessage() with zero DB cost) instead of querying MongoDB.
         const id_project = observerState.messageProjectCache.get(message_id) ?? null;
-        trackAnalyticsEvent('message.return_receipt', id_project, {
+        trackAnalyticsEvent(MessageConstants.ANALYTICS_EVENTS.MESSAGE_RETURN_RECEIPT, id_project, {
           id_message: message_id,
           recipient_id: convers_with,
           id_request: null,

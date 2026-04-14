@@ -27,14 +27,23 @@ export const WEBHOOK_EVENTS = {
   CONVERSATION_UNARCHIVED: 'conversation-unarchived',
 } as const;
 
+export const ANALYTICS_EVENTS = {
+  MESSAGE_SENT: 'message.sent',
+  MESSAGE_DELIVERED: 'message.delivered',
+  MESSAGE_RETURN_RECEIPT: 'message.return_receipt',
+  USER_PRESENCE_CHANGED: 'user.presence_changed',
+} as const;
+
 export type ChatMessageStatus = (typeof CHAT_MESSAGE_STATUS)[keyof typeof CHAT_MESSAGE_STATUS];
 export type ChatMessageStatusCode = (typeof CHAT_MESSAGE_STATUS_CODE)[keyof typeof CHAT_MESSAGE_STATUS_CODE];
 export type WebhookEvent = (typeof WEBHOOK_EVENTS)[keyof typeof WEBHOOK_EVENTS];
+export type AnalyticsEvent = (typeof ANALYTICS_EVENTS)[keyof typeof ANALYTICS_EVENTS];
 
 const MessageConstants = {
   CHAT_MESSAGE_STATUS,
   CHAT_MESSAGE_STATUS_CODE,
   WEBHOOK_EVENTS,
+  ANALYTICS_EVENTS,
 };
 
 export default MessageConstants;
