@@ -69,6 +69,13 @@ describe('trackAnalyticsEvent', () => {
     assert.equal(routingKey, 'analytics.message.delivered');
   });
 
+  it('publishes as persistent message', () => {
+    observerState.analytics_enabled = true;
+    trackAnalyticsEvent('message.delivered', 'proj-1', { id_message: 'msg-1' });
+    const [, , , options] = publishStub.firstCall.args as [string, string, Buffer, { persistent?: boolean }];
+    assert.equal(options?.persistent, true);
+  });
+
   it('publishes an envelope with correct shape', () => {
     observerState.analytics_enabled = true;
     const payload = { id_message: 'msg-42', sender_id: 'alice', recipient_id: 'bob' };

@@ -39,30 +39,8 @@ export function deliverMessage(
         }
       });
     }
-    // Analytics: fire message.sent for the sender-side copy of the message.
-    // For direct messages this is the copy delivered to the sender's own inbox.
-    // For group messages this is the group-timeline entry (inbox_of === group.uid).
-    if (message.status === MessageConstants.CHAT_MESSAGE_STATUS_CODE.SENT) {
-      const attrs = message.attributes as Record<string, unknown> | undefined;
-      const id_project = attrs?.projectId as string | undefined;
-
-      if (id_project) {
-        const sender = message.sender as string | undefined;
-        if (sender) {
-          observerState.userProjectCache.set(sender, id_project);
-        }
-      }
-
-      trackAnalyticsEvent(MessageConstants.ANALYTICS_EVENTS.MESSAGE_SENT, id_project, {
-        id_message: message.message_id as string ?? '',
-        id_request: (attrs?.requestId as string) ?? convers_with_id,
-        sender_id: message.sender as string ?? '',
-        sender_type: (attrs?.senderType as string) ?? 'user',
-        message_type: (message.type as string) ?? 'text',
-        has_attachment: !!(attrs?.attachment ?? message.metadata),
-        language: (attrs?.language as string) ?? null,
-      });
-    }
+    // message.sent analytics is intentionally disabled in chat21-server.
+    // Ownership remains in tiledesk-server to avoid double-counting.
 
     // Populate in-memory caches for ALL delivered messages (group or direct) so
     // subsequent events (return_receipt, presence) can resolve the project ID

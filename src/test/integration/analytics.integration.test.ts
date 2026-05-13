@@ -68,6 +68,24 @@ let publishConn: amqp.Connection;
 let publishChannel: amqp.Channel;
 let mongoClient: mongodb.MongoClient;
 
+function closeConnection(conn: amqp.Connection | undefined): Promise<void> {
+  if (!conn) return Promise.resolve();
+  return new Promise<void>((resolve, reject) => {
+    conn.close((err) => (err ? reject(err) : resolve()));
+  });
+}
+
+async function closeObserverIfStarted(): Promise<void> {
+  try {
+    await new Promise<void>((resolve, reject) => {
+      stopServer(resolve);
+      setTimeout(() => reject(new Error('observer close timeout')), 2000);
+    });
+  } catch {
+    // Observer may not have started; ignore teardown errors.
+  }
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
@@ -204,22 +222,14 @@ describe('Analytics integration', function () {
   // ── Global teardown ─────────────────────────────────────────────────────────
 
   after(async function () {
-    // Drop the test database so subsequent runs start clean.
-    await mongoClient.db().dropDatabase();
-    await mongoClient.close();
+    if (mongoClient) {
+      await mongoClient.db().dropDatabase();
+      await mongoClient.close();
+    }
 
-    // Close the observer's AMQP connection.
-    await new Promise<void>(r => stopServer(r));
-
-    // Close the publisher connection (main broker).
-    await new Promise<void>((resolve, reject) =>
-      publishConn.close((err) => (err ? reject(err) : resolve()))
-    );
-
-    // Close the consumer connection (analytics broker).
-    await new Promise<void>((resolve, reject) =>
-      consumerConn.close((err) => (err ? reject(err) : resolve()))
-    );
+    await closeObserverIfStarted();
+    await closeConnection(publishConn);
+    await closeConnection(consumerConn);
   });
 
   // Clear captured events before each test so assertions are isolated.

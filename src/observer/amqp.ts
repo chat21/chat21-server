@@ -196,6 +196,10 @@ export function startAnalyticsPublisher(): Promise<amqp.ConfirmChannel> {
           logger.error("[Analytics AMQP] failed to create confirm channel:", chErr.message);
           process.exit(1);
         }
+        ch.assertExchange(observerState.analytics_exchange, 'topic', {
+          durable: true,
+          autoDelete: false,
+        });
         ch.on("error", (chConnErr: Error) => {
           logger.error("[Analytics AMQP] publisher channel error:", chConnErr.message);
           process.exit(0);

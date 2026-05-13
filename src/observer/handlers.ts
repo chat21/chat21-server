@@ -90,7 +90,7 @@ function process_presence(topic: string, message_string: string, callback: (ok: 
   // Analytics: fires regardless of webhook_enabled.
   // Resolve the project ID from the in-memory user cache (populated by
   // deliverMessage() with zero DB cost) instead of querying MongoDB.
-  const id_project = observerState.userProjectCache.get(user_id) ?? null;
+  const id_project = observerState.userProjectCache.get(user_id) ?? pres_app_id;
   trackAnalyticsEvent(MessageConstants.ANALYTICS_EVENTS.USER_PRESENCE_CHANGED, id_project, {
     user_id,
     client_id,

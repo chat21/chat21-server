@@ -43,7 +43,7 @@ export function trackAnalyticsEvent(
       observerState.analytics_exchange,
       routingKey,
       Buffer.from(JSON.stringify(envelope)),
-      { persistent: false }
+      { persistent: true }
     );
     logger.debug(`[Analytics] published '${eventType}' for project '${idProject}'`);
   } catch (e) {
